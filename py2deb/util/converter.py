@@ -7,7 +7,8 @@ import re
 from subprocess import Popen, PIPE, STDOUT
 from ConfigParser import ConfigParser
 from debian.deb822 import Deb822
-from settings import PKG_REPO
+
+from py2deb.config.settings import PKG_REPO
 
 class Converter:
     '''

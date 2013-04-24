@@ -9,7 +9,6 @@ setup(name='pl-py2deb',
       author_email='arjan.verwer@paylogic.eu',
       url='https://wiki.paylogic.eu/',
       packages=find_packages(),
-      package_dir={'': 'py2deb'},
-      package_data={'py2deb': '*.ini'},
+      package_data={'py2deb': ['config/*.ini']},
       install_requires=['python-debian', 'stdeb'],
-      entry_points={'console_scripts': ['py2deb = py2deb.py2deb:main']})
+      entry_points={'console_scripts': ['py2deb = py2deb:main']})
