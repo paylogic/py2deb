@@ -25,8 +25,10 @@ def main():
         # evaluate setup.py scripts like the one from MySQL-python which
         # requires libmysqlclient before setup.py works.
         if converter.config.has_section('preinstall'):
-            dependencies = dict(converter.config.items('preinstall'))
-            converter._install_build_dep(*dependencies.values())
+            dependencies = []
+            for name, value in converter.config.items('preinstall'):
+                dependencies.extend(value.split())
+            converter._install_build_dep(*dependencies)
 
         sdists = get_source_dists(['install', '--ignore-installed', '-b', 
                                   builddir, '-r', requirements])
