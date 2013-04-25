@@ -3,7 +3,7 @@
 from setuptools import setup, find_packages
 
 setup(name='pl-py2deb',
-      version='0.5.0',
+      version='0.5.1',
       description='A tool to convert python packages to debian packages.',
       author='Arjan Verwer',
       author_email='arjan.verwer@paylogic.eu',
@@ -11,4 +11,4 @@ setup(name='pl-py2deb',
       packages=find_packages(),
       package_data={'py2deb': ['config/*.ini']},
       install_requires=['python-debian', 'stdeb'],
-      entry_points={'console_scripts': ['py2deb = py2deb:main']})
+      entry_points={'console_scripts': ['pl-py2deb = py2deb:main']})
