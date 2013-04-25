@@ -151,11 +151,10 @@ class Converter:
         '''
         os.chdir(package.directory)
 
-        p = Popen(['dpkg-buildpackage', '-us', '-uc'], stdout=PIPE, stderr=STDOUT)
-        stddata = p.communicate()
+        p = Popen(['dpkg-buildpackage', '-us', '-uc'])
+        p.wait()
 
         if p.returncode > 0:
-            print stddata[0]
             raise Exception('Failed to build %s' % (package.plname,))
 
         topdir = os.path.dirname(package.directory)
