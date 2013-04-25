@@ -36,7 +36,10 @@ def main():
 
         converter.packages.extend([Package(p[0], p[1], p[2]) for p in sdists])
         converter.convert()
+
+        # Cleanup after ourselves.
+        shutil.rmtree(builddir)
+
     except Exception, e:
         sys.exit(e)
-    finally:
-        shutil.rmtree(builddir)
+
