@@ -5,7 +5,7 @@ import re
 from pkg_resources import parse_requirements
 from debian.deb822 import Deb822
 
-from py2deb.config.settings import PKG_REPO
+from py2deb.config import PKG_REPO
 
 class Package:
     '''

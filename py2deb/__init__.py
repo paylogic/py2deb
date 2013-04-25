@@ -21,10 +21,10 @@ def main():
     try:
         converter = Converter(builddir)
 
-        # Fail dependencies
+        # Installing non python dependencies
         if converter.config.has_option('general', 'preinstall'):
-            fdep = converter.config.get('general', 'preinstall')
-            converter._install_build_dep(fdep)
+            dep = converter.config.get('general', 'preinstall')
+            converter._install_build_dep(dep)
 
         sdists = get_source_dists(['install', '--ignore-installed', '-b', 
                                   builddir, '-r', requirements])

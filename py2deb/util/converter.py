@@ -8,7 +8,7 @@ from subprocess import Popen, PIPE, STDOUT
 from ConfigParser import ConfigParser
 from debian.deb822 import Deb822
 
-from py2deb.config.settings import PKG_REPO
+from py2deb.config import PKG_REPO, config_dir
 
 class Converter:
     '''
@@ -20,7 +20,7 @@ class Converter:
         self.builddir = builddir
 
         self.config = ConfigParser()
-        self.config.read(os.path.join(os.path.dirname(__file__), 'control.ini'))
+        self.config.read(os.path.join(config_dir, 'control.ini'))
 
     def convert(self):
         '''
