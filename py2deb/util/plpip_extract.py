@@ -54,8 +54,8 @@ def unpack_source_dists(pip_arguments):
     #pattern = re.compile(r'^\s*Source in (.+?) has version (.+?), which satisfies requirement')
     pattern = re.compile(r'^\s*Source in (.+?) has version (.+?), which satisfies requirement ([^ ]+)')
     for line in output:
-        m = pattern.match(line)
-        if m:
+        match = pattern.match(line)
+        if match:
             directory = match.group(1)
             version = match.group(2)
             requirement = pkg_resources.Requirement.parse(match.group(3))
