@@ -3,6 +3,7 @@ import re
 import sys
 import urllib
 import urlparse
+import pkg_resources
 
 if os.getuid() == 0:
     download_cache = '/root/.pip/download-cache'
@@ -50,14 +51,19 @@ def unpack_source_dists(pip_arguments):
 
     # If pip succeeded, parse its output to find the pinned dependencies.
     dependencies = []
-    pattern = re.compile(r'^\s*Source in (.+?) has version (.+?), which satisfies requirement')
+    #pattern = re.compile(r'^\s*Source in (.+?) has version (.+?), which satisfies requirement')
+    pattern = re.compile(r'^\s*Source in (.+?) has version (.+?), which satisfies requirement ([^ ]+)')
     for line in output:
         m = pattern.match(line)
         if m:
-            directory = os.path.abspath(m.group(1))
-            name = os.path.basename(directory)
-            version = m.group(2)
-            dependencies.append((name, version, directory))
+            directory = match.group(1)
+            version = match.group(2)
+            requirement = pkg_resources.Requirement.parse(match.group(3))
+            dependencies.append((requirement.project_name, version, directory))
+            #directory = os.path.abspath(m.group(1))
+            #name = os.path.basename(directory)
+            #version = m.group(2)
+            #dependencies.append((name, version, directory))
     return True, dependencies
 
 def download_source_dists(pip_arguments):
