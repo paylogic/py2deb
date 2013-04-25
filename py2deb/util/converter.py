@@ -141,12 +141,10 @@ class Converter:
             self._install_build_dep(bdep)            
 
     def _install_build_dep(self, dep):
-        p = Popen(['sudo', 'apt-get', 'install', '-y'] + dep.split(), stdout=PIPE, stderr=STDOUT)
-        stddata = p.communicate()
-
+        p = Popen(['sudo', 'apt-get', 'install', '-y'] + dep.split())
+        p.wait()
         if p.returncode > 0:
-            print stddata[0]
-            raise Exception('Failed to install build-dependencies: %s' % (dep,))
+            raise Exception('Failed to install build dependencies: %s' % (dep,))
 
     def build(self, package):
         '''
