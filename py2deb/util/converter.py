@@ -2,7 +2,6 @@ import fnmatch
 import shutil
 import glob
 import os
-import re
 
 from subprocess import Popen, PIPE, STDOUT
 from ConfigParser import ConfigParser
@@ -141,10 +140,10 @@ class Converter:
             self._install_build_dep(*bdep.split())
 
     def _install_build_dep(self, *packages):
-        p = Popen(['sudo', 'apt-get', 'install', '-y'] + dep.split())
+        p = Popen(['sudo', 'apt-get', 'install', '-y'] + packages)
         p.wait()
         if p.returncode > 0:
-            raise Exception('Failed to install build dependencies: %s' % (dep,))
+            raise Exception('Failed to install build dependencies: %s' % (packages,))
 
     def build(self, package):
         '''
