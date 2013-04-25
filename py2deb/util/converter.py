@@ -138,9 +138,9 @@ class Converter:
         '''
         if self.config.has_option(package.name, 'build-depends'):
             bdep = self.config.get(package.name, 'build-depends')
-            self._install_build_dep(bdep)            
+            self._install_build_dep(*bdep.split())
 
-    def _install_build_dep(self, dep):
+    def _install_build_dep(self, *packages):
         p = Popen(['sudo', 'apt-get', 'install', '-y'] + dep.split())
         p.wait()
         if p.returncode > 0:

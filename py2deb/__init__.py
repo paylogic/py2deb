@@ -21,10 +21,12 @@ def main():
     try:
         converter = Converter(builddir)
 
-        # Installing non python dependencies
-        if converter.config.has_option('general', 'preinstall'):
-            dep = converter.config.get('general', 'preinstall')
-            converter._install_build_dep(dep)
+        # Install global build dependencies and any dependencies needed to
+        # evaluate setup.py scripts like the one from MySQL-python which
+        # requires libmysqlclient before setup.py works.
+        if converter.config.has_section('preinstall'):
+            dependencies = dict(converter.config.items('preinstall'))
+            converter._install_build_dep(*dependencies.values())
 
         sdists = get_source_dists(['install', '--ignore-installed', '-b', 
                                   builddir, '-r', requirements])
