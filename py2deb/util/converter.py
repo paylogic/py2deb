@@ -151,7 +151,7 @@ class Converter:
         '''
         os.chdir(package.directory)
 
-        p = Popen(['dpkg-buildpackage'], stdout=PIPE, stderr=STDOUT)
+        p = Popen(['dpkg-buildpackage', '-us', '-uc'], stdout=PIPE, stderr=STDOUT)
         stddata = p.communicate()
 
         if p.returncode > 0:
