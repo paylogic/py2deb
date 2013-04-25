@@ -4,8 +4,12 @@ import sys
 import urllib
 import urlparse
 
-download_cache = os.path.expanduser('~/.pip/download-cache')
-source_index = os.path.expanduser('~/.pl-pip/sources')
+if os.getuid() == 0:
+    download_cache = '/root/.pip/download-cache'
+    source_index = '/var/cache/pip-accel/sources'
+else:
+    download_cache = os.path.expanduser('~/.pip/download-cache')
+    source_index = os.path.expanduser('~/.pip-accel/sources')
 
 def get_source_dists(pip_arguments, max_retries=10):
     """
