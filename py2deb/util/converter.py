@@ -48,10 +48,15 @@ class Converter:
         # Temporary print of all built packages as a control depends field
         built_packages = None
         for pkg in self.packages:
+            depends_dict = pkg.control_patch()
+
+            if len(depends_dict['Depends']) < 1:
+                continue
+
             if not built_packages:
-                built_packages = pkg.control_patch()
+                built_packages = depends_dict
             else:
-                built_packages.merge_fields('Depends', pkg.control_patch())
+                built_packages.merge_fields('Depends', depends_dict)
 
         print built_packages.dump()
 
