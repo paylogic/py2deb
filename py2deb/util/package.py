@@ -50,11 +50,11 @@ class Package:
         '''
         deplist = []
         for dep in self.dependencies:
-            deplist.extend(self._depends())
+            deplist.extend(self._depends(dep))
 
         return deplist
 
-    def _depends(self, dep=None):
+    def _depends(self, dep):
         req_list = [x for x in parse_requirements(dep)]
         if not req_list:
             return []
