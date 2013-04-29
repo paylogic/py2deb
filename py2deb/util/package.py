@@ -42,6 +42,12 @@ class Package:
         '''
         Creates a Deb822 dict used for merging / patching a control file.
         '''
+        return Deb822(dict(Depends=', '.join(self.depends_list())))
+
+    def depends_list(self):
+        '''
+        Creates a list of dependencies in the format of a Depends field of a control file.
+        '''
         deplist = []
         for dep in self.dependencies:
             req_list = [x for x in parse_requirements(dep)]
@@ -57,4 +63,4 @@ class Package:
             else:
                 deplist.append(name)
 
-        return Deb822(dict(Depends=', '.join(deplist)))
+        return deplist
