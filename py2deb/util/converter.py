@@ -46,9 +46,12 @@ class Converter:
         print '\nConversion completed!'
 
         # Temporary print of all built packages as a control depends field
-        built_packages = Deb822(dict(Depends=''))
+        built_packages = None
         for pkg in self.packages:
-            built_packages.merge_fields('Depends', pkg.control_patch())
+            if not built_packages:
+                built_packages = pkg.control_patch()
+            else:
+                built_packages.merge_fields('Depends', pkg.control_patch())
 
         print built_packages.dump()
 
