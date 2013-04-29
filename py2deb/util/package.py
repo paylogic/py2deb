@@ -50,17 +50,20 @@ class Package:
         '''
         deplist = []
         for dep in self.dependencies:
-            req_list = [x for x in parse_requirements(dep)]
-            if not req_list:
-                continue
-
-            req = req_list[0] # Always one entry
-            name = self._plname(req.key)
-
-            if req.specs:
-                for spec in req.specs:
-                    deplist.append('%s (%s %s)' % (name, spec[0], spec[1]))
-            else:
-                deplist.append(name)
+            deplist.extend(self._depends)
 
         return deplist
+
+    def _depends(self, dep=None):
+        req_list = [x for x in parse_requirements(dep)]
+        if not req_list:
+            continue
+
+        req = req_list[0] # Always one entry
+        name = self._plname(req.key)
+
+        if req.specs:
+            return ['%s (%s %s)' % (name, spec[0], spec[1])
+                    for spec in req.specs]
+        else:
+            return [name]
