@@ -57,7 +57,7 @@ class Package:
     def _depends(self, dep=None):
         req_list = [x for x in parse_requirements(dep)]
         if not req_list:
-            continue
+            return []
 
         req = req_list[0] # Always one entry
         name = self._plname(req.key)
