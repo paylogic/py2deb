@@ -50,7 +50,7 @@ class Package:
         '''
         deplist = []
         for dep in self.dependencies:
-            deplist.extend(self._depends)
+            deplist.extend(self._depends())
 
         return deplist
 
