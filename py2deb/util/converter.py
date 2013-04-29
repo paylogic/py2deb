@@ -67,10 +67,10 @@ class Converter:
         '''
         Parse .egg-info/requires.txt for dependencies.
         '''
-        pattern = 'pip-egg-info/*.egg-info/requires.txt'
-        matches = glob.glob(os.path.join(package.directory, pattern))
+        pattern = os.path.join(package.directory, 'pip-egg-info/*.egg-info/requires.txt')
+        matches = glob.glob(pattern)
         
-        if matches == 1:
+        if len(matches) == 1:
             with open(matches[0]) as r:
                 for line in r.readlines():
                     if not line.strip():

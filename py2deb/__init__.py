@@ -39,7 +39,6 @@ def main():
 
         # Cleanup after ourselves.
         shutil.rmtree(builddir)
-
     except Exception, e:
         sys.exit(e)
 
