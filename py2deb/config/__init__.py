@@ -11,4 +11,7 @@ else:
 
 # The absolute path of the directory where Debianized dependency names +
 # versions are persisted.
-DEPENDENCY_STORE = '/var/lib/pl-py2deb/dependencies'
+if os.getuid() == 0:
+    DEPENDENCY_STORE = '/var/lib/pl-py2deb/dependencies'
+else:
+    DEPENDENCY_STORE = '/tmp/pl-py2deb/dependencies'
