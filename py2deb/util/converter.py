@@ -3,8 +3,11 @@ import fnmatch
 import glob
 import hashlib
 import os
+import os.path
 import shutil
+import sys
 import tempfile
+
 from subprocess import Popen, PIPE, STDOUT
 from ConfigParser import ConfigParser
 
@@ -88,8 +91,8 @@ class Converter:
         Debianize a python package using stdeb.
         '''
         os.chdir(package.directory)
-
-        p = Popen(['python', 'setup.py', '--command-packages=stdeb.command', 'debianize'],
+        python = os.path.join(sys.prefix, 'bin', 'python')
+        p = Popen([python, 'setup.py', '--command-packages=stdeb.command', 'debianize'],
                   stdout=PIPE, stderr=STDOUT)
         stddata = p.communicate()
 
