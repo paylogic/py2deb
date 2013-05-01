@@ -63,7 +63,7 @@ class Converter:
         that contains the code base which needs the requirements.
         '''
         with open(self.find_dependency_file(), 'w') as handle:
-            handle.write(', '.join('%s (%s)' % (p._depends(p.name)[0], p.version) for p in self.packages))
+            handle.write(', '.join('%s (%s-1)' % (p._depends(p.name)[0], p.version) for p in self.packages))
 
     def recall_dependencies(self):
         '''
