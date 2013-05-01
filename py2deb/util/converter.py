@@ -46,7 +46,7 @@ class Converter:
         print '\nConversion completed!'
 
         # Temporary print of all built packages as a control depends field
-        built_packages = [pkg._depends(pkg.name)[0] for pkg in self.packages]
+        built_packages = ['%s (%s)' % (pkg._depends(pkg.name)[0], pkg.version) for pkg in self.packages]
         print 'Depends: ' + ', '.join(built_packages)
 
     def debianize(self, package):
