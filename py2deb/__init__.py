@@ -1,44 +1,77 @@
-import tempfile
+"""
+Usage: pl-py2deb OPTIONS
+
+Supported options:
+
+  -b, --build=FILE   build Debian packages for all requirements in the given
+                     requirements.txt file (as accepted by pip)
+  -r, --recall=FILE  recall the Debian package names of previously converted
+                     packages based on a requirements.txt file
+  -h, --help         show this message and exit
+"""
+
 import shutil
 import sys
 import os
+import getopt
 
 from py2deb.util.plpip_extract import get_source_dists
 from py2deb.util.converter import Converter
 from py2deb.util.package import Package
 
 def main():
-    if len(sys.argv) != 2:
-        raise Exception('Invalid argument(s): Expecting one text file.')
-    
-    requirements = os.path.abspath(sys.argv[1])
 
-    if not os.path.isfile(requirements):
-        raise Exception('Error: %s is not a file.' % requirements)
+    # Command line option defaults (none :-).
+    action = ''
+    requirements = ''
 
-    builddir = tempfile.mkdtemp(prefix='py2deb_')
-    
+    # Parse the command line options.
+    options, arguments = getopt.getopt(sys.argv[1:], 'b:r:vh',
+            ['build=', 'recall=', 'verbose', 'help'])
+
+    # Map the command line options to variables and validate the arguments.
+    for option, value in options:
+        if option in ('-b', '--build'):
+            action = 'build'
+            requirements = os.path.abspath(value)
+            assert os.path.isfile(requirements), "Requirements file does not exist!"
+        elif option in ('-r', '--recall'):
+            action = 'recall'
+            requirements = os.path.abspath(value)
+            assert os.path.isfile(requirements), "Requirements file does not exist!"
+        elif option in ('-h', '--help'):
+            usage()
+            return
+        else:
+            assert False, "Unhandled option!"
+
     try:
-        converter = Converter(builddir)
+        converter = Converter(requirements)
 
-        # Install global build dependencies and any dependencies needed to
-        # evaluate setup.py scripts like the one from MySQL-python which
-        # requires libmysqlclient before setup.py works.
-        if converter.config.has_section('preinstall'):
-            dependencies = []
-            for name, value in converter.config.items('preinstall'):
-                dependencies.extend(value.split())
-            converter._install_build_dep(*dependencies)
+        if action == 'build':
+            # Install global build dependencies and any dependencies needed to
+            # evaluate setup.py scripts like the one from MySQL-python which
+            # requires libmysqlclient before setup.py works.
+            if converter.config.has_section('preinstall'):
+                dependencies = []
+                for name, value in converter.config.items('preinstall'):
+                    dependencies.extend(value.split())
+                converter._install_build_dep(*dependencies)
 
-        sdists = get_source_dists(['install', '--ignore-installed', '-b', 
-                                  builddir, '-r', requirements])
-        print '\n\nFinished downloading/extracting all packages, starting conversion... \n'
+            sdists = get_source_dists(['install', '--ignore-installed', '-b', 
+                                      converter.builddir, '-r', requirements])
+            print '\n\nFinished downloading/extracting all packages, starting conversion... \n'
 
-        converter.packages.extend([Package(p[0], p[1], p[2]) for p in sdists])
-        converter.convert()
+            converter.packages.extend([Package(p[0], p[1], p[2]) for p in sdists])
+            converter.convert()
 
-        # Cleanup after ourselves.
-        shutil.rmtree(builddir)
+            # Cleanup after ourselves.
+            shutil.rmtree(converter.builddir)
+        elif action == 'recall':
+            print converter.recall_dependencies()
+
     except Exception, e:
         sys.exit(e)
 
+def usage():
+    print __doc__.strip()

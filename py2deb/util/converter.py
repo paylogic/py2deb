@@ -1,23 +1,28 @@
+# Standard library modules.
 import fnmatch
-import shutil
 import glob
+import hashlib
 import os
-
+import shutil
+import tempfile
 from subprocess import Popen, PIPE, STDOUT
 from ConfigParser import ConfigParser
+
+# External dependencies.
 from debian.deb822 import Deb822
 
-from py2deb.config import PKG_REPO, config_dir
+# Internal modules.
+from py2deb.config import config_dir, PKG_REPO, DEPENDENCY_STORE
 
 class Converter:
     '''
     Converts a list of python packages to debian packages.
     '''
 
-    def __init__(self, builddir):
+    def __init__(self, requirements_file):
         self.packages = []
-        self.builddir = builddir
-
+        self.builddir = tempfile.mkdtemp(prefix='py2deb_')
+        self.requirements_file = requirements_file
         self.config = ConfigParser()
         self.config.read(os.path.join(config_dir, 'control.ini'))
 
@@ -45,9 +50,38 @@ class Converter:
 
         print '\nConversion completed!'
 
-        # Temporary print of all built packages as a control depends field
-        built_packages = ['%s (%s)' % (pkg._depends(pkg.name)[0], pkg.version) for pkg in self.packages]
-        print 'Depends: ' + ', '.join(built_packages)
+        # TODO Add a command line interface to get the output of remember_dependencies().
+        self.persist_dependencies()
+
+    def persist_dependencies(self):
+        '''
+        Persist the converted requirements in the format of Debian package names
+        which can be directly added to the dependencies of the Debian package
+        that contains the code base which needs the requirements.
+        '''
+        with open(self.find_dependency_file(), 'w') as handle:
+            handle.write(', '.join('%s (%s)' % (p._depends(p.name)[0], p.version) for p in self.packages))
+
+    def recall_dependencies(self):
+        '''
+        Recall the previously persisted Debianized dependencies.
+        '''
+        with open(self.find_dependency_file()) as handle:
+            return handle.read()
+
+    def find_dependency_file(self):
+        '''
+        Find the absolute path of the text file where the Debianized dependency
+        names and versions corresponding to the requirements.txt file are
+        stored.
+        '''
+        with open(self.requirements_file) as handle:
+            context = hashlib.sha1()
+            context.update(handle.read())
+            fingerprint = context.hexdigest()
+        if not os.path.isdir(DEPENDENCY_STORE):
+            os.makedirs(DEPENDENCY_STORE)
+        return os.path.join(DEPENDENCY_STORE, '%s.txt' % fingerprint)
 
     def debianize(self, package):
         '''

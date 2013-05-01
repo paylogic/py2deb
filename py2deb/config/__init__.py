@@ -1,9 +1,14 @@
 import os
 
+# The absolute path of the directory containing the configuration file `control.ini`.
 config_dir = os.path.dirname(os.path.abspath(__file__))
 
-# Destination of built packages.
+# The absolute path of the directory where generated *.deb files should be stored.
 if os.getuid() == 0:
     PKG_REPO = '/var/repos/deb-repo/repository/pl-py2deb'
 else:
     PKG_REPO = '/tmp'
+
+# The absolute path of the directory where Debianized dependency names +
+# versions are persisted.
+DEPENDENCY_STORE = '/var/lib/pl-py2deb/dependencies'
