@@ -65,7 +65,7 @@ class Converter:
         deplist = []
         for pkg in self.packages:
             debfile = DebFile(os.path.join(PKG_REPO, pkg.debfile))
-            deplist.append('%(Package)s (%(Version)s)' % debfile.debcontrol())
+            deplist.append('%(Package)s (=%(Version)s)' % debfile.debcontrol())
 
         with open(self.find_dependency_file(), 'w') as handle:
             handle.write(', '.join(deplist))
