@@ -11,7 +11,7 @@ setup(name='pl-py2deb',
       packages=find_packages(),
       package_data={'py2deb': ['config/*.ini']},
       install_requires=[
-          'python-debian', # proper dependency
+          'python-debian >= 0.1.21', # proper dependency
           'stdeb', # proper dependency
           'chardet', # transitive dependency of `python-debian'... (no one gets dependencies right :-)
       ],
