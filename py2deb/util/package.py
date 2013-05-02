@@ -71,9 +71,9 @@ class Package:
                 name = self._plname(req.req.key)
             else:
                 name = req.req.key
-            if req.specs:
+            if req.req.specs:
                 deplist.extend(['%s (%s %s)' % (name, spec[0], spec[1])
-                        for spec in req.specs])
+                        for spec in req.req.specs])
             else:
                 deplist.append(name)
 
