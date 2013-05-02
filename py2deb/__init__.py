@@ -45,33 +45,29 @@ def main():
         else:
             assert False, "Unhandled option!"
 
-    try:
         converter = Converter(requirements)
 
-        if action == 'build':
-            # Install global build dependencies and any dependencies needed to
-            # evaluate setup.py scripts like the one from MySQL-python which
-            # requires libmysqlclient before setup.py works.
-            if converter.config.has_section('preinstall'):
-                dependencies = []
-                for name, value in converter.config.items('preinstall'):
-                    dependencies.extend(value.split())
-                converter._install_build_dep(*dependencies)
+    if action == 'build':
+        # Install global build dependencies and any dependencies needed to
+        # evaluate setup.py scripts like the one from MySQL-python which
+        # requires libmysqlclient before setup.py works.
+        if converter.config.has_section('preinstall'):
+            dependencies = []
+            for name, value in converter.config.items('preinstall'):
+                dependencies.extend(value.split())
+            converter._install_build_dep(*dependencies)
 
-            sdists = get_source_dists(['install', '--ignore-installed', '-b', 
-                                      converter.builddir, '-r', requirements])
-            print '\n\nFinished downloading/extracting all packages, starting conversion... \n'
+        sdists = get_source_dists(['install', '--ignore-installed', '-b', 
+                                  converter.builddir, '-r', requirements])
+        print '\n\nFinished downloading/extracting all packages, starting conversion... \n'
 
-            converter.packages.extend([Package(p[0], p[1], p[2]) for p in sdists])
-            converter.convert()
+        converter.packages.extend([Package(p[0], p[1], p[2]) for p in sdists])
+        converter.convert()
 
-            # Cleanup after ourselves.
-            shutil.rmtree(converter.builddir)
-        elif action == 'recall':
-            print converter.recall_dependencies()
-
-    except Exception, e:
-        sys.exit(e)
+        # Cleanup after ourselves.
+        shutil.rmtree(converter.builddir)
+    elif action == 'recall':
+        print converter.recall_dependencies()
 
 def usage():
     print __doc__.strip()

@@ -2,7 +2,7 @@ import glob
 import os
 import re
 
-from pkg_resources import parse_requirements
+from pkg_resources import Requirement
 from debian.deb822 import Deb822
 
 from py2deb.config import PKG_REPO
@@ -15,8 +15,7 @@ class Package:
         self.name = name.lower()
         self.version = version
         self.directory = os.path.abspath(directory)
-        self.dependencies = []
-        self.debfile = None
+        self._requirements = []
         self.debdir = None
 
     @property
@@ -29,14 +28,31 @@ class Package:
         name = re.sub('[^a-z0-9]+', '-', name)
         name = name.strip('-')
         return 'pl-python-' + name
+
+    def add_requirement(self, req):
+        '''
+        Adds a requirement to the list of the requirements of this package
+        if it is an instance of pkg_resources.Requirement, else it'll try 
+        to make it into a Requirement.
+        '''
+        if not isinstance(req, Requirement):
+            req = Requirement.parse(req)
+        self._requirements.append(req)
     
+    @property
     def is_built(self):
         '''
         Check if a package already exists by checking the package repository.
         '''
+        return self.debfile is not None
+
+    @property
+    def debfile(self):
         pattern = '%s_%s-1_*.deb' % (self.plname, self.version)
         matches = glob.glob(os.path.join(PKG_REPO, pattern))
-        return len(matches) > 0
+        matches.sort()
+        if matches:
+            return matches[-1]
 
     def control_patch(self):
         '''
@@ -49,21 +65,16 @@ class Package:
         Creates a list of dependencies in the format of a Depends field of a control file.
         '''
         deplist = []
-        for dep in self.dependencies:
-            deplist.extend(self._depends(dep))
+        for req in self._requirements:
+            name = self._plname(req.key)
+
+            if req.specs:
+                deplist.extend(['%s (%s %s)' % (name, spec[0], spec[1])
+                        for spec in req.specs])
+            else:
+                deplist.append(name)
 
         return deplist
+        
 
-    def _depends(self, dep):
-        req_list = [x for x in parse_requirements(dep)]
-        if not req_list:
-            return []
-
-        req = req_list[0] # Always one entry
-        name = self._plname(req.key)
-
-        if req.specs:
-            return ['%s (%s %s)' % (name, spec[0], spec[1])
-                    for spec in req.specs]
-        else:
-            return [name]
+        

@@ -10,9 +10,11 @@ import tempfile
 
 from subprocess import Popen, PIPE, STDOUT
 from ConfigParser import ConfigParser
+from pkg_resources import Requirement
 
 # External dependencies.
 from debian.deb822 import Deb822
+from debian.debfile import DebFile
 
 # Internal modules.
 from py2deb.config import config_dir, PKG_REPO, DEPENDENCY_STORE
@@ -34,7 +36,7 @@ class Converter:
         Start the conversion.
         '''
         for package in self.packages:
-            if package.is_built():
+            if package.is_built:
                 print '%s is already built, skipping...' % (package.plname,)
                 continue
 
@@ -49,8 +51,6 @@ class Converter:
 
             print 'Converted %s-%s to %s' % (package.name, package.version, package.debfile)
 
-            self.move(package, PKG_REPO)
-
         print '\nConversion completed!'
 
         # TODO Add a command line interface to get the output of remember_dependencies().
@@ -62,8 +62,13 @@ class Converter:
         which can be directly added to the dependencies of the Debian package
         that contains the code base which needs the requirements.
         '''
+        deplist = []
+        for pkg in self.packages:
+            debfile = DebFile(os.path.join(PKG_REPO, pkg.debfile))
+            deplist.append('%(Package)s (%(Version)s)' % debfile.debcontrol())
+
         with open(self.find_dependency_file(), 'w') as handle:
-            handle.write(', '.join('%s (%s-1)' % (p._depends(p.name)[0], p.version) for p in self.packages))
+            handle.write(', '.join(deplist))
 
     def recall_dependencies(self):
         '''
@@ -92,7 +97,8 @@ class Converter:
         '''
         os.chdir(package.directory)
         python = os.path.join(sys.prefix, 'bin', 'python')
-        p = Popen([python, 'setup.py', '--command-packages=stdeb.command', 'debianize'],
+        p = Popen([python, 'setup.py', '--command-packages=stdeb.command', 'debianize',
+                  '--ignore-install-requires'], #For pypi version of stdeb
                   stdout=PIPE, stderr=STDOUT)
         stddata = p.communicate()
 
@@ -115,11 +121,18 @@ class Converter:
                     if line.startswith('['):
                         break
 
-                    package.dependencies.append(line)
+                    req = Requirement.parse(line)
+
+                    if self.config.has_option('replace_dependencies', req.key):
+                        name = self.config.get('replace_dependencies', req.key)
+                        req = Requirement(name, req.specs, req.extras)
+
+                    package.add_requirement(req)
 
     def patch_rules(self, package):
         '''
         Patch rules file to prevent dh_python2 to guess dependencies.
+        This is only needed if the latest stdeb release from github is used.
         '''
         patch = '\noverride_dh_python2:\n\tdh_python2 --no-guessing-deps\n'
 
@@ -201,17 +214,9 @@ class Converter:
         topdir = os.path.dirname(package.directory)
         for item in os.listdir(topdir):
             if fnmatch.fnmatch(item, '%s_*.deb' % package.plname):
-                package.debfile = item
-                package.debdir = topdir
+                source = os.path.join(topdir, item)
+                shutil.move(source, PKG_REPO)
+                print 'Moved %s to %s' % (item, PKG_REPO)
                 break
         else:
             raise Exception("Could not find build of %s" % (package.plname,))
-
-    def move(self, package, destination):
-        '''
-        Moves a package to the destination if it has been build (thus has a .deb)
-        '''
-        if package.debdir and package.debfile:
-            source = os.path.join(package.debdir, package.debfile)
-            shutil.move(source, destination)
-            print 'Moved %s to %s' % (package.debfile, destination)
