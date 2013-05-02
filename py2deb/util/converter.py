@@ -123,8 +123,8 @@ class Converter:
 
                     req = Requirement.parse(line)
 
-                    if self.config.has_option('replace_dependencies', req.key):
-                        name = self.config.get('replace_dependencies', req.key)
+                    if self.config.has_option('replacements', req.key):
+                        name = self.config.get('replacements', req.key)
                         req = Requirement(name, req.specs, req.extras)
 
                     package.add_requirement(req)
