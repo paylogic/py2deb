@@ -5,7 +5,7 @@ config_dir = os.path.dirname(os.path.abspath(__file__))
 
 # The absolute path of the directory where generated *.deb files should be stored.
 if os.getuid() == 0:
-    PKG_REPO = '/var/repos/deb-repo/repository/pl-py2deb'
+    PKG_REPO = '/var/repos/deb-repo/repository/py2deb'
 else:
     PKG_REPO = '/tmp'
 
