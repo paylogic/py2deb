@@ -8,9 +8,11 @@ import shutil
 import sys
 import tempfile
 
+# External dependencies.
+import pkg_resources
+
 from subprocess import Popen, PIPE, STDOUT
 from ConfigParser import ConfigParser
-from pkg_resources import Requirement
 
 # External dependencies.
 from debian.deb822 import Deb822
@@ -18,6 +20,7 @@ from debian.debfile import DebFile
 
 # Internal modules.
 from py2deb.config import config_dir, PKG_REPO, DEPENDENCY_STORE
+from py2deb.util.package import Requirement
 
 class Converter:
     '''
@@ -112,7 +115,6 @@ class Converter:
         '''
         pattern = os.path.join(package.directory, 'pip-egg-info/*.egg-info/requires.txt')
         matches = glob.glob(pattern)
-        
         if len(matches) == 1:
             with open(matches[0]) as r:
                 for line in r.readlines():
@@ -120,14 +122,13 @@ class Converter:
                        continue
                     if line.startswith('['):
                         break
-
-                    req = Requirement.parse(line)
-
+                    req = pkg_resources.Requirement.parse(line)
                     if self.config.has_option('replacements', req.key):
                         name = self.config.get('replacements', req.key)
-                        req = Requirement(name, req.specs, req.extras)
-
-                    package.add_requirement(req)
+                        req = pkg_resources.Requirement(name, req.specs, req.extras)
+                        package.add_requirement(Requirement(req, translatable=False))
+                    else:
+                        package.add_requirement(Requirement(req, translatable=True))
 
     def patch_rules(self, package):
         '''

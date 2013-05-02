@@ -1,8 +1,10 @@
+# Standard library modules.
 import glob
 import os
 import re
 
-from pkg_resources import Requirement
+# External dependencies.
+import pkg_resources
 from debian.deb822 import Deb822
 
 from py2deb.config import PKG_REPO
@@ -35,8 +37,8 @@ class Package:
         if it is an instance of pkg_resources.Requirement, else it'll try 
         to make it into a Requirement.
         '''
-        if not isinstance(req, Requirement):
-            req = Requirement.parse(req)
+        if not isinstance(req, pkg_resources.Requirement):
+            req = pkg_resources.Requirement.parse(req)
         self._requirements.append(req)
     
     @property
@@ -66,8 +68,10 @@ class Package:
         '''
         deplist = []
         for req in self._requirements:
-            name = self._plname(req.key)
-
+            if req.translatable:
+                name = self._plname(req.req.key)
+            else:
+                name = req.req.key
             if req.specs:
                 deplist.extend(['%s (%s %s)' % (name, spec[0], spec[1])
                         for spec in req.specs])
@@ -76,5 +80,8 @@ class Package:
 
         return deplist
         
+class Requirement:
 
-        
+    def __init__(self, requirement, translatable=True):
+        self.req = requirement
+        self.translatable = translatable
