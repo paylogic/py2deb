@@ -37,8 +37,7 @@ class Package:
         if it is an instance of pkg_resources.Requirement, else it'll try 
         to make it into a Requirement.
         '''
-        if not isinstance(req, pkg_resources.Requirement):
-            req = pkg_resources.Requirement.parse(req)
+        assert isinstance(req, Requirement)
         self._requirements.append(req)
     
     @property
