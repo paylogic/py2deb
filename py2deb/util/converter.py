@@ -45,6 +45,7 @@ class Converter:
 
             print 'Converting %s-%s ...' % (package.name, package.version)
 
+            self.apply_workarounds(package)
             self.debianize(package)
             self.parse_egg_req(package)
             self.patch_rules(package)
@@ -93,6 +94,17 @@ class Converter:
         if not os.path.isdir(DEPENDENCY_STORE):
             os.makedirs(DEPENDENCY_STORE)
         return os.path.join(DEPENDENCY_STORE, '%s.txt' % fingerprint)
+
+    def apply_workarounds(self, package):
+        '''
+        Fabric includes a bundled Paramiko, which makes pl-python-fabric
+        conflict with pl-python-paramiko... We patch the source distribution to
+        remove the bundled version of Paramiko from the Fabric source package.
+        '''
+        if package.name.lower() == 'fabric':
+            directory = os.path.join(package.directory, 'paramiko')
+            if os.path.isdir(directory):
+                shutil.rmtree(directory)
 
     def debianize(self, package):
         '''
