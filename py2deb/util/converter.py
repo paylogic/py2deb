@@ -20,7 +20,7 @@ from debian.debfile import DebFile
 
 # Internal modules.
 from py2deb.config import config_dir, PKG_REPO, DEPENDENCY_STORE
-from py2deb.util.package import Requirement
+from py2deb.util.package import PythonRequirement, DebianRequirement
 
 class Converter:
     '''
@@ -136,11 +136,10 @@ class Converter:
                         break
                     req = pkg_resources.Requirement.parse(line)
                     if self.config.has_option('replacements', req.key):
-                        name = self.config.get('replacements', req.key)
-                        req = pkg_resources.Requirement(name, req.specs, req.extras)
-                        package.add_requirement(Requirement(req, translatable=False))
+                        debian_package = self.config.get('replacements', req.key)
+                        package.add_requirement(DebianRequirement(debian_package))
                     else:
-                        package.add_requirement(Requirement(req, translatable=True))
+                        package.add_requirement(PythonRequirement(req))
 
     def patch_rules(self, package):
         '''

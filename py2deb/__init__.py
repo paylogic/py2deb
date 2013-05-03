@@ -48,6 +48,7 @@ def main():
         converter = Converter(requirements)
 
     if action == 'build':
+
         # Install global build dependencies and any dependencies needed to
         # evaluate setup.py scripts like the one from MySQL-python which
         # requires libmysqlclient before setup.py works.
@@ -61,14 +62,20 @@ def main():
                                   converter.builddir, '-r', requirements])
         print '\n\nFinished downloading/extracting all packages, starting conversion... \n'
 
-        # Remove packages if they're in the ignore list.
-        sdists = [p for p in sdists if not converter.config.has_option('ignore', p[0].lower())]
+        # Add the packages reported as requirements by pip to the list of
+        # packages to be converted. Packages that have upstream (Debian/Ubuntu)
+        # replacements obviously don't have to be converted.
+        packages_to_ignore = set(k.lower() for k, v in converter.config.items('replacements'))
+        for name, version, directory in sdists:
+            if name.lower() not in packages_to_ignore:
+                converter.packages.append(Package(name, version, directory))
 
-        converter.packages.extend([Package(p[0], p[1], p[2]) for p in sdists])
+        # Start the actual conversion.
         converter.convert()
 
         # Cleanup after ourselves.
         shutil.rmtree(converter.builddir)
+
     elif action == 'recall':
         print converter.recall_dependencies()
 
