@@ -61,6 +61,9 @@ def main():
                                   converter.builddir, '-r', requirements])
         print '\n\nFinished downloading/extracting all packages, starting conversion... \n'
 
+        # Remove packages if they're in the ignore list.
+        sdists = [p for p in sdists if not converter.config.has_option('ignore', p[0].lower())]
+
         converter.packages.extend([Package(p[0], p[1], p[2]) for p in sdists])
         converter.convert()
 
