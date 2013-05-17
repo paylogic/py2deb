@@ -20,6 +20,7 @@ from debian.debfile import DebFile
 # Internal modules.
 from py2deb.config import config_dir, PKG_REPO, DEPENDENCY_STORE
 from py2deb.util.package import Requirement, Package
+from py2deb.util import compact
 
 class Converter:
     '''
@@ -116,7 +117,13 @@ class Converter:
         '''
         Recall the previously persisted Debianized dependencies.
         '''
-        with open(self.find_dependency_file()) as handle:
+        dependency_file = self.find_dependency_file()
+        if not os.path.isfile(dependency_file):
+            raise Exception, compact("Could not recall dependencies: \
+                                      This requirements file has not yet been \
+                                      converted with py2deb on this machine.")
+
+        with open(dependency_file) as handle:
             return handle.read()
 
     def find_dependency_file(self):
