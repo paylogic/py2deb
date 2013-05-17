@@ -7,20 +7,19 @@ import os.path
 import shutil
 import sys
 import tempfile
-
-# External dependencies.
-import pkg_resources
-
 from subprocess import Popen, PIPE, STDOUT
 from ConfigParser import ConfigParser
 
 # External dependencies.
+import pkg_resources
+import pip_accel
+import pip.exceptions
 from debian.deb822 import Deb822
 from debian.debfile import DebFile
 
 # Internal modules.
 from py2deb.config import config_dir, PKG_REPO, DEPENDENCY_STORE
-from py2deb.util.package import Requirement
+from py2deb.util.package import Requirement, Package
 
 class Converter:
     '''
@@ -38,6 +37,9 @@ class Converter:
         '''
         Start the conversion.
         '''
+        self.preinstall()
+        self.packages.extend(self.get_required_packages())
+
         for package in self.packages:
             if package.is_built:
                 print '%s is already built, skipping...' % (package.plname,)
@@ -57,8 +59,44 @@ class Converter:
 
         print '\nConversion completed!'
 
-        # TODO Add a command line interface to get the output of remember_dependencies().
         self.persist_dependencies()
+
+    def preinstall(self):
+        ''''''
+        if self.config.has_section('preinstall'):
+            dependencies = []
+            for name, value in self.config.items('preinstall'):
+                dependencies.extend(value.split())
+            self._install_build_dep(*dependencies)
+
+    def get_required_packages(self):
+        '''
+        Install global build dependencies and any dependencies needed to
+        evaluate setup.py scripts like the one from MySQL-python which
+        requires libmysqlclient before setup.py works.
+        '''
+        sdists = self.get_source_dists(['install', '--ignore-installed', '-b', 
+                                  self.builddir, '-r', self.requirements_file])
+
+        # Remove packages if they're in the ignore list.
+        sdists = [p for p in sdists if not self.config.has_option('ignore', p[0].lower())]
+
+        return [Package(p[0], p[1], p[2]) for p in sdists]        
+
+    def get_source_dists(self, pip_arguments, max_retries=10):
+        """
+        Download and unpack the source distributions for all dependencies specified
+        in the pip command line arguments.
+        """
+        pip_accel.initialize_directories()
+        i = 1
+        while i < max_retries:
+            try:
+                return pip_accel.unpack_source_dists(pip_arguments)
+            except pip.exceptions.DistributionNotFound:
+                pip_accel.download_source_dists(pip_arguments)
+            i += 1
+        raise Exception, "pip failed %i times!" % max_retries
 
     def persist_dependencies(self):
         '''
