@@ -8,5 +8,4 @@ To-do list for the Python to Debian converter
 - Add confirmation for installation of non-python dependencies *and* add a command to auto-confirm everything (--yes)
 - Use sanity_check_dependencies() from pip_accel.deps
 - Implement a patch configuration option to patch packages from PyPI.
-- Command-line option: do not follow dependencies.
 - Command-line option: Alternative config file
