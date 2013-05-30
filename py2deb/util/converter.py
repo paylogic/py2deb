@@ -27,10 +27,11 @@ class Converter:
     Converts a list of python packages to debian packages.
     '''
 
-    def __init__(self, requirements_file):
+    def __init__(self, requirements_file, follow_dependencies):
         self.packages = []
         self.builddir = tempfile.mkdtemp(prefix='py2deb_')
         self.requirements_file = requirements_file
+        self.follow_dependencies = follow_dependencies
         self.config = ConfigParser()
         self.config.read(os.path.join(config_dir, 'control.ini'))
 
@@ -63,7 +64,11 @@ class Converter:
         self.persist_dependencies()
 
     def preinstall(self):
-        ''''''
+        '''
+        Install global build dependencies and any dependencies needed to
+        evaluate setup.py scripts like the one from MySQL-python which
+        requires libmysqlclient before setup.py works.
+        '''
         if self.config.has_section('preinstall'):
             dependencies = []
             for name, value in self.config.items('preinstall'):
@@ -72,12 +77,12 @@ class Converter:
 
     def get_required_packages(self):
         '''
-        Install global build dependencies and any dependencies needed to
-        evaluate setup.py scripts like the one from MySQL-python which
-        requires libmysqlclient before setup.py works.
+        Returns a list of Packages by passing the requirements.txt to pip-accel
         '''
-        sdists = self.get_source_dists(['install', '--ignore-installed', '-b', 
-                                  self.builddir, '-r', self.requirements_file])
+        pip_args = ['install', '--ignore-installed', '-b', self.builddir, '-r', self.requirements_file]
+        if not self.follow_dependencies:
+            pip_args.append('--no-deps')
+        sdists = self.get_source_dists(pip_args)
 
         # Remove packages if they're in the ignore list.
         sdists = [p for p in sdists if not self.config.has_option('ignore', p[0].lower())]
