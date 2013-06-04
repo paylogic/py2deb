@@ -30,12 +30,12 @@ class Package:
     def add_requirement(self, req):
         '''
         Adds a requirement to the list of the requirements of this package
-        if it is an instance of pkg_resources.Requirement, else it'll try 
+        if it is an instance of pkg_resources.Requirement, else it'll try
         to make it into a Requirement.
         '''
         assert isinstance(req, Requirement)
         self._requirements.append(req)
-    
+
     @property
     def is_built(self):
         '''
