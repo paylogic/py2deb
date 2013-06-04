@@ -3,7 +3,7 @@
 from setuptools import setup, find_packages
 
 setup(name='pl-py2deb',
-      version='0.5.40',
+      version='0.5.41',
       description='A tool to convert python packages to debian packages.',
       author='Arjan Verwer',
       author_email='arjan.verwer@paylogic.eu',

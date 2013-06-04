@@ -83,12 +83,11 @@ class Converter:
         pip_args = ['install', '--ignore-installed', '-b', self.builddir, '-r', self.requirements_file]
         if not self.follow_dependencies:
             pip_args.append('--no-deps')
-        sdists = self.get_source_dists(pip_args)
-
-        # Remove packages if they're in the ignore list.
-        sdists = [p for p in sdists if not self.config.has_option('ignore', p[0].lower())]
-
-        return [Package(p[0], p[1], p[2]) for p in sdists]        
+        for name, version, directory in self.get_source_dists(pip_args):
+            # Remove packages which don't need to be converted to Debian packages.
+            if not self.config.has_option('replacements', name.lower()):
+                # All remaining packages do need to be converted.
+                yield Package(name, version, directory)
 
     def get_source_dists(self, pip_arguments, max_retries=10):
         """
