@@ -7,8 +7,8 @@ Supported options:
                      requirements.txt file (as accepted by pip)
   -r, --recall=FILE  recall the Debian package names of previously converted
                      packages based on a requirements.txt file
-  -h, --help         show this message and exit
   -d, --no-deps      Do not follow dependencies.
+  -h, --help         show this message and exit
 """
 
 import shutil
@@ -25,8 +25,8 @@ def main():
     requirements = ''
 
     # Parse the command line options.
-    options, arguments = getopt.getopt(sys.argv[1:], 'b:r:hd',
-            ['build=', 'recall=', 'help', 'no-deps'])
+    options, arguments = getopt.getopt(sys.argv[1:], 'b:r:dh',
+            ['build=', 'recall=', 'no-deps', 'help'])
 
     # Print usage if no options are given.
     if not options:
@@ -56,11 +56,13 @@ def main():
 
     converter = Converter(requirements, follow_dependencies)
 
-    if action == 'build':        
+    if action == 'build':
+
         converter.convert()
 
         # Cleanup after ourselves.
         shutil.rmtree(converter.builddir)
+
     elif action == 'recall':
         print converter.recall_dependencies()
 
