@@ -167,7 +167,7 @@ class Converter:
                   stdout=PIPE, stderr=STDOUT)
         stddata = p.communicate()
 
-        if p.returncode > 0:
+        if p.returncode != 0:
             print stddata[0]
             raise Exception('Failed to debianize %s' % (package.name,))
 
@@ -258,7 +258,7 @@ class Converter:
     def _install_build_dep(self, *packages):
         p = Popen(['sudo', 'apt-get', 'install', '-y'] + list(packages))
         p.wait()
-        if p.returncode > 0:
+        if p.returncode != 0:
             raise Exception('Failed to install build dependencies: %s' % (packages,))
 
     def build(self, package):
@@ -270,7 +270,7 @@ class Converter:
         p = Popen(['dpkg-buildpackage', '-us', '-uc'])
         p.wait()
 
-        if p.returncode > 0:
+        if p.returncode != 0:
             raise Exception('Failed to build %s' % (package.plname,))
 
         topdir = os.path.dirname(package.directory)
