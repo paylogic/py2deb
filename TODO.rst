@@ -13,3 +13,4 @@ To-do list for the Python to Debian converter
   * Remove fabric-paramiko patch.
 
 - Use sanity_check_dependencies() from pip_accel.deps.
+- ? Make custom exceptions
