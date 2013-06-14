@@ -19,7 +19,7 @@ from debian.deb822 import Deb822
 from debian.debfile import DebFile
 
 # Internal modules.
-from py2deb.config import config_dir, PKG_REPO, DEPENDENCY_STORE
+from py2deb.config import PKG_REPO, DEPENDENCY_STORE
 from py2deb.util.package import PythonRequirement, DebianRequirement, Package
 from py2deb.util import compact
 
