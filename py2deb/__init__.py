@@ -24,14 +24,18 @@ def main():
     # Command line option defaults
     config_file = os.path.join(config_dir, 'control.ini')
     print_dependencies = False
-    verbosity = 0
+    verbose = False
     auto_install = False
 
     # Parse command line options
     options, pip_args = getopt.gnu_getopt(sys.argv[1:], 'c:pvyh',
             ['config=', 'print-deps', 'verbose', 'yes', 'help'])
 
-    # Map the command line options to variables and validate the arguments.
+    if not pip_args:
+        usage()
+        return
+
+    # Validate the command line options and map them to variables
     for option, value in options:
         if option in ('-c', '--config'):
             config_file = os.path.abspath(value)
@@ -39,7 +43,7 @@ def main():
         elif option in ('-p', '--print-deps'):
             print_dependencies = True
         elif option in ('-v', '--verbose'):
-            verbosity += 1
+            verbose = True
         elif option in ('-y', '--yes'):
             auto_install = True
         elif option in ('-h', '--help'):
