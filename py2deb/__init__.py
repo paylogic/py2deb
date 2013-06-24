@@ -12,17 +12,20 @@ Supported options:
   -h, --help         show this message and exit
 """
 
+# Standard library modules
+import getopt
+import logging
+import os
 import shutil
 import sys
-import os
-import getopt
 
-from py2deb.util.converter import Converter
-from py2deb.config import config_dir
+# Internal modules
+from py2deb.converter import convert
+from py2deb.logger import logger
 
 def main():
     # Command line option defaults
-    config_file = os.path.join(config_dir, 'control.ini')
+    config_file = None
     print_dependencies = False
     verbose = False
     auto_install = False
@@ -52,17 +55,15 @@ def main():
         else:
             assert False, "Unrecognized option: %s" % option
 
-    converter = Converter(requirements, follow_dependencies)
+    if verbose:
+        logger.setLevel(logging.DEBUG)
 
-    if action == 'build':
+    # Start converting
+    converted = convert(pip_args, config_file=config_file, auto_install=auto_install,
+                        verbose=verbose, cleanup=False)
 
-        converter.convert()
-
-        # Cleanup after ourselves.
-        shutil.rmtree(converter.builddir)
-
-    elif action == 'recall':
-        print converter.recall_dependencies()
+    if print_dependencies:
+        print ', '.join(converted)
 
 def usage():
     print __doc__.strip()
