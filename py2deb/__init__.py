@@ -60,7 +60,7 @@ def main():
 
     # Start converting
     converted = convert(pip_args, config_file=config_file, auto_install=auto_install,
-                        verbose=verbose, cleanup=False)
+                        verbose=verbose, cleanup=True)
 
     if print_dependencies:
         print ', '.join(converted)
