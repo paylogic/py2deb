@@ -207,7 +207,7 @@ def control_patch_cfg(package, config):
         items = dict(config.items(package.name))
 
     # Remove fields supported by Py2Deb but not by debian
-    for to_remove in ('script'):
+    for to_remove in ('script',):
         items.pop(to_remove, None)
 
     return Deb822(items)
