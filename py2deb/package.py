@@ -80,5 +80,14 @@ class Package:
                     dependencies.append(name)
                 else:
                     for constraint, version in req.specs:
-                        dependencies.append('%s (%s %s)' % (name, constraint, version))
+                        if constraint == '<':
+                            dependencies.append('%s (%s %s)' % (name, '<<', version))
+                        elif constraint == '>':
+                            dependencies.append('%s (%s %s)' % (name, '>>', version))
+                        elif constraint == '!=':
+                            dependencies.append('%s (%s %s) | %s (%s %s)' %
+                                (name, '<<', version, name, '>>', version))
+                        else:
+                            dependencies.append('%s (%s %s)' % (name, constraint, version))
+
         return dependencies
