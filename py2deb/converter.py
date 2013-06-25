@@ -56,7 +56,7 @@ def convert(pip_args, auto_install=False, verbose=False, config_file=None, clean
             patch_rules(package)
             patch_control(package, replacements, config)
             apply_script(package, config, verbose)
-            sanity_check_dependencies(package, auto_install)
+            #sanity_check_dependencies(package, auto_install)
             debfile = build(package, repository, verbose)
             logger.info('%s has been converted to %s', package.name, package.debian_name)
         converted.append('%(Package)s (=%(Version)s)' % debfile.debcontrol())
