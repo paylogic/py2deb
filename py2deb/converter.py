@@ -56,7 +56,7 @@ def convert(pip_args, auto_install=False, verbose=False, config_file=None, clean
             patch_rules(package)
             patch_control(package, replacements, config)
             apply_script(package, config, verbose)
-            #sanity_check_dependencies(package, auto_install)
+            pip_accel.deps.sanity_check_dependencies(package.name, auto_install)
             debfile = build(package, repository, verbose)
             logger.info('%s has been converted to %s', package.name, package.debian_name)
         converted.append('%(Package)s (=%(Version)s)' % debfile.debcontrol())
@@ -227,12 +227,6 @@ def apply_script(package, config, verbose):
             raise Exception, 'Failed to apply script on %s' % package.name
 
         logger.info('The script has been applied.')
-
-def sanity_check_dependencies(package, auto_install):
-    logger.debug('Performing a sanity check on %s', package.name)
-    result = pip_accel.deps.sanity_check_dependencies(package.name)
-    assert result, 'Failed sanity check on %s' % package.name
-    logger.debug('Sanity check completed')
 
 def build(package, repository, verbose):
     """
