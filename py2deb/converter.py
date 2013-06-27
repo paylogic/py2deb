@@ -107,7 +107,7 @@ def get_required_packages(pip_args, prefix, replacements):
         if pkg_name not in to_ignore:
             yield package
         else:
-            logger.info('%s is in the ignore list and will not be build.', pkg_name)
+            logger.warn('%s is in the ignore list and will not be build.', pkg_name)
 
 def get_related_packages(pkg_name, packages):
     """
@@ -142,21 +142,21 @@ def debianize(package, verbose):
     """
     Debianize a python package using stdeb.
     """
-    logger.info('Debianizing %s', package.name)
+    logger.debug('Debianizing %s', package.name)
     python = os.path.join(sys.prefix, 'bin', 'python')
     command = ' '.join([python, 'setup.py', '--command-packages=stdeb.command',
                         'debianize', '--ignore-install-requires'])
     if run(command, package.directory, verbose):
         raise Exception, 'Failed to debianize %s' % package.name
 
-    logger.info('Debianized %s', package.name)
+    logger.debug('Debianized %s', package.name)
 
 def patch_rules(package):
     """
     Patch rules file to prevent dh_python2 to guess dependencies.
     This only has effect if the 0.6.0+git release of stdeb is used.
     """
-    logger.info('Patching rules file of %s', package.name)
+    logger.debug('Patching rules file of %s', package.name)
     patch = '\noverride_dh_python2:\n\tdh_python2 --no-guessing-deps\n'
     rules_file = os.path.join(package.directory, 'debian', 'rules')
 
@@ -172,13 +172,13 @@ def patch_rules(package):
 
     with open(rules_file, 'w+') as rules:
         rules.writelines(lines)
-    logger.info('The rules file of %s has been patched', package.name)
+    logger.debug('The rules file of %s has been patched', package.name)
 
 def patch_control(package, replacements, config):
     """
     Patch control file to add dependencies.
     """
-    logger.info('Patching control file of %s', package.name)
+    logger.debug('Patching control file of %s', package.name)
     control_file = os.path.join(package.directory, 'debian', 'control')
 
     with open(control_file, 'r') as control:
@@ -201,7 +201,7 @@ def patch_control(package, replacements, config):
         paragraphs[0].dump(control)
         control.write('\n')
         paragraphs[1].dump(control)
-    logger.info('The control file of %s has been patched', package.name)
+    logger.debug('The control file of %s has been patched', package.name)
 
 def control_patch_pkg(package, replacements):
     """
@@ -234,13 +234,13 @@ def apply_script(package, config, verbose):
     """
     if config.has_option(package.name, 'script'):
         command = config.get(package.name, 'script')
-        logger.info('Applying the following script on %s in %s: %s',
+        logger.debug('Applying the following script on %s in %s: %s',
                      package.name, package.directory, command)
 
         if run(command, package.directory, verbose):
             raise Exception, 'Failed to apply script on %s' % package.name
 
-        logger.info('The script has been applied.')
+        logger.debug('The script has been applied.')
 
 def build(package, repository, verbose):
     """

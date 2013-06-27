@@ -6,4 +6,4 @@ import coloredlogs
 
 logger = logging.getLogger('py2deb')
 logger.setLevel(logging.INFO)
-logger.addHandler(coloredlogs.ColoredStreamHandler())
+logger.addHandler(coloredlogs.ColoredStreamHandler(show_name=True))
