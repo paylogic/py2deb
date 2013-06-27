@@ -31,7 +31,7 @@ class RedirectSTDOUT:
         sys.stdout = self.stdout
 
 
-def convert(pip_args, auto_install=False, verbose=False, config_file=None, cleanup=True):
+def convert(pip_args, config_file=None, repo_dir=None, auto_install=False, verbose=False, cleanup=True):
     """
     Creates debian packages by converting python packages gained through pip-accel.
     """
@@ -48,8 +48,9 @@ def convert(pip_args, auto_install=False, verbose=False, config_file=None, clean
 
     # Prefix
     prefix = config.get('general', 'prefix')
-    # Destination of built packages
-    repository = os.path.abspath(config.get('general', 'repository'))
+    # Destination of built packages.
+    if not repo_dir:
+        repo_dir = os.path.abspath(config.get('general', 'repository'))
     # Replacements
     replacements = dict(config.items('replacements'))
     # Tell pip to extract into the build directory
@@ -57,10 +58,10 @@ def convert(pip_args, auto_install=False, verbose=False, config_file=None, clean
 
     converted = []
     for package in get_required_packages(pip_args, prefix, replacements):
-        result = find_build(package, repository)
+        result = find_build(package, repo_dir)
         if result:
             logger.info('%s has been found in %s, skipping build.',
-                         package.debian_name, repository)
+                         package.debian_name, repo_dir)
             debfile = DebFile(result[-1])
         else:
             logger.info('Starting conversion of %s', package.name)
@@ -69,7 +70,7 @@ def convert(pip_args, auto_install=False, verbose=False, config_file=None, clean
             patch_control(package, replacements, config)
             apply_script(package, config, verbose)
             pip_accel.deps.sanity_check_dependencies(package.name, auto_install)
-            debfile = build(package, repository, verbose)
+            debfile = build(package, repo_dir, verbose)
             logger.info('%s has been converted to %s', package.name, package.debian_name)
         converted.append('%(Package)s (=%(Version)s)' % debfile.debcontrol())
 
