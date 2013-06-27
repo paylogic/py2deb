@@ -19,6 +19,18 @@ from py2deb.logger import logger
 from py2deb.package import Package
 from py2deb.util import run
 
+class RedirectSTDOUT:
+    def __init__(self, target):
+        self.target = target
+        self.stdout = sys.stdout
+
+    def __enter__(self):
+        sys.stdout = self.target
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        sys.stdout = self.stdout
+
+
 def convert(pip_args, auto_install=False, verbose=False, config_file=None, cleanup=True):
     """
     Creates debian packages by converting python packages gained through pip-accel.
@@ -112,17 +124,18 @@ def get_source_dists(pip_arguments, max_retries=10):
     Download and unpack the source distributions for all dependencies
     specified in the pip command line arguments.
     """
-    pip_accel.initialize_directories()
-    logger.debug('Passing the follow arguments to pip-accel: %s', ' '.join(pip_arguments))
-    for i in xrange(max_retries):
-        logger.debug('Attempt %i/%i of getting source distributions through pip-accel.', 
-                     i+1, max_retries)
-        try:
-            return pip_accel.unpack_source_dists(pip_arguments)
-        except pip.exceptions.DistributionNotFound:
-            pip_accel.download_source_dists(pip_arguments)
-    else:
-        raise Exception, 'pip-accel failed to get the source distributions %i times.' % max_retries
+    with RedirectSTDOUT(sys.stderr):
+        pip_accel.initialize_directories()
+        logger.debug('Passing the follow arguments to pip-accel: %s', ' '.join(pip_arguments))
+        for i in xrange(max_retries):
+            logger.debug('Attempt %i/%i of getting source distributions through pip-accel.', 
+                         i+1, max_retries)
+            try:
+                return pip_accel.unpack_source_dists(pip_arguments)
+            except pip.exceptions.DistributionNotFound:
+                pip_accel.download_source_dists(pip_arguments)
+        else:
+            raise Exception, 'pip-accel failed to get the source dists %i times.' % max_retries
 
 def debianize(package, verbose):
     """
