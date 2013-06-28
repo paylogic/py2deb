@@ -45,7 +45,7 @@ def transform_package_name(name, prefix, sep='-'):
 def run(command, wd=None, verbose=False):
     with Workin(wd):
         if verbose:
-            exitcode = os.system(command)
+            exitcode = os.system(command + ' 1>&2')
         else:
             handle = os.popen(command + ' 2>&1')
             output = handle.read()
