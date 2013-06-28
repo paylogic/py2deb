@@ -18,7 +18,7 @@ However, for internal use, we found several limitations:
 - (Automatic) installation of build-dependencies
 - Adding prefixes to the package names (To prevent conflicts with existing packages in the official repositories)
 - Building/converting in batches
-- Being able to choose dependencies (self-build packages or, for example, ubuntu packages)
+- Being able to choose dependencies
 
 By combining our own requirements with pip-accel and stdeb, Py2Deb was born.
 
@@ -28,7 +28,24 @@ Download the source and run (as root): ``python setup.py install``
 
 How does it work?
 -----------------
---
+Py2Deb accepts the following commands:
+
+Usage: pl-py2deb [OPTIONS] -- PIP_ACCEL_ARGS [PIP_ACCEL_OPTIONS]
+
+Supported options:
+
+-c, --config=FILE  override the default configuration file
+-p, --print-deps   prints a valid value for the `Depends` line of a
+                   debian control file with the package names and
+                   pinned versions of all built pacakges
+-v, --verbose      more output
+-y, --yes          automatically confirm installation of system-wide dependencies
+-h, --help         show this message and exit
+
+For example, if you would run ``pip-accel coloredlogs -r other_packages.txt`` to install several packages, you can do
+``py2deb coloredlogs -r other_packages.txt`` to convert those same packages to debian packages.
+
+For the steps it takes to generate debian packages you can read the source code and/or look at ``workflow/workflow.png``
 
 Nice to know
 ------------
