@@ -73,8 +73,7 @@ def main():
                         config_file=config_file,
                         repo_dir=repo_dir,
                         auto_install=auto_install,
-                        verbose=verbose,
-                        cleanup=True)
+                        verbose=verbose)
 
     if print_dependencies:
         print ', '.join(converted)
