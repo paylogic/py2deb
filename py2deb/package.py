@@ -1,6 +1,20 @@
+# From http://www.debian.org/doc/debian-policy/ch-relationships.html#s-virtual:
+#
+#   If a relationship field has a version number attached, only real packages
+#   will be considered to see whether the relationship is satisfied (or the
+#   prohibition violated, for a conflict or breakage). In other words, if a
+#   version number is specified, this is a request to ignore all Provides for
+#   that package name and consider only real packages. The package manager will
+#   assume that a package providing that virtual package is not of the "right"
+#   version. A Provides field may not contain version numbers, and the version
+#   number of the concrete package which provides a particular virtual package
+#   will not be considered when considering a dependency on or conflict with
+#   the virtual package name.
+
 # Standard library modules.
 import glob
 import os
+import logging
 
 # External dependencies.
 import pkg_resources
@@ -8,78 +22,103 @@ import pkg_resources
 # Internal modules.
 from py2deb.util import transform_package_name
 
+# Initialize the logger.
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.DEBUG)
+
 class Package:
+
     """
-    Wrapper for python packages that will get converted to debian packages.
+    Wrapper for Python packages that will be converted to Debian packages.
     """
-    def __init__(self, name, version, directory, prefix='python'):
+
+    def __init__(self, name, version, directory, virtual_prefix, custom_prefix):
         self.name = name.lower()
         self.version = version
         self.directory = os.path.abspath(directory)
-        self.prefix = prefix
-        
-        # Init list of python requirements
-        self.py_requirements = self._py_requirements() or []
+        self.virtual_prefix = virtual_prefix
+        self.custom_prefix = custom_prefix
+        self.py_requirements = self.python_requirements or []
 
-    def _py_requirements(self):
+    def __repr__(self):
         """
-        Returns a list of pkg_resources.Requirement objects
+        Return a textual representation of the Package object.
         """
-        # requires.txt contains the python requirements/dependencies
+        return "Package(name=%r, version=%r)" % (self.name, self.version)
+
+    @property
+    def python_requirements(self):
+        """
+        Returns a list of :py:class:`pkg_resources.Requirement` objects.
+        """
+        requirements = []
+        # requires.txt contains the Python package requirements/dependencies.
         pattern = os.path.join(self.directory, 'pip-egg-info/*.egg-info/requires.txt')
-        matches = glob.glob(pattern)
-        if len(matches) == 1:
-            with open(matches[0]) as r:
-                lines = r.readlines()
-                return list(self._parse_requires(lines))
-                    
-    def _parse_requires(self, lines):
+        for filename in glob.glob(pattern):
+            with open(filename) as handle:
+                for line in handle:
+                    line = line.strip()
+                    if line and not line.isspace():
+                        # Stop at extra requirements (optional dependencies).
+                        if line.startswith('['):
+                            break
+                        requirements.append(pkg_resources.Requirement.parse(line))
+        logger.debug("Python requirements of %s (%s): %r", self.name, self.version, requirements)
+        return requirements
+
+    @property
+    def release(self):
         """
-        Parses a list of strings (usually from requires.txt)
-        to generate pkg_resources.Requirement objects.
+        The version number and release number, separated by a dash.
         """
-        for line in lines:
-            # Skip empty lines
-            if not line.strip():
-                continue
-            # Stop at extra requirements (optional dependencies)
-            if line.startswith('['):
-                break
-            yield pkg_resources.Requirement.parse(line)
+        return "%s-1" % self.version
 
     @property
     def debian_name(self):
         """
-        Valid debian package name.
+        The name of the Debian package corresponding to the Python package.
         """
-        return transform_package_name(self.name, self.prefix)
+        return transform_package_name(self.custom_prefix, self.name)
 
     @property
     def debian_file_pattern(self):
         """
-        Valid debian package name.
+        Filename pattern to find Debian package archives for the Python package.
         """
-        return '%s_%s-1_*.deb' % (self.debian_name, self.version)
+        return '%s_%s_*.deb' % (self.debian_name, self.release)
 
     @property
     def py_dependencies(self):
-        return [req.key for req in self.py_requirements]
+        """
+        List of required Python packages.
+        """
+        return [req.key for req in self.python_requirements]
 
     def debian_dependencies(self, replacements):
         """
-        Returns a valid debian "Depends" string containing
-        all dependencies of this python package.
+        List with required Debian packages of this Python package in the
+        format of the ``Depends:`` line as used in Debian package ``control``
+        files.
         """
         dependencies = []
-        for req in self.py_requirements:
+        for req in self.python_requirements:
             if req.key in replacements:
                 dependencies.append(replacements.get(req.key))
             else:
-                name = transform_package_name(req.key, self.prefix)
+                name = transform_package_name(self.virtual_prefix, req.key)
                 if not req.specs:
                     dependencies.append(name)
                 else:
                     for constraint, version in req.specs:
+                        # XXX Debian package version numbers usually contain
+                        # two parts separated by a dash: The upstream version
+                        # and the version of the Debian package. According to
+                        # the Debian packaging documentation you can leave out
+                        # the second part (the Debian package version) and
+                        # "Depends:" entries should still match, except they
+                        # don't! That's why we manually add the second part.
+                        if 'ubuntu' not in version:
+                            version += '-1'
                         if constraint == '<':
                             dependencies.append('%s (%s %s)' % (name, '<<', version))
                         elif constraint == '>':
@@ -87,7 +126,9 @@ class Package:
                         elif constraint == '!=':
                             dependencies.append('%s (%s %s) | %s (%s %s)' %
                                 (name, '<<', version, name, '>>', version))
+                        elif constraint == '==':
+                            dependencies.append('%s (%s %s)' % (name, '=', version))
                         else:
                             dependencies.append('%s (%s %s)' % (name, constraint, version))
-
+        logger.debug("Debian requirements of %s (%s): %r", self.debian_name, self.version, dependencies)
         return dependencies

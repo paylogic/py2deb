@@ -3,7 +3,8 @@ import logging
 
 # External dependency.
 import coloredlogs
+coloredlogs.install()
 
+# Initialize a logger for use by py2deb.
 logger = logging.getLogger('py2deb')
-logger.setLevel(logging.INFO)
-logger.addHandler(coloredlogs.ColoredStreamHandler(show_name=True))
+logger.setLevel(logging.DEBUG)

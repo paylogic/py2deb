@@ -1,23 +1,29 @@
-# Standard library modules
+# Standard library modules.
 import fnmatch
 import glob
 import os
+import pipes
 import shutil
 import sys
 import tempfile
-from ConfigParser import ConfigParser
 
 # External dependencies
 import pip_accel
 import pip.exceptions
 from debian.deb822 import Deb822
 from debian.debfile import DebFile
+from deb_pkg_tools import merge_control_fields
 
 # Internal modules
-from py2deb.config import config_dir
 from py2deb.logger import logger
 from py2deb.package import Package
-from py2deb.util import run
+from py2deb.util import run, transform_package_name
+
+# Old style of ignoring dependencies on Python packages.
+IGNORE_INSTALL_REQUIRES = True
+
+# New style of ignoring dependencies on Python packages.
+NO_GUESSING_DEPS = True
 
 class RedirectOutput:
 
@@ -38,31 +44,26 @@ class RedirectOutput:
     def __exit__(self, exc_type, exc_value, traceback):
         sys.stdout = self.stdout
 
-
-def convert(pip_args, config_file=None, repo_dir=None, auto_install=False, verbose=False):
+def convert(pip_args, config, auto_install=False, verbose=False):
     """
     Convert Python packages downloaded using pip-accel to Debian packages.
     """
     # Initialize the build directory.
     build_dir = tempfile.mkdtemp(prefix='py2deb_')
     logger.debug('Created build directory: %s', build_dir)
-    # Initialize the configuration.
-    config = ConfigParser()
-    if config_file:
-        config.read(os.path.abspath(config_file))
-    else:
-        config.read(os.path.join(config_dir, 'py2deb.ini'))
-    # Get the prefix for package names.
-    prefix = config.get('general', 'prefix')
-    # Set the destination of built packages.
-    if not repo_dir:
-        repo_dir = os.path.abspath(config.get('general', 'repository'))
     # Find package replacements.
     replacements = dict(config.items('replacements'))
     # Tell pip to extract into the build directory
     pip_args.extend(['-b', build_dir])
+    # Generate list of requirements.
+    requirements = get_required_packages(pip_args,
+                                         virtual_prefix=config.get('general', 'virtual-prefix'),
+                                         custom_prefix=config.get('general', 'custom-prefix'),
+                                         replacements=replacements)
+    logger.debug("Required packages: %r", requirements)
     converted = []
-    for package in get_required_packages(pip_args, prefix, replacements):
+    repo_dir = os.path.abspath(config.get('general', 'repository'))
+    for package in requirements:
         result = find_build(package, repo_dir)
         if result:
             logger.info('%s has been found in %s, skipping build.',
@@ -89,7 +90,7 @@ def find_build(package, repository):
     """
     return glob.glob(os.path.join(repository, package.debian_file_pattern))
 
-def get_required_packages(pip_args, prefix, replacements):
+def get_required_packages(pip_args, virtual_prefix, custom_prefix, replacements):
     """
     Find the packages that have to be converted to Debian packages (excludes
     packages that have replacements).
@@ -98,7 +99,7 @@ def get_required_packages(pip_args, prefix, replacements):
     # Create a dictionary of packages downloaded by pip-accel.
     packages = {}
     for name, version, directory in get_source_dists(pip_arguments):
-        package = Package(name, version, directory, prefix)
+        package = Package(name, version, directory, virtual_prefix, custom_prefix)
         packages[package.name] = package
     # Create a list of packages to ignore.
     to_ignore = []
@@ -106,11 +107,13 @@ def get_required_packages(pip_args, prefix, replacements):
         if pkg_name in replacements:
             to_ignore.extend(get_related_packages(pkg_name, packages))
     # Yield packages that should be build.
+    to_build = []
     for pkg_name, package in packages.iteritems():
         if pkg_name not in to_ignore:
-            yield package
+            to_build.append(package)
         else:
             logger.warn('%s is in the ignore list and will not be build.', pkg_name)
+    return to_build
 
 def get_related_packages(pkg_name, packages):
     """
@@ -147,10 +150,11 @@ def debianize(package, verbose):
     """
     logger.debug('Debianizing %s', package.name)
     python = os.path.join(sys.prefix, 'bin', 'python')
-    command = ' '.join([python, 'setup.py', '--command-packages=stdeb.command',
-                        'debianize', '--ignore-install-requires'])
-    if run(command, package.directory, verbose):
-        raise Exception, 'Failed to debianize %s' % package.name
+    command = [python, 'setup.py', '--command-packages=stdeb.command', 'debianize']
+    if IGNORE_INSTALL_REQUIRES:
+        command.append('--ignore-install-requires')
+    if run(' '.join(command), package.directory, verbose):
+        raise Exception, "Failed to debianize package! (%s)" % package.name
     logger.debug('Debianized %s', package.name)
 
 def patch_rules(package):
@@ -180,35 +184,23 @@ def patch_control(package, replacements, config):
     """
     logger.debug('Patching control file of %s', package.name)
     control_file = os.path.join(package.directory, 'debian', 'control')
-
-    with open(control_file, 'r') as control:
-        paragraphs = list(Deb822.iter_paragraphs(control))
+    with open(control_file, 'r') as handle:
+        paragraphs = list(Deb822.iter_paragraphs(handle))
         assert len(paragraphs) == 2, 'Unexpected control file format for %s.' % package.name
-
-    with open(control_file, 'w+') as control:
-        # This patch adds dependencies
-        control_dict_pkg = control_patch_pkg(package, replacements)
-        for field in control_dict_pkg:
-            paragraphs[1].merge_fields(field, control_dict_pkg)
-
-        # This patch adds fields defined in the config
-        control_dict_conf = control_patch_cfg(package, config)
-        for field in control_dict_conf:
-            paragraphs[1].merge_fields(field, control_dict_conf)
-
-        paragraphs[1]['Package'] = package.debian_name
-
-        paragraphs[0].dump(control)
-        control.write('\n')
-        paragraphs[1].dump(control)
+    with open(control_file, 'w') as handle:
+        virtual_prefix = config.get('general', 'virtual-prefix')
+        custom_prefix = config.get('general', 'custom-prefix')
+        # Set the package name.
+        paragraphs[1]['Package'] = transform_package_name(custom_prefix, package.name)
+        # Patch the dependencies.
+        paragraphs[1] = merge_control_fields(paragraphs[1], dict(Depends=', '.join(package.debian_dependencies(replacements))))
+        # Patch any configured fields.
+        paragraphs[1] = merge_control_fields(paragraphs[1], control_patch_cfg(package, config))
+        logger.debug("Patched control fields: %r", paragraphs[1])
+        paragraphs[0].dump(handle)
+        handle.write('\n')
+        paragraphs[1].dump(handle)
     logger.debug('The control file of %s has been patched', package.name)
-
-def control_patch_pkg(package, replacements):
-    """
-    Creates a Deb822 dictionary used to patch
-    the dependency field in a control file.
-    """
-    return Deb822(dict(Depends=', '.join(package.debian_dependencies(replacements))))
 
 def control_patch_cfg(package, config):
     """
@@ -216,15 +208,12 @@ def control_patch_cfg(package, config):
     second paragraph of a control file by using
     fields defined in a config file.
     """
-    items = {}
+    config_fields = Deb822()
     if config.has_section(package.name):
-        items = dict(config.items(package.name))
-
-    # Remove fields supported by Py2Deb but not by debian
-    for to_remove in ('script',):
-        items.pop(to_remove, None)
-
-    return Deb822(items)
+        for name, value in config.items(package.name):
+            if name != 'script':
+                config_fields[name] = value
+    return config_fields
 
 def apply_script(package, config, verbose):
     """
@@ -247,18 +236,28 @@ def build(package, repository, verbose):
     Builds the Debian package using dpkg-buildpackage.
     """
     logger.info('Building %s', package.debian_name)
-    command = 'dpkg-buildpackage -us -uc'
-    # stdeb 0.6.0+git uses dh_python2, which guesses dependencies by
-    # default. We don't want this because we override this behavior.
-    os.environ['DH_OPTIONS'] = '--no-guessing-deps'
+    # XXX Always run the `dpkg-buildpackage' command in a clean environment.
+    # Without this and `py2deb' is running in a virtual environment, the
+    # pathnames inside the generated Debian package will refer to the virtual
+    # environment instead of the system wide Python installation!
+    command = '. /etc/environment && dpkg-buildpackage -us -uc'
+    if NO_GUESSING_DEPS:
+        # XXX stdeb 0.6.0+git uses dh_python2, which guesses dependencies
+        # by default. We don't want this so we override this behavior.
+        os.environ['DH_OPTIONS'] = '--no-guessing-deps'
     if run(command, package.directory, verbose):
         raise Exception, 'Failed to build %s' % package.debian_name
-    topdir = os.path.dirname(package.directory)
-    for item in os.listdir(topdir):
-        if fnmatch.fnmatch(item, '%s_*.deb' % package.debian_name):
-            source = os.path.join(topdir, item)
-            shutil.move(source, repository)
-            logger.info('Build succeeded, moving %s to %s', item, repository)
-            return DebFile(os.path.join(repository, item))
+    logger.debug("Scanning for generated Debian packages ..")
+    parent_directory = os.path.dirname(package.directory)
+    for filename in os.listdir(parent_directory):
+        if filename.endswith('.deb'):
+            pathname = os.path.join(parent_directory, filename)
+            logger.debug("Considering file: %s", pathname)
+            if fnmatch.fnmatch(filename, '%s_*.deb' % package.debian_name):
+                logger.info('Build of %s succeeded, checking package with Lintian ..', pathname)
+                os.system('lintian %s' % pipes.quote(pathname))
+                logger.info('Moving %s to %s', pathname, repository)
+                shutil.move(pathname, repository)
+                return DebFile(os.path.join(repository, filename))
     else:
         raise Exception, 'Could not find build of %s' % package.debian_name

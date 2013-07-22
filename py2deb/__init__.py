@@ -1,13 +1,14 @@
 """
-Usage: pl-py2deb [OPTIONS] -- PIP_ARGS
+Usage: py2deb [OPTIONS] -- PIP_ARGS
 
 Supported options:
 
-  -c, --config=FILE  override the default configuration file
+  -c, --config=FILE  set the user configuration file
   -r, --repo=DIR     override the default repository directory
-  -p, --print-deps   prints a valid value for the `Depends` line of a
-                     debian control file with the package names and
-                     pinned versions of all built pacakges
+  -p, --prefix=STR   set custom package name prefix (something other than `python')
+  -P, --print-deps   prints a valid value for the `Depends` line of a Debian
+                     control file with the package names and pinned versions of
+                     all built packages
   -v, --verbose      more output
   -y, --yes          automatically confirm installation of system-wide dependencies
   -h, --help         show this message and exit
@@ -20,21 +21,22 @@ import os
 import sys
 
 # Internal modules
+from py2deb.config import load_config
 from py2deb.converter import convert
-from py2deb.logger import logger
 
 def main():
 
     # Command line option defaults
     config_file = None
     repo_dir = None
+    custom_prefix = None
     print_dependencies = False
     verbose = False
     auto_install = False
 
     # Parse command line options
-    options, pip_args = getopt.gnu_getopt(sys.argv[1:], 'c:r:pvyh',
-            ['config=', 'repo=', 'print-deps', 'verbose', 'yes', 'help'])
+    options, pip_args = getopt.gnu_getopt(sys.argv[1:], 'c:r:p:Pvyh',
+            ['config=', 'repo=', 'prefix=', 'print-deps', 'verbose', 'yes', 'help'])
 
     if not pip_args:
         usage()
@@ -52,7 +54,9 @@ def main():
             if not os.path.isdir(repo_dir):
                 msg = "Repository directory doesn't exist! (%s)"
                 raise Exception, msg % repo_dir
-        elif option in ('-p', '--print-deps'):
+        elif option in ('-p', '--prefix'):
+            custom_prefix = value
+        elif option in ('-P', '--print-deps'):
             print_dependencies = True
         elif option in ('-v', '--verbose'):
             verbose = True
@@ -65,13 +69,20 @@ def main():
             msg = "Unrecognized option: %s"
             raise Exception, msg % option
 
+    # Configure the logging level.
     if verbose:
-        logger.setLevel(logging.DEBUG)
+        logging.getLogger().setLevel(logging.DEBUG)
+
+    # Initialize the configuration.
+    config = load_config(filename=config_file)
+    if repo_dir:
+        config.set('general', 'repository', repo_dir)
+    if custom_prefix:
+        config.set('general', 'custom-prefix', custom_prefix)
 
     # Start the conversion.
     converted = convert(pip_args,
-                        config_file=config_file,
-                        repo_dir=repo_dir,
+                        config=config,
                         auto_install=auto_install,
                         verbose=verbose)
 

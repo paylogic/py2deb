@@ -30,7 +30,7 @@ How does it work?
 -----------------
 Py2Deb accepts the following commands:
 
-Usage: pl-py2deb [OPTIONS] -- PIP_ACCEL_ARGS [PIP_ACCEL_OPTIONS]
+Usage: py2deb [OPTIONS] -- PIP_ARGS [PIP_OPTIONS]
 
 Supported options:
 

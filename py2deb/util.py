@@ -1,8 +1,14 @@
+# Standard library modules.
+import logging
 import os
 import re
 import sys
 
+# Initialize a logger.
+logger = logging.getLogger(__name__)
+
 class Workin:
+
     def __init__(self, wd):
         self.wd = wd
         self.old_wd = None
@@ -22,27 +28,43 @@ def compact(text, **kw):
     """
     return ' '.join(text.split()).format(**kw)
 
-def transform_package_name(name, prefix, sep='-'):
-    '''
+previously_transformed_names = {}
+
+def transform_package_name(*words):
+    """
     Transforms the name of a Python package as found on PyPi into the name that
     we want it to have as a Debian package using a prefix and a seperator.
-    '''
-    # Make sure it's lower case
-    name = name.lower()
-    # Make sure that the only non-alphanumeric
-    # character is the seperator
-    name = re.sub('[^a-z0-9]+', sep, name)
-    prefix = re.sub('[^a-z0-9]+', sep, prefix)
-    # Make sure the prefix isn't surrounded by the seperator.
-    prefix = prefix.strip(sep)
-    # Make sure the name isn't surrounded by the seperator.
-    name = name.strip(sep)
-    # Prevent double words in the prefix
-    prefix_pattern = '^%s%s' % (prefix.rpartition(sep)[2], sep)
-    name = re.sub(prefix_pattern, '', name)
-    return prefix + sep + name
+    """
+    if words not in previously_transformed_names:
+        # Transform ('python', 'python-debian') into ('python', 'python', 'debian').
+        normalized_words = '-'.join(w.lower() for w in words).split('-')
+        logger.debug("Transforming package name, step 1: Split words (%r)", normalized_words)
+        # Remove repeating words.
+        deduplicated_words = list(normalized_words)
+        i = 0
+        while i < len(deduplicated_words):
+            if i + 1 < len(deduplicated_words) and deduplicated_words[i] == deduplicated_words[i + 1]:
+                deduplicated_words.pop(i)
+            else:
+                i += 1
+        logger.debug("Transforming package name, step 2: Removed redundant words (%r)", deduplicated_words)
+        # Make sure that the only non-alphanumeric character is the dash.
+        name = re.sub('[^a-z0-9]+', '-', ' '.join(deduplicated_words)).strip('-')
+        logger.debug("Transforming package name, step 3: Normalizing special characters (%r)", name)
+        previously_transformed_names[words] = name
+    return previously_transformed_names[words]
 
 def run(command, wd=None, verbose=False):
+    """
+    Advanced version of :py:func:`os.system()` that can change the working
+    directory and silence external commands (if the command ends with a nonzero
+    exit code the output will be shown anyway).
+
+    :param command: The shell command line to execute (a string).
+    :param wd: The working directory for the command (a string, optional).
+    :param verbose: ``True`` if the output of the command should be shown,
+                    ``False`` if the output should be hidden (the default).
+    """
     with Workin(wd):
         if verbose:
             exitcode = os.system(command + ' 1>&2')

@@ -1,11 +1,30 @@
+# Standard library modules.
+import ConfigParser
 import os
+import logging
 
-# The absolute path of the directory containing the configuration file `control.ini`.
-config_dir = os.path.dirname(os.path.abspath(__file__))
+# External dependencies.
+from humanfriendly import format_path
 
-# The absolute path of the directory where Debianized dependency names +
-# versions are persisted.
-if os.getuid() == 0:
-    DEPENDENCY_STORE = '/var/lib/pl-py2deb/dependencies'
-else:
-    DEPENDENCY_STORE = '/tmp/pl-py2deb/dependencies'
+# Initialize the logger.
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.DEBUG)
+
+def load_config(filename=None):
+    """
+    Load the py2deb configuration file.
+
+    param filename: Filename of user configuration file (a string, optional).
+    :returns: A :py:class:`ConfigParser.RawConfigParser` object.
+    """
+    config = ConfigParser.RawConfigParser()
+    # Load the configuration bundled with py2deb.
+    directory = os.path.dirname(os.path.abspath(__file__))
+    bundled = os.path.join(directory, 'py2deb.ini')
+    logger.debug("Loading bundled configuration: %s", format_path(bundled))
+    config.read(bundled)
+    # Load the configuration provided by the user?
+    if filename:
+        logger.debug("Loading user configuration: %s", format_path(filename))
+        config.read(filename)
+    return config
