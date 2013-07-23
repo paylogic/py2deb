@@ -1,7 +1,9 @@
 To-do list for the Python to Debian converter
 =============================================
 
-``None``
+- Automated tests!
+- Decide whether to abandon custom+virtual prefixes; do it.
+- Try to get rid of the Debian version suffix in dependencies?!
 
 Ideas
 -----

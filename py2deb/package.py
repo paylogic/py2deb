@@ -32,12 +32,11 @@ class Package:
     Wrapper for Python packages that will be converted to Debian packages.
     """
 
-    def __init__(self, name, version, directory, virtual_prefix, custom_prefix):
+    def __init__(self, name, version, directory, name_prefix):
         self.name = name.lower()
         self.version = version
         self.directory = os.path.abspath(directory)
-        self.virtual_prefix = virtual_prefix
-        self.custom_prefix = custom_prefix
+        self.name_prefix = name_prefix
         self.py_requirements = self.python_requirements or []
 
     def __repr__(self):
@@ -78,7 +77,7 @@ class Package:
         """
         The name of the Debian package corresponding to the Python package.
         """
-        return transform_package_name(self.custom_prefix, self.name)
+        return transform_package_name(self.name_prefix, self.name)
 
     @property
     def debian_file_pattern(self):
@@ -105,29 +104,20 @@ class Package:
             if req.key in replacements:
                 dependencies.append(replacements.get(req.key))
             else:
-                name = transform_package_name(self.virtual_prefix, req.key)
+                name = transform_package_name(self.name_prefix, req.key)
                 if not req.specs:
                     dependencies.append(name)
                 else:
                     for constraint, version in req.specs:
-                        # XXX Debian package version numbers usually contain
-                        # two parts separated by a dash: The upstream version
-                        # and the version of the Debian package. According to
-                        # the Debian packaging documentation you can leave out
-                        # the second part (the Debian package version) and
-                        # "Depends:" entries should still match, except they
-                        # don't! That's why we manually add the second part.
-                        if 'ubuntu' not in version:
-                            version += '-1'
                         if constraint == '<':
                             dependencies.append('%s (%s %s)' % (name, '<<', version))
                         elif constraint == '>':
                             dependencies.append('%s (%s %s)' % (name, '>>', version))
+                        elif constraint == '==':
+                            dependencies.append('%s (%s %s)' % (name, '=', version))
                         elif constraint == '!=':
                             dependencies.append('%s (%s %s) | %s (%s %s)' %
                                 (name, '<<', version, name, '>>', version))
-                        elif constraint == '==':
-                            dependencies.append('%s (%s %s)' % (name, '=', version))
                         else:
                             dependencies.append('%s (%s %s)' % (name, constraint, version))
         logger.debug("Debian requirements of %s (%s): %r", self.debian_name, self.version, dependencies)

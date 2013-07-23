@@ -77,3 +77,16 @@ def run(command, wd=None, verbose=False):
                 sys.stderr.write(output)
 
     return exitcode
+
+def is_lucid_lynx():
+    """
+    Check the contents of ``/etc/issue.net`` to determine whether we are
+    running on Ubuntu 10.04 (Lucid Lynx).
+
+    :returns: ``True`` if running on Ubuntu 10.04, ``False`` otherwise.
+    """
+    try:
+        with open('/etc/issue.net') as handle:
+            return '10.04' in handle.read()
+    except Exception:
+        return False

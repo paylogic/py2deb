@@ -5,7 +5,7 @@ Supported options:
 
   -c, --config=FILE  set the user configuration file
   -r, --repo=DIR     override the default repository directory
-  -p, --prefix=STR   set custom package name prefix (something other than `python')
+  -p, --prefix=STR   set package name prefix (defaults to `python-')
   -P, --print-deps   prints a valid value for the `Depends` line of a Debian
                      control file with the package names and pinned versions of
                      all built packages
@@ -29,7 +29,7 @@ def main():
     # Command line option defaults
     config_file = None
     repo_dir = None
-    custom_prefix = None
+    name_prefix = None
     print_dependencies = False
     verbose = False
     auto_install = False
@@ -55,7 +55,7 @@ def main():
                 msg = "Repository directory doesn't exist! (%s)"
                 raise Exception, msg % repo_dir
         elif option in ('-p', '--prefix'):
-            custom_prefix = value
+            name_prefix = value
         elif option in ('-P', '--print-deps'):
             print_dependencies = True
         elif option in ('-v', '--verbose'):
@@ -77,8 +77,8 @@ def main():
     config = load_config(filename=config_file)
     if repo_dir:
         config.set('general', 'repository', repo_dir)
-    if custom_prefix:
-        config.set('general', 'custom-prefix', custom_prefix)
+    if name_prefix:
+        config.set('general', 'name-prefix', name_prefix)
 
     # Start the conversion.
     converted = convert(pip_args,

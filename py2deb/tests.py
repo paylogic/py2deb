@@ -1,12 +1,12 @@
 # Tests for py2deb.
 #
 # Author: Peter Odding <peter@peterodding.com>
-# Last Change: July 21, 2013
+# Last Change: July 23, 2013
 
 # Standard library modules.
 import unittest
 
-# Modules included in our package.
+# Internal modules.
 from py2deb.util import transform_package_name
 
 class Py2DebTestCase(unittest.TestCase):

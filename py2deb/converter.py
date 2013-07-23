@@ -17,13 +17,16 @@ from deb_pkg_tools import merge_control_fields
 # Internal modules
 from py2deb.logger import logger
 from py2deb.package import Package
-from py2deb.util import run, transform_package_name
+from py2deb.util import is_lucid_lynx, run, transform_package_name
 
-# Old style of ignoring dependencies on Python packages.
-IGNORE_INSTALL_REQUIRES = True
-
-# New style of ignoring dependencies on Python packages.
-NO_GUESSING_DEPS = True
+if is_lucid_lynx():
+    # Old style of ignoring dependencies on Python packages.
+    IGNORE_INSTALL_REQUIRES = True
+    NO_GUESSING_DEPS = False
+else:
+    # New style of ignoring dependencies on Python packages.
+    IGNORE_INSTALL_REQUIRES = False
+    NO_GUESSING_DEPS = True
 
 class RedirectOutput:
 
@@ -57,8 +60,7 @@ def convert(pip_args, config, auto_install=False, verbose=False):
     pip_args.extend(['-b', build_dir])
     # Generate list of requirements.
     requirements = get_required_packages(pip_args,
-                                         virtual_prefix=config.get('general', 'virtual-prefix'),
-                                         custom_prefix=config.get('general', 'custom-prefix'),
+                                         name_prefix=config.get('general', 'name-prefix'),
                                          replacements=replacements)
     logger.debug("Required packages: %r", requirements)
     converted = []
@@ -72,7 +74,6 @@ def convert(pip_args, config, auto_install=False, verbose=False):
         else:
             logger.info('Starting conversion of %s', package.name)
             debianize(package, verbose)
-            #patch_rules(package)
             patch_control(package, replacements, config)
             apply_script(package, config, verbose)
             pip_accel.deps.sanity_check_dependencies(package.name, auto_install)
@@ -90,7 +91,7 @@ def find_build(package, repository):
     """
     return glob.glob(os.path.join(repository, package.debian_file_pattern))
 
-def get_required_packages(pip_args, virtual_prefix, custom_prefix, replacements):
+def get_required_packages(pip_args, name_prefix, replacements):
     """
     Find the packages that have to be converted to Debian packages (excludes
     packages that have replacements).
@@ -99,7 +100,7 @@ def get_required_packages(pip_args, virtual_prefix, custom_prefix, replacements)
     # Create a dictionary of packages downloaded by pip-accel.
     packages = {}
     for name, version, directory in get_source_dists(pip_arguments):
-        package = Package(name, version, directory, virtual_prefix, custom_prefix)
+        package = Package(name, version, directory, name_prefix)
         packages[package.name] = package
     # Create a list of packages to ignore.
     to_ignore = []
@@ -157,27 +158,6 @@ def debianize(package, verbose):
         raise Exception, "Failed to debianize package! (%s)" % package.name
     logger.debug('Debianized %s', package.name)
 
-def patch_rules(package):
-    """
-    Patch the rules file to prevent dh_python2 from guessing dependencies. This
-    only has effect if the 0.6.0+git release of stdeb is used.
-    """
-    logger.debug('Patching rules file of %s', package.name)
-    patch = '\noverride_dh_python2:\n\tdh_python2 --no-guessing-deps\n'
-    rules_file = os.path.join(package.directory, 'debian', 'rules')
-    lines = []
-    with open(rules_file, 'r') as rules:
-        lines = rules.readlines()
-        for i in range(len(lines)):
-            if '%:' in lines[i]:
-                lines.insert(i-1, patch)
-                break
-        else:
-            raise Exception, 'Failed to patch %s' % rules_file
-    with open(rules_file, 'w+') as rules:
-        rules.writelines(lines)
-    logger.debug('The rules file of %s has been patched', package.name)
-
 def patch_control(package, replacements, config):
     """
     Patch control file to add dependencies.
@@ -188,10 +168,8 @@ def patch_control(package, replacements, config):
         paragraphs = list(Deb822.iter_paragraphs(handle))
         assert len(paragraphs) == 2, 'Unexpected control file format for %s.' % package.name
     with open(control_file, 'w') as handle:
-        virtual_prefix = config.get('general', 'virtual-prefix')
-        custom_prefix = config.get('general', 'custom-prefix')
         # Set the package name.
-        paragraphs[1]['Package'] = transform_package_name(custom_prefix, package.name)
+        paragraphs[1]['Package'] = transform_package_name(config.get('general', 'name-prefix'), package.name)
         # Patch the dependencies.
         paragraphs[1] = merge_control_fields(paragraphs[1], dict(Depends=', '.join(package.debian_dependencies(replacements))))
         # Patch any configured fields.
