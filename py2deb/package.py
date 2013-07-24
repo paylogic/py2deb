@@ -99,6 +99,8 @@ class Package:
         format of the ``Depends:`` line as used in Debian package ``control``
         files.
         """
+        # Useful link:
+        # http://www.python.org/dev/peps/pep-0440/#version-specifiers
         dependencies = []
         for req in self.python_requirements:
             if req.key in replacements:
@@ -114,7 +116,7 @@ class Package:
                         elif constraint == '>':
                             dependencies.append('%s (%s %s)' % (name, '>>', version))
                         elif constraint == '==':
-                            dependencies.append('%s (%s %s)' % (name, '=', version))
+                            dependencies.append('%s (%s %s)' % (name, '=', '%s-1' % version))
                         elif constraint == '!=':
                             dependencies.append('%s (%s %s) | %s (%s %s)' %
                                 (name, '<<', version, name, '>>', version))
