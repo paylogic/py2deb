@@ -6,6 +6,7 @@ import pipes
 import shutil
 import sys
 import tempfile
+import time
 
 # External dependencies
 import pip_accel
@@ -160,21 +161,31 @@ def debianize(package, verbose):
 
 def patch_control(package, replacements, config):
     """
-    Patch control file to add dependencies.
+    Patch the control file of a 'Debianized' Python package (see
+    :py:func:`debianize()`) to modify the package metadata and inject the
+    Python package's dependencies as Debian package dependencies.
     """
     logger.debug('Patching control file of %s', package.name)
     control_file = os.path.join(package.directory, 'debian', 'control')
     with open(control_file, 'r') as handle:
         paragraphs = list(Deb822.iter_paragraphs(handle))
+        logger.debug("Original control fields: %r", paragraphs[1])
         assert len(paragraphs) == 2, 'Unexpected control file format for %s.' % package.name
     with open(control_file, 'w') as handle:
-        # Set the package name.
-        paragraphs[1]['Package'] = transform_package_name(config.get('general', 'name-prefix'), package.name)
-        # Patch the dependencies.
-        paragraphs[1] = merge_control_fields(paragraphs[1], dict(Depends=', '.join(package.debian_dependencies(replacements))))
-        # Patch any configured fields.
+        # Patch the metadata and dependencies:
+        #  - Make sure the package name uses our prefix.
+        #  - Make sure the word py2deb occurs in the package description. This
+        #    makes `apt-cache search py2deb' report packages created by py2deb.
+        overrides = dict(Package=transform_package_name(config.get('general', 'name-prefix'), package.name),
+                         Description=time.strftime('Packaged by py2deb on %B %e, %Y at %H:%M'),
+                         Depends=', '.join(package.debian_dependencies(replacements)))
+        paragraphs[1] = merge_control_fields(paragraphs[1], overrides)
+        logger.debug("Patched control fields (phase 1/2): %r", paragraphs[1])
+        # Patch any fields for which overrides are present in the configuration
+        # file bundled with py2deb or provided by the user.
         paragraphs[1] = merge_control_fields(paragraphs[1], control_patch_cfg(package, config))
-        logger.debug("Patched control fields: %r", paragraphs[1])
+        logger.debug("Patched control fields (phase 2/2): %r", paragraphs[1])
+        # Save the patched control file.
         paragraphs[0].dump(handle)
         handle.write('\n')
         paragraphs[1].dump(handle)
@@ -182,16 +193,15 @@ def patch_control(package, replacements, config):
 
 def control_patch_cfg(package, config):
     """
-    Creates a Deb822 dictionary used to patch the
-    second paragraph of a control file by using
-    fields defined in a config file.
+    Get a dictionary with control file fields for which overrides are present
+    in the configuration file bundled with py2deb or provided by the user.
     """
-    config_fields = Deb822()
+    overrides = {}
     if config.has_section(package.name):
         for name, value in config.items(package.name):
             if name != 'script':
-                config_fields[name] = value
-    return config_fields
+                overrides[name] = value
+    return overrides
 
 def apply_script(package, config, verbose):
     """
