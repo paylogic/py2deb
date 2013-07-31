@@ -229,6 +229,8 @@ def build(package, repository, verbose):
     # pathnames inside the generated Debian package will refer to the virtual
     # environment instead of the system wide Python installation!
     command = '. /etc/environment && dpkg-buildpackage -us -uc'
+    if verbose:
+        os.environ['DH_VERBOSE'] = '1'
     if NO_GUESSING_DEPS:
         # XXX stdeb 0.6.0+git uses dh_python2, which guesses dependencies
         # by default. We don't want this so we override this behavior.
