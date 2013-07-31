@@ -13,7 +13,7 @@ import pip_accel
 import pip.exceptions
 from debian.deb822 import Deb822
 from debian.debfile import DebFile
-from deb_pkg_tools import merge_control_fields
+from deb_pkg_tools.control import merge_control_fields
 
 # Internal modules
 from py2deb.logger import logger
