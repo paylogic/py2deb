@@ -1,5 +1,6 @@
 # Standard library modules.
 import fnmatch
+import functools
 import glob
 import os
 import pipes
@@ -62,7 +63,8 @@ def convert(pip_args, config, auto_install=False, verbose=False):
     # Generate list of requirements.
     requirements = get_required_packages(pip_args,
                                          name_prefix=config.get('general', 'name-prefix'),
-                                         replacements=replacements)
+                                         replacements=replacements,
+                                         build_dir=build_dir)
     logger.debug("Required packages: %r", requirements)
     converted = []
     repo_dir = os.path.abspath(config.get('general', 'repository'))
@@ -92,7 +94,7 @@ def find_build(package, repository):
     """
     return glob.glob(os.path.join(repository, package.debian_file_pattern))
 
-def get_required_packages(pip_args, name_prefix, replacements):
+def get_required_packages(pip_args, name_prefix, replacements, build_dir):
     """
     Find the packages that have to be converted to Debian packages (excludes
     packages that have replacements).
@@ -100,7 +102,7 @@ def get_required_packages(pip_args, name_prefix, replacements):
     pip_arguments = ['install', '--ignore-installed'] + pip_args
     # Create a dictionary of packages downloaded by pip-accel.
     packages = {}
-    for name, version, directory in get_source_dists(pip_arguments):
+    for name, version, directory in get_source_dists(pip_arguments, build_dir):
         package = Package(name, version, directory, name_prefix)
         packages[package.name] = package
     # Create a list of packages to ignore.
@@ -128,7 +130,7 @@ def get_related_packages(pkg_name, packages):
             related.extend(get_related_packages(dependency, packages))
     return related
 
-def get_source_dists(pip_arguments, max_retries=10):
+def get_source_dists(pip_arguments, build_dir, max_retries=10):
     """
     Download and unpack the source distributions for all dependencies
     specified in the pip command line arguments.
@@ -140,9 +142,11 @@ def get_source_dists(pip_arguments, max_retries=10):
             logger.debug('Attempt %i/%i of getting source distributions using pip-accel.',
                          i+1, max_retries)
             try:
-                return pip_accel.unpack_source_dists(pip_arguments)
+                unpack_partial = functools.partial(pip_accel.unpack_source_dists, pip_arguments, build_directory=build_dir)
+                return pip_accel.previous_build_workaround(unpack_partial, build_dir)
             except pip.exceptions.DistributionNotFound:
-                pip_accel.download_source_dists(pip_arguments)
+                download_partial = functools.partial(pip_accel.download_source_dists, pip_arguments, build_dir)
+                pip_accel.previous_build_workaround(download_partial, build_dir)
         else:
             raise Exception, 'pip-accel failed to get the source dists %i times.' % max_retries
 

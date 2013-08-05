@@ -5,7 +5,7 @@
 from setuptools import setup, find_packages
 
 setup(name='py2deb',
-      version='0.7',
+      version='0.7.1',
       description='Converts Python packages to Debian packages (including dependencies).',
       author='Arjan Verwer',
       author_email='arjan.verwer@paylogic.eu',
@@ -17,7 +17,7 @@ setup(name='py2deb',
           # Direct dependencies of py2deb.
           'coloredlogs == 0.4.3',
           'humanfriendly == 1.5',
-          'pip-accel == 0.9.10',
+          'pip-accel == 0.9.12',
           'deb-pkg-tools == 1.0',
           # Provides the debian.deb822 module. A direct dependency of py2deb.
           # These version constraints specifically allow for version 0.1.21
