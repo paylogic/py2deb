@@ -1,7 +1,7 @@
 # Fake stdeb module that loads the right version of stdeb depending on platform.
 #
 # Author: Peter Odding <peter@peterodding.com>
-# Last Change: July 23, 2013
+# Last Change: August 11, 2013
 #
 # The py2deb package bundles two copies of stdeb:
 #
@@ -19,9 +19,9 @@
 import sys
 
 # Internal modules.
-from py2deb.util import is_lucid_lynx
+from py2deb.util import pick_stdeb_release
 
-if is_lucid_lynx():
+if pick_stdeb_release() == 'old':
     from py2deb.libs import stdeb_old
     sys.modules['stdeb'] = stdeb_old
 else:

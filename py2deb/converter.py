@@ -19,16 +19,7 @@ from deb_pkg_tools.package import clean_package_tree
 # Internal modules
 from py2deb.logger import logger
 from py2deb.package import Package
-from py2deb.util import is_lucid_lynx, run, transform_package_name
-
-if is_lucid_lynx():
-    # Old style of ignoring dependencies on Python packages.
-    IGNORE_INSTALL_REQUIRES = True
-    NO_GUESSING_DEPS = False
-else:
-    # New style of ignoring dependencies on Python packages.
-    IGNORE_INSTALL_REQUIRES = False
-    NO_GUESSING_DEPS = True
+from py2deb.util import pick_stdeb_release, run, transform_package_name
 
 class RedirectOutput:
 
@@ -156,7 +147,7 @@ def debianize(package, verbose):
     logger.debug('Debianizing %s', package.name)
     python = os.path.join(sys.prefix, 'bin', 'python')
     command = [python, 'setup.py', '--command-packages=stdeb.command', 'debianize']
-    if IGNORE_INSTALL_REQUIRES:
+    if pick_stdeb_release() == 'old':
         command.append('--ignore-install-requires')
     if run(' '.join(command), package.directory, verbose):
         raise Exception, "Failed to debianize package! (%s)" % package.name
@@ -234,7 +225,7 @@ def build(package, repository, verbose):
     command = '. /etc/environment && dpkg-buildpackage -us -uc'
     if verbose:
         os.environ['DH_VERBOSE'] = '1'
-    if NO_GUESSING_DEPS:
+    if pick_stdeb_release() == 'new':
         # XXX stdeb 0.6.0+git uses dh_python2, which guesses dependencies
         # by default. We don't want this so we override this behavior.
         os.environ['DH_OPTIONS'] = '--no-guessing-deps'

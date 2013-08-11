@@ -77,15 +77,49 @@ def run(command, wd=None, verbose=False):
                 sys.stderr.write(output)
     return exitcode
 
-def is_lucid_lynx():
+def find_ubuntu_release():
     """
-    Check the contents of ``/etc/issue.net`` to determine whether we are
-    running on Ubuntu 10.04 (Lucid Lynx).
+    Find the code name of the Ubuntu release we're running.
 
-    :returns: ``True`` if running on Ubuntu 10.04, ``False`` otherwise.
+    :returns: The name of the release, a string like ``lucid`` or ``precise``.
     """
-    try:
-        with open('/etc/issue.net') as handle:
-            return '10.04' in handle.read()
-    except Exception:
-        return False
+    lsb_release = os.popen('lsb_release --short --codename 2>/dev/null')
+    distribution = lsb_release.read().strip()
+    logger.debug("Detected Ubuntu release: %s", distribution[0].upper() + distribution[1:])
+    return distribution
+
+def find_python_version():
+    """
+    Find the version of Python we're running.
+
+    :returns: A string like ``python2.6`` or ``python2.7``.
+    """
+    python_version = 'python%d.%d' % (sys.version_info[0], sys.version_info[1])
+    logger.debug("Detected Python version: %s", python_version)
+    return python_version
+
+applicable_stdeb_release = None
+
+def pick_stdeb_release():
+    """
+    Determine whether the old (0.6.0) or new (0.6.0+git) release of ``stdeb``
+    should be used to convert Python packages to Debian packages.
+    """
+    global applicable_stdeb_release
+    if not applicable_stdeb_release:
+        ubuntu_release = find_ubuntu_release()
+        python_version = find_python_version()
+        # XXX Before we decide on an answer, make sure the answer will be valid!
+        if ubuntu_release == 'lucid' and python_version != 'python2.6':
+            raise Exception, "On Ubuntu 10.04 you should use Python 2.6 to run py2deb! (you are using %s)" % python_version
+        elif ubuntu_release == 'precise' and python_version != 'python2.7':
+            raise Exception, "On Ubuntu 12.04 you should use Python 2.7 to run py2deb! (you are using %s)" % python_version
+        elif ubuntu_release not in ('lucid', 'precise'):
+            logger.warn("py2deb was developed for and tested on Ubuntu 10.04 (Python 2.6)"
+                        " and Ubuntu 12.04 (Python 2.7). Since we appear to be running on"
+                        " another platform you may experience breakage!")
+        if ubuntu_release == 'lucid':
+            applicable_stdeb_release = 'old'
+        else:
+            applicable_stdeb_release = 'new'
+    return applicable_stdeb_release

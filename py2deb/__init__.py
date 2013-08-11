@@ -15,7 +15,7 @@ Supported options:
 """
 
 # Semi-standard module versioning.
-__version__ = '0.7.6'
+__version__ = '0.7.7'
 
 # Standard library modules.
 import getopt
@@ -28,6 +28,7 @@ import coloredlogs
 # Modules included in our package.
 from py2deb.config import load_config
 from py2deb.converter import convert
+from py2deb.util import pick_stdeb_release
 
 def main():
 
@@ -81,6 +82,9 @@ def main():
         config.set('general', 'repository', repo_dir)
     if name_prefix:
         config.set('general', 'name-prefix', name_prefix)
+
+    # Make sure we're running on a supported configuration.
+    pick_stdeb_release()
 
     # Start the conversion.
     converted = convert(pip_args,
