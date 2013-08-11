@@ -14,6 +14,9 @@ Supported options:
   -h, --help         show this message and exit
 """
 
+# Semi-standard module versioning.
+__version__ = '0.7.3'
+
 # Standard library modules
 import getopt
 import logging

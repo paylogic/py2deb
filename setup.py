@@ -1,40 +1,49 @@
 #!/usr/bin/env python
 
-# XXX py2deb bundles two copies of stdeb, please refer to the file `stdeb.py'.
+# Setup script for py2deb.
+#
+# Authors:
+#  - Arjan Verwer <arjan.verwer@gmail.com>
+#  - Peter Odding <peter@peterodding.com>
+# Last Change: August 11, 2013
+# URL: https://github.com/paylogic/py2deb
+#
+# Please note that py2deb bundles two copies of stdeb (see `stdeb.py').
 
+import re
+from os.path import abspath, dirname, join
 from setuptools import setup, find_packages
 
+# Find the directory containing the source distribution.
+source_directory = dirname(abspath(__file__))
+
+# Find the current version.
+module = join(source_directory, 'py2deb', '__init__.py')
+for line in open(module, 'r'):
+    match = re.match(r'^__version__\s*=\s*["\']([^"\']+)["\']$', line)
+    if match:
+        version_string = match.group(1)
+        break
+else:
+    raise Exception, "Failed to extract version from redock/__init__.py!"
+
+# Fill in the long description (for the benefit of PyPi)
+# with the contents of README.rst (rendered by GitHub).
+readme_text = open(join(source_directory, 'README.rst'), 'r').read()
+
+# Fill in the "install_requires" field based on requirements.txt.
+requirements = [l.strip() for l in open(join(source_directory, 'requirements.txt'), 'r') if not l.startswith('#')]
+
 setup(name='py2deb',
-      version='0.7.2',
-      description='Converts Python packages to Debian packages (including dependencies).',
-      author='Arjan Verwer',
-      author_email='arjan.verwer@paylogic.eu',
-      url='https://wiki.paylogic.eu/',
+      version=version_string,
+      description='Converts Python packages to Debian packages (including dependencies)',
+      long_description=readme_text,
+      author='Arjan Verwer & Peter Odding',
+      author_email='arjan.verwer@gmail.com, peter.odding@paylogic.eu',
+      url='https://github.com/paylogic/py2deb',
       packages=find_packages(),
       py_modules=['stdeb'],
       package_data={'py2deb': ['config/*.ini']},
-      install_requires=[
-          # Direct dependencies of py2deb.
-          'coloredlogs >= 0.4.6',
-          'humanfriendly >= 1.5',
-          'pip-accel >= 0.9.13',
-          'deb-pkg-tools >= 1.0.3',
-          # Provides the debian.deb822 module. A direct dependency of py2deb.
-          # Ideally we should be able to use the version provided by the
-          # upstream Ubuntu package, but I failed to get this working. The
-          # problem seems to be that the Ubuntu package has version "0.1.21ubuntu1"
-          # which the constraints "python-debian >= 0.1.21, < 0.1.22" don't match;
-          # I keep getting the following runtime error message:
-          #
-          #   pkg_resources.DistributionNotFound: python-debian>=0.1.21,<0.1.22
-          #
-          # A logical OR in the constraints would solve this but apparently the
-          # Python requirement specifications don't support that. See
-          # http://www.python.org/dev/peps/pep-0440/. For now I've removed the
-          # version constraints, which solves the problem but is not cool.
-          'python-debian',
-          # Transitive undocumented dependency of `python-debian'.
-          'chardet',
-      ],
+      install_requires=requirements,
       entry_points={'console_scripts': ['py2deb = py2deb:main']},
       test_suite='py2deb.tests')
