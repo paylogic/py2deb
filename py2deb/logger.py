@@ -7,4 +7,3 @@ coloredlogs.install()
 
 # Initialize a logger for use by py2deb.
 logger = logging.getLogger('py2deb')
-logger.setLevel(logging.DEBUG)

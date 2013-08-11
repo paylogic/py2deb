@@ -15,15 +15,17 @@ Supported options:
 """
 
 # Semi-standard module versioning.
-__version__ = '0.7.5'
+__version__ = '0.7.6'
 
-# Standard library modules
+# Standard library modules.
 import getopt
-import logging
 import os
 import sys
 
-# Internal modules
+# External dependency.
+import coloredlogs
+
+# Modules included in our package.
 from py2deb.config import load_config
 from py2deb.converter import convert
 
@@ -62,6 +64,7 @@ def main():
         elif option in ('-P', '--print-deps'):
             print_dependencies = True
         elif option in ('-v', '--verbose'):
+            coloredlogs.increase_verbosity()
             verbose = True
         elif option in ('-y', '--yes'):
             auto_install = True
@@ -71,10 +74,6 @@ def main():
         else:
             msg = "Unrecognized option: %s"
             raise Exception, msg % option
-
-    # Configure the logging level.
-    if verbose:
-        logging.getLogger().setLevel(logging.DEBUG)
 
     # Initialize the configuration.
     config = load_config(filename=config_file)
