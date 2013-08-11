@@ -65,6 +65,7 @@ def run(command, wd=None, verbose=False):
     :param verbose: ``True`` if the output of the command should be shown,
                     ``False`` if the output should be hidden (the default).
     """
+    logger.debug("Executing external command: %s", command)
     with Workin(wd):
         if verbose:
             exitcode = os.system(command + ' 1>&2')
@@ -72,10 +73,8 @@ def run(command, wd=None, verbose=False):
             handle = os.popen(command + ' 2>&1')
             output = handle.read()
             exitcode = handle.close()
-
             if exitcode:
                 sys.stderr.write(output)
-
     return exitcode
 
 def is_lucid_lynx():
