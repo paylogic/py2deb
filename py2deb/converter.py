@@ -1,6 +1,5 @@
 # Standard library modules.
 import fnmatch
-import functools
 import glob
 import os
 import pipes
@@ -142,11 +141,9 @@ def get_source_dists(pip_arguments, build_dir, max_retries=10):
             logger.debug('Attempt %i/%i of getting source distributions using pip-accel.',
                          i+1, max_retries)
             try:
-                unpack_partial = functools.partial(pip_accel.unpack_source_dists, pip_arguments, build_directory=build_dir)
-                return pip_accel.previous_build_workaround(unpack_partial, build_dir)
+                return pip_accel.unpack_source_dists(pip_arguments, build_directory=build_dir)
             except pip.exceptions.DistributionNotFound:
-                download_partial = functools.partial(pip_accel.download_source_dists, pip_arguments, build_dir)
-                pip_accel.previous_build_workaround(download_partial, build_dir)
+                pip_accel.download_source_dists(pip_arguments, build_dir)
         else:
             raise Exception, 'pip-accel failed to get the source dists %i times.' % max_retries
 
