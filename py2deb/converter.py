@@ -14,6 +14,7 @@ import pip.exceptions
 from debian.deb822 import Deb822
 from debian.debfile import DebFile
 from deb_pkg_tools.control import merge_control_fields
+from deb_pkg_tools.package import clean_package_tree
 
 # Internal modules
 from py2deb.logger import logger
@@ -79,6 +80,7 @@ def convert(pip_args, config, auto_install=False, verbose=False):
             patch_control(package, replacements, config)
             apply_script(package, config, verbose)
             pip_accel.deps.sanity_check_dependencies(package.name, auto_install)
+            clean_package_tree(package.directory)
             debfile = build(package, repo_dir, verbose)
             logger.info('%s has been converted to %s', package.name, package.debian_name)
         converted.append('%(Package)s (=%(Version)s)' % debfile.debcontrol())
