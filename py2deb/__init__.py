@@ -3,19 +3,21 @@ Usage: py2deb [OPTIONS] -- PIP_ARGS
 
 Supported options:
 
-  -c, --config=FILE  set the user configuration file
-  -r, --repo=DIR     override the default repository directory
-  -p, --prefix=STR   set package name prefix (defaults to `python-')
-  -P, --print-deps   prints a valid value for the `Depends` line of a Debian
-                     control file with the package names and pinned versions of
-                     all built packages
-  -v, --verbose      more output
-  -y, --yes          automatically confirm installation of system-wide dependencies
-  -h, --help         show this message and exit
+  -c, --config=FILE     set the user configuration file
+  -r, --repo=DIR        override the default repository directory
+  -p, --prefix=STR      set package name prefix (defaults to `python-')
+  -P, --print-deps      prints a valid value for the `Depends` line of a Debian
+                        control file with the package names and pinned versions
+                        of all built packages
+  -s, --with-stdeb      use the stdeb backend to build the Debian package
+  -p, --with-pip-accel  use the pip-accel backend to build the Debian package
+  -v, --verbose         make more noise (can be repeated)
+  -y, --yes             automatically install missing system packages
+  -h, --help            show this message and exit
 """
 
 # Semi-standard module versioning.
-__version__ = '0.7.7'
+__version__ = '0.8'
 
 # Standard library modules.
 import getopt
@@ -26,6 +28,8 @@ import sys
 import coloredlogs
 
 # Modules included in our package.
+from py2deb.backends.pip_accel_backend import build as build_with_pip_accel
+from py2deb.backends.stdeb_backend import build as build_with_stdeb
 from py2deb.config import load_config
 from py2deb.converter import convert
 from py2deb.util import pick_stdeb_release
@@ -33,6 +37,7 @@ from py2deb.util import pick_stdeb_release
 def main():
 
     # Command line option defaults
+    backend = build_with_stdeb
     config_file = None
     repo_dir = None
     name_prefix = None
@@ -41,8 +46,8 @@ def main():
     auto_install = False
 
     # Parse command line options
-    options, pip_args = getopt.gnu_getopt(sys.argv[1:], 'c:r:p:Pvyh',
-            ['config=', 'repo=', 'prefix=', 'print-deps', 'verbose', 'yes', 'help'])
+    options, pip_args = getopt.gnu_getopt(sys.argv[1:], 'c:r:p:Pspyvh',
+            ['config=', 'repo=', 'prefix=', 'print-deps', 'with-stdeb', 'with-pip-accel', 'verbose', 'yes', 'help'])
 
     if not pip_args:
         usage()
@@ -64,11 +69,15 @@ def main():
             name_prefix = value
         elif option in ('-P', '--print-deps'):
             print_dependencies = True
+        elif option in ('-s', '--with-stdeb'):
+            backend = build_with_stdeb
+        elif option in ('-p', '--with-pip-accel'):
+            backend = build_with_pip_accel
+        elif option in ('-y', '--yes'):
+            auto_install = True
         elif option in ('-v', '--verbose'):
             coloredlogs.increase_verbosity()
             verbose = True
-        elif option in ('-y', '--yes'):
-            auto_install = True
         elif option in ('-h', '--help'):
             usage()
             return
@@ -89,6 +98,7 @@ def main():
     # Start the conversion.
     converted = convert(pip_args,
                         config=config,
+                        backend=backend,
                         auto_install=auto_install,
                         verbose=verbose)
 

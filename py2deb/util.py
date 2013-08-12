@@ -4,7 +4,7 @@ import os
 import re
 import sys
 
-# Initialize a logger.
+# Initialize a logger for this module.
 logger = logging.getLogger(__name__)
 
 class Workin:
@@ -90,7 +90,9 @@ def find_ubuntu_release():
 
 def find_python_version():
     """
-    Find the version of Python we're running.
+    Find the version of Python we're running. This specifically returns a name
+    matching the format of the names of the Debian packages providing the
+    various available Python versions.
 
     :returns: A string like ``python2.6`` or ``python2.7``.
     """
