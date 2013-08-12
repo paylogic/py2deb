@@ -14,7 +14,7 @@ from debian.deb822 import Deb822
 from pip_accel.bdist import get_binary_dist, install_binary_dist
 
 # Modules included in our package.
-from py2deb.util import find_python_version
+from py2deb.util import find_python_version, patch_control_file
 
 # Initialize a logger for this module.
 logger = logging.getLogger(__name__)
@@ -41,16 +41,19 @@ def build(context):
             dependencies += find_library_dependencies(shared_objects)
         # Generate the DEBIAN/control file.
         os.mkdir(os.path.join(build_directory, 'DEBIAN'))
+        # TODO Find a way to preserve author/maintainer fields.
+        control_fields = Deb822(dict(
+          Package=package.debian_name,
+          Version=package.release,
+          Description=time.strftime('Packaged by py2deb on %B %e, %Y at %H:%M'),
+          Depends=', '.join(sorted(dependencies)),
+          Priority='optional',
+          Section='python',
+          Architecture=architecture,
+          Maintainer='py2deb'))
+        control_fields = patch_control_file(package, control_fields)
         with open(os.path.join(build_directory, 'DEBIAN', 'control'), 'w') as handle:
-            # TODO Preserve author/maintainer fields.
-            Deb822(dict(Package=package.debian_name,
-                        Version=package.release,
-                        Description=time.strftime('Packaged by py2deb on %B %e, %Y at %H:%M'),
-                        Depends=', '.join(sorted(dependencies)),
-                        Priority='optional',
-                        Section='python',
-                        Architecture=architecture,
-                        Maintainer='py2deb')).dump(handle)
+            control_fields.dump(handle)
         # TODO Post installation script to generate byte code files?!
         return build_package(build_directory)
     finally:

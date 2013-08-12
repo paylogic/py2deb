@@ -10,21 +10,23 @@ from humanfriendly import format_path
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
 
-def load_config(filename=None):
+# Initialize the configuration parser.
+config = ConfigParser.RawConfigParser()
+
+# Load the bundled configuration.
+bundled_config_file = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'py2deb.ini')
+logger.debug("Loading bundled configuration: %s", format_path(bundled_config_file))
+config.read(bundled_config_file)
+
+def load_config(filename):
     """
     Load the py2deb configuration file.
 
-    param filename: Filename of user configuration file (a string, optional).
+    param filename: Filename of user configuration file (a string).
     :returns: A :py:class:`ConfigParser.RawConfigParser` object.
     """
-    config = ConfigParser.RawConfigParser()
     # Load the configuration bundled with py2deb.
-    directory = os.path.dirname(os.path.abspath(__file__))
-    bundled = os.path.join(directory, 'py2deb.ini')
-    logger.debug("Loading bundled configuration: %s", format_path(bundled))
-    config.read(bundled)
     # Load the configuration provided by the user?
-    if filename:
-        logger.debug("Loading user configuration: %s", format_path(filename))
-        config.read(filename)
-    return config
+    filename = os.path.abspath(filename)
+    logger.debug("Loading user configuration: %s", format_path(filename))
+    config.read(filename)

@@ -24,7 +24,6 @@ from py2deb.util import transform_package_name
 
 # Initialize the logger.
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.DEBUG)
 
 class Package:
 
@@ -78,10 +77,7 @@ class Package:
         """
         The name of the Debian package corresponding to the Python package.
         """
-        try:
-            return self.config.get(self.name, 'debian-name')
-        except Exception:
-            return transform_package_name(self.name_prefix, self.name)
+        return transform_package_name(self.name)
 
     @property
     def debian_file_pattern(self):
@@ -112,7 +108,7 @@ class Package:
             if req.key in replacements:
                 dependencies.append(replacements[req.key])
             else:
-                name = transform_package_name(self.name_prefix, req.key)
+                name = transform_package_name(req.key)
                 if not req.specs:
                     dependencies.append(name)
                 else:

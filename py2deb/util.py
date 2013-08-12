@@ -4,6 +4,12 @@ import os
 import re
 import sys
 
+# External dependencies.
+from deb_pkg_tools.control import merge_control_fields
+
+# Modules included in our package.
+from py2deb.config import config
+
 # Initialize a logger for this module.
 logger = logging.getLogger(__name__)
 
@@ -28,31 +34,48 @@ def compact(text, **kw):
     """
     return ' '.join(text.split()).format(**kw)
 
+def patch_control_file(package, control_fields):
+    """
+    Get a dictionary with control file fields for which overrides are present
+    in the configuration file bundled with py2deb or provided by the user.
+    """
+    overrides = {}
+    if config.has_section(package.name):
+        for name, value in config.items(package.name):
+            if name != 'script':
+                overrides[name] = value
+    return merge_control_fields(control_fields, overrides)
+
 previously_transformed_names = {}
 
-def transform_package_name(*words):
+def transform_package_name(python_package):
     """
     Transforms the name of a Python package as found on PyPi into the name that
     we want it to have as a Debian package using a prefix and a seperator.
     """
-    if words not in previously_transformed_names:
-        # Transform ('python', 'python-debian') into ('python', 'python', 'debian').
-        normalized_words = '-'.join(w.lower() for w in words).split('-')
-        logger.debug("Transforming package name, step 1: Split words (%r)", normalized_words)
-        # Remove repeating words.
-        deduplicated_words = list(normalized_words)
-        i = 0
-        while i < len(deduplicated_words):
-            if i + 1 < len(deduplicated_words) and deduplicated_words[i] == deduplicated_words[i + 1]:
-                deduplicated_words.pop(i)
-            else:
-                i += 1
-        logger.debug("Transforming package name, step 2: Removed redundant words (%r)", deduplicated_words)
-        # Make sure that the only non-alphanumeric character is the dash.
-        name = re.sub('[^a-z0-9]+', '-', ' '.join(deduplicated_words)).strip('-')
-        logger.debug("Transforming package name, step 3: Normalizing special characters (%r)", name)
-        previously_transformed_names[words] = name
-    return previously_transformed_names[words]
+    if python_package not in previously_transformed_names:
+        if config.has_option(python_package, 'debian-name'):
+            debian_package = config.get(python_package, 'debian-name')
+            logger.debug("Package %s has overridden Debian package name configured: %s", python_package, debian_package)
+        else:
+            # Apply the package name prefix.
+            debian_package = '%s-%s' % (config.get('general', 'name-prefix'), python_package)
+            normalized_words = debian_package.lower().split('-')
+            logger.debug("Transforming package name, step 1: Split words (%r)", normalized_words)
+            # Remove repeating words.
+            deduplicated_words = list(normalized_words)
+            i = 0
+            while i < len(deduplicated_words):
+                if i + 1 < len(deduplicated_words) and deduplicated_words[i] == deduplicated_words[i + 1]:
+                    deduplicated_words.pop(i)
+                else:
+                    i += 1
+            logger.debug("Transforming package name, step 2: Removed redundant words (%r)", deduplicated_words)
+            # Make sure that the only non-alphanumeric character is the dash.
+            debian_package = re.sub('[^a-z0-9]+', '-', ' '.join(deduplicated_words)).strip('-')
+            logger.debug("Transforming package name, step 3: Normalizing special characters (%r)", debian_package)
+        previously_transformed_names[python_package] = debian_package
+    return previously_transformed_names[python_package]
 
 def run(command, wd=None, verbose=False):
     """

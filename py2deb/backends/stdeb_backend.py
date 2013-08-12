@@ -13,7 +13,7 @@ from deb_pkg_tools.package import clean_package_tree
 from debian.deb822 import Deb822
 
 # Modules included in our package.
-from py2deb.util import pick_stdeb_release, run
+from py2deb.util import patch_control_file, pick_stdeb_release, run
 
 # Initialize a logger for this module.
 logger = logging.getLogger(__name__)
@@ -63,25 +63,13 @@ def patch_control(package, config):
         logger.debug("Patched control fields (phase 1/2): %r", paragraphs[1])
         # Patch any fields for which overrides are present in the configuration
         # file bundled with py2deb or provided by the user.
-        paragraphs[1] = merge_control_fields(paragraphs[1], control_patch_cfg(package, config))
+        paragraphs[1] = patch_control_file(package, paragraphs[1])
         logger.debug("Patched control fields (phase 2/2): %r", paragraphs[1])
         # Save the patched control file.
         paragraphs[0].dump(handle)
         handle.write('\n')
         paragraphs[1].dump(handle)
     logger.debug('The control file of %s has been patched', package.name)
-
-def control_patch_cfg(package, config):
-    """
-    Get a dictionary with control file fields for which overrides are present
-    in the configuration file bundled with py2deb or provided by the user.
-    """
-    overrides = {}
-    if config.has_section(package.name):
-        for name, value in config.items(package.name):
-            if name != 'script':
-                overrides[name] = value
-    return overrides
 
 def apply_script(package, config, verbose):
     """

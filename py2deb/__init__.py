@@ -17,7 +17,7 @@ Supported options:
 """
 
 # Semi-standard module versioning.
-__version__ = '0.8'
+__version__ = '0.8.1'
 
 # Standard library modules.
 import getopt
@@ -30,7 +30,7 @@ import coloredlogs
 # Modules included in our package.
 from py2deb.backends.pip_accel_backend import build as build_with_pip_accel
 from py2deb.backends.stdeb_backend import build as build_with_stdeb
-from py2deb.config import load_config
+from py2deb.config import config, load_config
 from py2deb.converter import convert
 from py2deb.util import pick_stdeb_release
 
@@ -86,7 +86,8 @@ def main():
             raise Exception, msg % option
 
     # Initialize the configuration.
-    config = load_config(filename=config_file)
+    if config_file:
+        load_config(config_file)
     if repo_dir:
         config.set('general', 'repository', repo_dir)
     if name_prefix:
