@@ -20,7 +20,7 @@ logger = logging.getLogger(__name__)
 
 def build(context):
     debianize(context['package'], context['verbose'])
-    patch_control(context['package'], context['replacements'], context['config'])
+    patch_control(context['package'], context['config'])
     apply_script(context['package'], context['config'], context['verbose'])
     pip_accel.deps.sanity_check_dependencies(context['package'].name, context['auto_install'])
     clean_package_tree(context['package'].directory)
@@ -39,7 +39,7 @@ def debianize(package, verbose):
         raise Exception, "Failed to debianize package! (%s)" % package.name
     logger.debug('Debianized %s', package.name)
 
-def patch_control(package, replacements, config):
+def patch_control(package, config):
     """
     Patch the control file of a 'Debianized' Python package (see
     :py:func:`debianize()`) to modify the package metadata and inject the
@@ -58,7 +58,7 @@ def patch_control(package, replacements, config):
         #    makes `apt-cache search py2deb' report packages created by py2deb.
         overrides = dict(Package=package.debian_name,
                          Description=time.strftime('Packaged by py2deb on %B %e, %Y at %H:%M'),
-                         Depends=', '.join(package.debian_dependencies(replacements)))
+                         Depends=', '.join(package.debian_dependencies))
         paragraphs[1] = merge_control_fields(paragraphs[1], overrides)
         logger.debug("Patched control fields (phase 1/2): %r", paragraphs[1])
         # Patch any fields for which overrides are present in the configuration

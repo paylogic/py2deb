@@ -21,7 +21,6 @@ logger = logging.getLogger(__name__)
 
 def build(context):
     package = context['package']
-    replacements = context['replacements']
     # Create a temporary directory to put the generated package in.
     build_directory = tempfile.mkdtemp()
     # Make sure we clean up the temporary directory afterwards...
@@ -34,7 +33,7 @@ def build(context):
                             prefix=os.path.join(build_directory, 'usr'),
                             python='/usr/bin/%s' % find_python_version())
         # Get the Python requirements converted to Debian dependencies.
-        dependencies = [find_python_version()] + package.debian_dependencies(replacements)
+        dependencies = [find_python_version()] + package.debian_dependencies
         # Look for shared object files in the package tree.
         shared_objects = find_shared_object_files(build_directory)
         architecture = determine_package_architecture(shared_objects)

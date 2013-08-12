@@ -32,11 +32,12 @@ class Package:
     Wrapper for Python packages that will be converted to Debian packages.
     """
 
-    def __init__(self, name, version, directory, name_prefix):
+    def __init__(self, name, version, directory, name_prefix, config):
         self.name = name.lower()
         self.version = version
         self.directory = os.path.abspath(directory)
         self.name_prefix = name_prefix
+        self.config = config
         self.py_requirements = self.python_requirements or []
 
     def __repr__(self):
@@ -93,7 +94,8 @@ class Package:
         """
         return [req.key for req in self.python_requirements]
 
-    def debian_dependencies(self, replacements):
+    @property
+    def debian_dependencies(self):
         """
         List with required Debian packages of this Python package in the
         format of the ``Depends:`` line as used in Debian package ``control``
@@ -102,9 +104,10 @@ class Package:
         # Useful link:
         # http://www.python.org/dev/peps/pep-0440/#version-specifiers
         dependencies = []
+        replacements = dict(self.config.items('replacements'))
         for req in self.python_requirements:
             if req.key in replacements:
-                dependencies.append(replacements.get(req.key))
+                dependencies.append(replacements[req.key])
             else:
                 name = transform_package_name(self.name_prefix, req.key)
                 if not req.specs:
@@ -122,5 +125,6 @@ class Package:
                                 (name, '<<', version, name, '>>', version))
                         else:
                             dependencies.append('%s (%s %s)' % (name, constraint, version))
+        dependencies = sorted(dependencies)
         logger.debug("Debian requirements of %s (%s): %r", self.debian_name, self.version, dependencies)
         return dependencies

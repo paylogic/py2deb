@@ -29,7 +29,8 @@ def convert(pip_args, config, backend, auto_install=False, verbose=False):
     requirements = get_required_packages(pip_args,
                                          name_prefix=config.get('general', 'name-prefix'),
                                          replacements=replacements,
-                                         build_dir=build_dir)
+                                         build_dir=build_dir,
+                                         config=config)
     logger.debug("Required packages: %r", requirements)
     converted = []
     repository = config.get('general', 'repository')
@@ -62,7 +63,7 @@ def find_build(package, repository):
     """
     return glob.glob(os.path.join(repository, package.debian_file_pattern))
 
-def get_required_packages(pip_args, name_prefix, replacements, build_dir):
+def get_required_packages(pip_args, name_prefix, replacements, build_dir, config):
     """
     Find the packages that have to be converted to Debian packages (excludes
     packages that have replacements).
@@ -71,7 +72,7 @@ def get_required_packages(pip_args, name_prefix, replacements, build_dir):
     # Create a dictionary of packages downloaded by pip-accel.
     packages = {}
     for name, version, directory in get_source_dists(pip_arguments, build_dir):
-        package = Package(name, version, directory, name_prefix)
+        package = Package(name, version, directory, name_prefix, config)
         packages[package.name] = package
     # Create a list of packages to ignore.
     to_ignore = []
