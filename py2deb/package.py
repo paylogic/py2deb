@@ -78,7 +78,10 @@ class Package:
         """
         The name of the Debian package corresponding to the Python package.
         """
-        return transform_package_name(self.name_prefix, self.name)
+        try:
+            return self.config.get(self.name, 'debian-name')
+        except Exception:
+            return transform_package_name(self.name_prefix, self.name)
 
     @property
     def debian_file_pattern(self):
