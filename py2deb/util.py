@@ -42,9 +42,11 @@ def patch_control_file(package, control_fields):
     overrides = {}
     if config.has_section(package.name):
         for name, value in config.items(package.name):
-            if name != 'script':
+            if name not in ('debian-name', 'script'):
                 overrides[name] = value
-    return merge_control_fields(control_fields, overrides)
+    if overrides:
+        control_fields = merge_control_fields(control_fields, overrides)
+    return control_fields
 
 previously_transformed_names = {}
 
