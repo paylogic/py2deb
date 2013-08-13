@@ -125,28 +125,18 @@ def find_python_version():
     logger.debug("Detected Python version: %s", python_version)
     return python_version
 
-applicable_stdeb_release = None
-
-def pick_stdeb_release():
+def check_supported_platform():
     """
     Determine whether the old (0.6.0) or new (0.6.0+git) release of ``stdeb``
     should be used to convert Python packages to Debian packages.
     """
-    global applicable_stdeb_release
-    if not applicable_stdeb_release:
-        ubuntu_release = find_ubuntu_release()
-        python_version = find_python_version()
-        # XXX Before we decide on an answer, make sure the answer will be valid!
-        if ubuntu_release == 'lucid' and python_version != 'python2.6':
-            raise Exception, "On Ubuntu 10.04 you should use Python 2.6 to run py2deb! (you are using %s)" % python_version
-        elif ubuntu_release == 'precise' and python_version != 'python2.7':
-            raise Exception, "On Ubuntu 12.04 you should use Python 2.7 to run py2deb! (you are using %s)" % python_version
-        elif ubuntu_release not in ('lucid', 'precise'):
-            logger.warn("py2deb was developed for and tested on Ubuntu 10.04 (Python 2.6)"
-                        " and Ubuntu 12.04 (Python 2.7). Since we appear to be running on"
-                        " another platform you may experience breakage!")
-        if ubuntu_release == 'lucid':
-            applicable_stdeb_release = 'old'
-        else:
-            applicable_stdeb_release = 'new'
-    return applicable_stdeb_release
+    ubuntu_release = find_ubuntu_release()
+    python_version = find_python_version()
+    if ubuntu_release == 'lucid' and python_version != 'python2.6':
+        raise Exception, "On Ubuntu 10.04 you should use Python 2.6 to run py2deb! (you are using %s)" % python_version
+    elif ubuntu_release == 'precise' and python_version != 'python2.7':
+        raise Exception, "On Ubuntu 12.04 you should use Python 2.7 to run py2deb! (you are using %s)" % python_version
+    elif ubuntu_release not in ('lucid', 'precise'):
+        logger.warn("py2deb was developed for and tested on Ubuntu 10.04 (Python 2.6)"
+                    " and Ubuntu 12.04 (Python 2.7). Since we appear to be running on"
+                    " another platform you may experience breakage!")

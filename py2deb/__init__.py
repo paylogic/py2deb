@@ -32,7 +32,7 @@ from py2deb.backends.pip_accel_backend import build as build_with_pip_accel
 from py2deb.backends.stdeb_backend import build as build_with_stdeb
 from py2deb.config import config, load_config
 from py2deb.converter import convert
-from py2deb.util import pick_stdeb_release
+from py2deb.util import check_supported_platform
 
 def main():
 
@@ -94,7 +94,7 @@ def main():
         config.set('general', 'name-prefix', name_prefix)
 
     # Make sure we're running on a supported configuration.
-    pick_stdeb_release()
+    check_supported_platform()
 
     # Start the conversion.
     converted = convert(pip_args,

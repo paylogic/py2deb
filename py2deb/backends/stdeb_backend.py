@@ -11,9 +11,10 @@ import pip_accel
 from deb_pkg_tools.control import merge_control_fields
 from deb_pkg_tools.package import clean_package_tree
 from debian.deb822 import Deb822
+from stdeb import __version__ as stdeb_version
 
 # Modules included in our package.
-from py2deb.util import patch_control_file, pick_stdeb_release, run
+from py2deb.util import patch_control_file, run
 
 # Initialize a logger for this module.
 logger = logging.getLogger(__name__)
@@ -33,7 +34,7 @@ def debianize(package, verbose):
     logger.debug('Debianizing %s', package.name)
     python = os.path.join(sys.prefix, 'bin', 'python')
     command = [python, 'setup.py', '--command-packages=stdeb.command', 'debianize']
-    if pick_stdeb_release() == 'old':
+    if stdeb_version == '0.6.0': # The "old" version of stdeb.
         command.append('--ignore-install-requires')
     if run(' '.join(command), package.directory, verbose):
         raise Exception, "Failed to debianize package! (%s)" % package.name
@@ -97,7 +98,7 @@ def dpkg_buildpackage(package, verbose):
     command = '. /etc/environment && dpkg-buildpackage -us -uc'
     if verbose:
         os.environ['DH_VERBOSE'] = '1'
-    if pick_stdeb_release() == 'new':
+    if stdeb_version == '0.6.0+git': # The "new" version of stdeb.
         # XXX stdeb 0.6.0+git uses dh_python2, which guesses dependencies
         # by default. We don't want this so we override this behavior.
         os.environ['DH_OPTIONS'] = '--no-guessing-deps'
