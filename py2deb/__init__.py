@@ -17,7 +17,7 @@ Supported options:
 """
 
 # Semi-standard module versioning.
-__version__ = '0.8.3'
+__version__ = '0.8.4'
 
 # Standard library modules.
 import getopt

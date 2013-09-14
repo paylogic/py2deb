@@ -3,6 +3,7 @@ import fnmatch
 import logging
 import os
 import pipes
+import shutil
 import sys
 import time
 
@@ -31,6 +32,9 @@ def debianize(package, verbose):
     """
     Debianize a Python package using stdeb.
     """
+    if os.path.isfile(os.path.join(package.directory, 'debian', 'control')):
+        logger.warn("Package was previously Debianized: Overwriting existing files!")
+        shutil.rmtree(os.path.join(package.directory, 'debian'))
     logger.debug('Debianizing %s', package.name)
     python = os.path.join(sys.prefix, 'bin', 'python')
     command = [python, 'setup.py', '--command-packages=stdeb.command', 'debianize']
