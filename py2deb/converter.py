@@ -86,7 +86,7 @@ def get_required_packages(pip_args, name_prefix, replacements, build_dir, config
             to_build.append(package)
         else:
             logger.warn('%s is in the ignore list and will not be build.', pkg_name)
-    return to_build
+    return sorted(to_build, key=lambda p: p.name.lower())
 
 def get_related_packages(pkg_name, packages):
     """
