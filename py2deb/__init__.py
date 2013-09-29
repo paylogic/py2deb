@@ -17,7 +17,7 @@ Supported options:
 """
 
 # Semi-standard module versioning.
-__version__ = '0.8.4'
+__version__ = '0.8.5'
 
 # Standard library modules.
 import getopt
@@ -35,6 +35,9 @@ from py2deb.converter import convert
 from py2deb.util import check_supported_platform
 
 def main():
+
+    # Initialize logging to the terminal.
+    coloredlogs.install()
 
     # Command line option defaults
     backend = build_with_stdeb

@@ -6,9 +6,8 @@ import logging
 # External dependencies.
 from humanfriendly import format_path
 
-# Initialize the logger.
+# Initialize a logger for this module.
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.DEBUG)
 
 # Initialize the configuration parser.
 config = ConfigParser.RawConfigParser()

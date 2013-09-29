@@ -1,18 +1,21 @@
 # Standard library modules.
 import glob
+import logging
 import os
 import shutil
 import sys
 import tempfile
 
-# External dependencies
+# External dependencies.
 import pip_accel
 import pip.exceptions
 from debian.debfile import DebFile
 
-# Internal modules
-from py2deb.logger import logger
+# Modules included in our package.
 from py2deb.package import Package
+
+# Initialize a logger for this module.
+logger = logging.getLogger(__name__)
 
 def convert(pip_args, config, backend, auto_install=False, verbose=False):
     """

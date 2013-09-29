@@ -43,9 +43,9 @@ Supported options:
 -h, --help         show this message and exit
 
 For example, if you would run ``pip-accel coloredlogs -r other_packages.txt`` to install several packages, you can do
-``py2deb coloredlogs -r other_packages.txt`` to convert those same packages to debian packages.
+``py2deb coloredlogs -r other_packages.txt`` to convert those same packages to Debian packages.
 
-For the steps it takes to generate debian packages you can read the source code and/or look at ``workflow/workflow.png``
+For the steps it takes to generate Debian packages you can read the source code and/or look at ``workflow/workflow.png``
 
 Nice to know
 ------------
