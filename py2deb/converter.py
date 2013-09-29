@@ -12,31 +12,36 @@ import pip.exceptions
 from debian.debfile import DebFile
 
 # Modules included in our package.
+from py2deb.backends.stdeb_backend import build as build_with_stdeb
+from py2deb.config import config
 from py2deb.package import Package
+from py2deb.util import check_supported_platform
 
 # Initialize a logger for this module.
 logger = logging.getLogger(__name__)
 
-def convert(pip_args, config, backend, auto_install=False, verbose=False):
+def convert(pip_install_args, repository=None, backend=build_with_stdeb, auto_install=False, verbose=False):
     """
     Convert Python packages downloaded using pip-accel to Debian packages.
     """
+    # Make sure we're running on a supported configuration.
+    check_supported_platform()
     # Initialize the build directory.
     build_dir = tempfile.mkdtemp(prefix='py2deb_')
     logger.debug('Created build directory: %s', build_dir)
     # Find package replacements.
     replacements = dict(config.items('replacements'))
     # Tell pip to extract into the build directory
-    pip_args.extend(['-b', build_dir])
+    pip_install_args.extend(['-b', build_dir])
     # Generate list of requirements.
-    requirements = get_required_packages(pip_args,
+    requirements = get_required_packages(pip_install_args,
                                          name_prefix=config.get('general', 'name-prefix'),
                                          replacements=replacements,
                                          build_dir=build_dir,
                                          config=config)
     logger.debug("Required packages: %r", requirements)
     converted = []
-    repository = config.get('general', 'repository')
+    repository = repository or config.get('general', 'repository')
     for package in requirements:
         result = find_build(package, repository)
         if result:
@@ -66,12 +71,12 @@ def find_build(package, repository):
     """
     return glob.glob(os.path.join(repository, package.debian_file_pattern))
 
-def get_required_packages(pip_args, name_prefix, replacements, build_dir, config):
+def get_required_packages(pip_install_args, name_prefix, replacements, build_dir, config):
     """
     Find the packages that have to be converted to Debian packages (excludes
     packages that have replacements).
     """
-    pip_arguments = ['install', '--ignore-installed'] + pip_args
+    pip_arguments = ['install', '--ignore-installed'] + pip_install_args
     # Create a dictionary of packages downloaded by pip-accel.
     packages = {}
     for name, version, directory in get_source_dists(pip_arguments, build_dir):
