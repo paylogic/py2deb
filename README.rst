@@ -24,7 +24,15 @@ By combining our own requirements with pip-accel and stdeb, Py2Deb was born.
 
 How to install it?
 ------------------
+
 Download the source and run (as root): ``python setup.py install``
+
+Alternatively, if you're feeling adventurous :-) there is a shell script called
+``bootstrap.sh`` located in the root of the py2deb repository and source code
+distributions. This shell script installs py2deb in a temporary Python virtual
+environment and then uses that py2deb installation to convert py2deb and its
+dependencies to Debian packages. The generated Debian packages are used to
+properly install py2deb on your system.
 
 How does it work?
 -----------------
