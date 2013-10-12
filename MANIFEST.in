@@ -1,4 +1,4 @@
 include *.rst
 include *.txt
-include bootstrap.sh
+include stdeb.cfg
 recursive-include py2deb *.ini

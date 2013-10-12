@@ -12,17 +12,34 @@ Supported options:
   -s, --with-stdeb      use the stdeb backend to build the Debian package
   -p, --with-pip-accel  use the pip-accel backend to build the Debian package
   -v, --verbose         make more noise (can be repeated)
+  -i, --install         install py2deb using Debian packages (bootstrapping)
   -y, --yes             automatically install missing system packages
   -h, --help            show this message and exit
 """
 
 # Semi-standard module versioning.
-__version__ = '0.8.8'
+__version__ = '0.9'
+
+# The following non-essential Debian packages need to be installed in order for
+# py2deb to work properly. Please note that this list does not include the
+# dependencies of deb-pkg-tools!
+#
+# TODO Document why we need these!
+debian_package_dependencies = (
+        'apt-file',
+        'apt-utils',
+        'build-essential',
+        'debhelper',
+        'dpkg-dev',
+        'python-all',
+        'python-pkg-resources',
+)
 
 # Standard library modules.
 import getopt
 import os
 import sys
+import textwrap
 
 # External dependency.
 import coloredlogs
@@ -30,6 +47,7 @@ import coloredlogs
 # Modules included in our package.
 from py2deb.backends.pip_accel_backend import build as build_with_pip_accel
 from py2deb.backends.stdeb_backend import build as build_with_stdeb
+from py2deb.bootstrap import install
 from py2deb.config import config, load_config
 from py2deb.converter import convert
 
@@ -46,10 +64,11 @@ def main():
     print_dependencies = False
     verbose = False
     auto_install = False
+    do_install = False
 
     # Parse command line options
-    options, arguments = getopt.gnu_getopt(sys.argv[1:], 'c:r:p:Pspyvh',
-            ['config=', 'repo=', 'prefix=', 'print-deps', 'with-stdeb', 'with-pip-accel', 'verbose', 'yes', 'help'])
+    options, arguments = getopt.gnu_getopt(sys.argv[1:], 'ic:r:p:Pspyvh',
+            ['install', 'config=', 'repo=', 'prefix=', 'print-deps', 'with-stdeb', 'with-pip-accel', 'verbose', 'yes', 'help'])
 
     if not arguments:
         usage()
@@ -57,7 +76,9 @@ def main():
 
     # Validate the command line options and map them to variables
     for option, value in options:
-        if option in ('-c', '--config'):
+        if option in ('-i', '--install'):
+            do_install = True
+        elif option in ('-c', '--config'):
             config_file = os.path.abspath(value)
             if not os.path.isfile(config_file):
                 msg = "Configuration file doesn't exist! (%s)"
@@ -93,15 +114,33 @@ def main():
     if name_prefix:
         config.set('general', 'name-prefix', name_prefix)
 
-    # Start the conversion.
-    converted = convert(arguments,
-                        backend=backend,
-                        repository=repository,
-                        auto_install=auto_install,
-                        verbose=verbose)
+    if not (do_install or arguments):
+        usage()
+        return
 
-    if print_dependencies:
-        print ', '.join(converted)
+    if do_install:
+        install()
+
+    if arguments:
+        converted = convert(arguments,
+                            backend=backend,
+                            repository=repository,
+                            auto_install=auto_install,
+                            verbose=verbose)
+        if print_dependencies:
+            print ', '.join(converted)
 
 def usage():
     print __doc__.strip()
+
+def generate_stdeb_cfg():
+    print textwrap.dedent('''
+        # The py2deb package bundles two copies of stdeb and installs its own
+        # top level stdeb module. We explicitly make the python-py2deb package
+        # conflict with the python-stdeb package so that the two are not
+        # installed together.
+        [py2deb]
+        Depends: {depends}
+        Conflicts: python-stdeb
+        Replaces: python-stdeb
+    '''.format(depends=', '.join(debian_package_dependencies))).strip()
