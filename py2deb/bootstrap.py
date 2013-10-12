@@ -16,11 +16,12 @@ import shutil
 import tempfile
 
 # External dependencies.
-from humanfriendly import concatenate
 from deb_pkg_tools import debian_package_dependencies as deb_pkg_tools_dependencies
-from deb_pkg_tools.utils import execute
 from deb_pkg_tools.repo import activate_repository, deactivate_repository, update_repository
-from py2deb import convert, debian_package_dependencies as py2deb_dependencies
+from deb_pkg_tools.utils import execute
+from humanfriendly import concatenate
+from py2deb import debian_package_dependencies as py2deb_dependencies
+from py2deb.converter import convert
 
 # Initialize a logger for this module.
 logger = logging.getLogger(__name__)
