@@ -18,7 +18,7 @@ Supported options:
 """
 
 # Semi-standard module versioning.
-__version__ = '0.9.1'
+__version__ = '0.9.2'
 
 # The following non-essential Debian packages need to be installed in order for
 # py2deb to work properly. Please note that this list does not include the
@@ -69,10 +69,6 @@ def main():
     # Parse command line options
     options, arguments = getopt.gnu_getopt(sys.argv[1:], 'ic:r:p:Pspyvh',
             ['install', 'config=', 'repo=', 'prefix=', 'print-deps', 'with-stdeb', 'with-pip-accel', 'verbose', 'yes', 'help'])
-
-    if not arguments:
-        usage()
-        return
 
     # Validate the command line options and map them to variables
     for option, value in options:
