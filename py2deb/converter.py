@@ -56,14 +56,15 @@ def convert(pip_install_args, repository=None, backend=build_with_stdeb, auto_in
                                     config=config,
                                     verbose=verbose,
                                     auto_install=auto_install))
-            filename = os.path.basename(pathname)
-            if not os.path.samefile(pathname, os.path.join(repository, filename)):
-                logger.debug("Moving %s to %s ..", filename, format_path(repository))
-                shutil.move(pathname, repository)
+            old_path = os.path.realpath(pathname)
+            new_path = os.path.realpath(os.path.join(repository, os.path.basename(pathname)))
+            if new_path != old_path:
+                logger.debug("Moving %s to %s ..", format_path(old_path), format_path(new_path))
+                shutil.move(old_path, new_path)
             logger.info("Finished converting %s to %s (%s).",
                         package.name, package.debian_name,
-                        format_path(os.path.join(repository, filename)))
-            archive = os.path.join(repository, os.path.basename(pathname))
+                        format_path(new_path))
+            archive = new_path
         debfile = DebFile(archive)
         converted.append('%(Package)s (=%(Version)s)' % debfile.debcontrol())
     # Clean up the build directory.
