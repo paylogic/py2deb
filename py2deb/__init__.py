@@ -18,7 +18,7 @@ Supported options:
 """
 
 # Semi-standard module versioning.
-__version__ = '0.9.4'
+__version__ = '0.9.5'
 
 # The following non-essential Debian packages need to be installed in order for
 # py2deb to work properly. Please note that this list does not include the
