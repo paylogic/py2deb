@@ -10,6 +10,7 @@ import tempfile
 import pip_accel
 import pip.exceptions
 from debian.debfile import DebFile
+from humanfriendly import format_path
 
 # Modules included in our package.
 from py2deb.backends.stdeb_backend import build as build_with_stdeb
@@ -28,7 +29,7 @@ def convert(pip_install_args, repository=None, backend=build_with_stdeb, auto_in
     check_supported_platform()
     # Initialize the build directory.
     build_dir = tempfile.mkdtemp(prefix='py2deb_')
-    logger.debug('Created build directory: %s', build_dir)
+    logger.debug("Created build directory: %s", format_path(build_dir))
     # Find package replacements.
     replacements = dict(config.items('replacements'))
     # Tell pip to extract into the build directory
@@ -43,31 +44,36 @@ def convert(pip_install_args, repository=None, backend=build_with_stdeb, auto_in
     converted = []
     repository = repository or config.get('general', 'repository')
     for package in requirements:
-        result = find_build(package, repository)
+        result = find_existing_debs(package, repository)
         if result:
-            logger.info('%s has been found in %s, skipping build.',
-                         package.debian_name, repository)
             archive = result[-1]
+            logger.info("Skipping conversion of %s (existing archive found: %s).",
+                         package.name, format_path(archive))
         else:
-            logger.info('Starting conversion of %s', package.name)
+            logger.info("Converting %s to %s ..", package.name, package.debian_name)
             pathname = backend(dict(package=package,
                                     replacements=replacements,
                                     config=config,
                                     verbose=verbose,
                                     auto_install=auto_install))
-            shutil.move(pathname, repository)
-            logger.info('%s has been converted to %s', package.name, package.debian_name)
+            filename = os.path.basename(pathname)
+            if not os.path.samefile(pathname, os.path.join(repository, filename)):
+                logger.debug("Moving %s to %s ..", filename, format_path(repository))
+                shutil.move(pathname, repository)
+            logger.info("Finished converting %s to %s (%s).",
+                        package.name, package.debian_name,
+                        format_path(os.path.join(repository, filename)))
             archive = os.path.join(repository, os.path.basename(pathname))
         debfile = DebFile(archive)
         converted.append('%(Package)s (=%(Version)s)' % debfile.debcontrol())
     # Clean up the build directory.
     shutil.rmtree(build_dir)
-    logger.debug('Removed build directory: %s', build_dir)
+    logger.debug("Removed build directory: %s", build_dir)
     return converted
 
-def find_build(package, repository):
+def find_existing_debs(package, repository):
     """
-    Find an existing *.deb package that was previously generated.
+    Find existing ``*.deb`` package archives that were previously generated.
     """
     return glob.glob(os.path.join(repository, package.debian_file_pattern))
 
@@ -93,7 +99,7 @@ def get_required_packages(pip_install_args, name_prefix, replacements, build_dir
         if pkg_name not in to_ignore:
             to_build.append(package)
         else:
-            logger.warn('%s is in the ignore list and will not be build.', pkg_name)
+            logger.warn("%s is in the ignore list and will not be build.", pkg_name)
     return sorted(to_build, key=lambda p: p.name.lower())
 
 def get_related_packages(pkg_name, packages):
@@ -114,16 +120,16 @@ def get_source_dists(pip_arguments, build_dir, max_retries=10):
     """
     with RedirectOutput(sys.stderr):
         pip_accel.initialize_directories()
-        logger.debug('Passing the following arguments to pip-accel: %s', ' '.join(pip_arguments))
+        logger.debug("Passing the following arguments to pip-accel: %s", ' '.join(pip_arguments))
         for i in xrange(max_retries):
-            logger.debug('Attempt %i/%i of getting source distributions using pip-accel.',
+            logger.debug("Attempt %i/%i of getting source distributions using pip-accel.",
                          i+1, max_retries)
             try:
                 return pip_accel.unpack_source_dists(pip_arguments, build_directory=build_dir)
             except pip.exceptions.DistributionNotFound:
                 pip_accel.download_source_dists(pip_arguments, build_dir)
         else:
-            raise Exception, 'pip-accel failed to get the source dists %i times.' % max_retries
+            raise Exception, "pip-accel failed to get the source dists %i times." % max_retries
 
 class RedirectOutput:
 
