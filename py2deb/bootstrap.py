@@ -51,7 +51,7 @@ def install():
         try:
             # Try to install the generated packages from the repository.
             logger.info("Installing py2deb using Debian packages ..")
-            execute('apt-get', 'install', 'python-py2deb', sudo=True, logger=logger)
+            execute('apt-get', 'install', '--yes', 'python-py2deb', sudo=True, logger=logger)
         finally:
             # Always deactivate the temporary repository after use.
             deactivate_repository(directory)
