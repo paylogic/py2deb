@@ -116,7 +116,7 @@ def dpkg_buildpackage(package, verbose):
             logger.debug("Considering file: %s", pathname)
             if fnmatch.fnmatch(filename, '%s_*.deb' % package.debian_name):
                 logger.info('Build of %s succeeded, checking package with Lintian ..', pathname)
-                os.system('lintian %s' % pipes.quote(pathname))
+                os.system('lintian %s >&2' % pipes.quote(pathname))
                 return pathname
     else:
         raise Exception, 'Could not find build of %s' % package.debian_name
