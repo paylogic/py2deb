@@ -13,8 +13,10 @@ from debian.debfile import DebFile
 from humanfriendly import format_path
 
 # Modules included in our package.
+from py2deb.backends.pip_accel_backend import build as build_with_pip_accel
 from py2deb.backends.stdeb_backend import build as build_with_stdeb
 from py2deb.config import config
+from py2deb.exceptions import BackendFailed
 from py2deb.package import Package
 from py2deb.util import check_supported_platform
 
@@ -23,54 +25,88 @@ logger = logging.getLogger(__name__)
 
 def convert(pip_install_args, repository=None, backend=build_with_stdeb, auto_install=False, verbose=False):
     """
-    Convert Python packages downloaded using pip-accel to Debian packages.
+    Convert Python packages to Debian packages. This function is a wrapper for
+    the real conversion function (:py:func:`convert_real()`). If the requested
+    backend fails, the wrapper will retry the build with the alternative
+    backend.
     """
     # Make sure we're running on a supported configuration.
     check_supported_platform()
+    try:
+        # Try to build the package with the requested backend.
+        return convert_real(pip_install_args,
+                            repository=repository,
+                            backend=backend,
+                            auto_install=auto_install,
+                            verbose=verbose)
+    except BackendFailed, e:
+        if backend == build_with_stdeb:
+            logger.exception(e)
+            logger.warn("py2deb's stdeb backend failed, falling back to pip-accel backend.")
+            alternative_backend = build_with_pip_accel
+        elif backend == build_with_pip_accel:
+            logger.exception(e)
+            logger.warn("py2deb's pip-accel backend failed, falling back to stdeb backend.")
+            alternative_backend = build_with_stdeb
+        else:
+            raise
+        # Fall back to the alternative backend if the requested backend fails.
+        return convert_real(pip_install_args,
+                            repository=repository,
+                            backend=alternative_backend,
+                            auto_install=auto_install,
+                            verbose=verbose)
+
+def convert_real(pip_install_args, repository=None, backend=build_with_stdeb, auto_install=False, verbose=False):
+    """
+    Convert Python packages to Debian packages.
+    """
     # Initialize the build directory.
     build_dir = tempfile.mkdtemp(prefix='py2deb_')
     logger.debug("Created build directory: %s", format_path(build_dir))
-    # Find package replacements.
-    replacements = dict(config.items('replacements'))
-    # Tell pip to extract into our build directory.
-    pip_install_args = list(pip_install_args) + ['-b', build_dir]
-    # Generate list of requirements.
-    requirements = get_required_packages(pip_install_args=pip_install_args,
-                                         name_prefix=config.get('general', 'name-prefix'),
-                                         replacements=replacements,
-                                         build_dir=build_dir,
-                                         config=config)
-    logger.debug("Required packages: %r", requirements)
-    converted = []
-    repository = repository or config.get('general', 'repository')
-    for package in requirements:
-        result = find_existing_debs(package, repository)
-        if result:
-            archive = result[-1]
-            logger.info("Skipping conversion of %s (existing archive found: %s).",
-                         package.name, format_path(archive))
-        else:
-            logger.info("Converting %s to %s ..", package.name, package.debian_name)
-            pathname = backend(dict(package=package,
-                                    replacements=replacements,
-                                    config=config,
-                                    verbose=verbose,
-                                    auto_install=auto_install))
-            old_path = os.path.realpath(pathname)
-            new_path = os.path.realpath(os.path.join(repository, os.path.basename(pathname)))
-            if new_path != old_path:
-                logger.debug("Moving %s to %s ..", format_path(old_path), format_path(new_path))
-                shutil.move(old_path, new_path)
-            logger.info("Finished converting %s to %s (%s).",
-                        package.name, package.debian_name,
-                        format_path(new_path))
-            archive = new_path
-        debfile = DebFile(archive)
-        converted.append('%(Package)s (=%(Version)s)' % debfile.debcontrol())
-    # Clean up the build directory.
-    shutil.rmtree(build_dir)
-    logger.debug("Removed build directory: %s", build_dir)
-    return converted
+    try:
+        # Find package replacements.
+        replacements = dict(config.items('replacements'))
+        # Tell pip to extract into our build directory.
+        pip_install_args = list(pip_install_args) + ['-b', build_dir]
+        # Generate list of requirements.
+        requirements = get_required_packages(pip_install_args=pip_install_args,
+                                             name_prefix=config.get('general', 'name-prefix'),
+                                             replacements=replacements,
+                                             build_dir=build_dir,
+                                             config=config)
+        logger.debug("Required packages: %r", requirements)
+        converted = []
+        repository = repository or config.get('general', 'repository')
+        for package in requirements:
+            result = find_existing_debs(package, repository)
+            if result:
+                archive = result[-1]
+                logger.info("Skipping conversion of %s (existing archive found: %s).",
+                             package.name, format_path(archive))
+            else:
+                logger.info("Converting %s to %s ..", package.name, package.debian_name)
+                pathname = backend(dict(package=package,
+                                        replacements=replacements,
+                                        config=config,
+                                        verbose=verbose,
+                                        auto_install=auto_install))
+                old_path = os.path.realpath(pathname)
+                new_path = os.path.realpath(os.path.join(repository, os.path.basename(pathname)))
+                if new_path != old_path:
+                    logger.debug("Moving %s to %s ..", format_path(old_path), format_path(new_path))
+                    shutil.move(old_path, new_path)
+                logger.info("Finished converting %s to %s (%s).",
+                            package.name, package.debian_name,
+                            format_path(new_path))
+                archive = new_path
+            debfile = DebFile(archive)
+            converted.append('%(Package)s (=%(Version)s)' % debfile.debcontrol())
+        return converted
+    finally:
+        # Clean up the build directory.
+        logger.debug("Cleaning up build directory: %s", build_dir)
+        shutil.rmtree(build_dir)
 
 def find_existing_debs(package, repository):
     """
