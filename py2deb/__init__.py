@@ -35,7 +35,7 @@ from py2deb.config import config, load_config
 from py2deb.converter import convert
 
 # Semi-standard module versioning.
-__version__ = '0.10.1'
+__version__ = '0.10.2'
 
 # Initialize a logger for this module.
 logger = logging.getLogger()
@@ -52,6 +52,7 @@ debian_package_dependencies = (
     'dpkg-dev',             # Required by py2deb to build packages (specifically the program dpkg-buildpackage).
     'python-all',           # Required by py2deb to determine which version of stdeb to use.
     'python-pkg-resources', # Required by py2deb (the Python module pkg_resources).
+    'python-setuptools',    # Required by stdeb to build packages.
     'python-support',       # Required by stdeb to avoid "dpkg-checkbuilddeps: Unmet build dependencies: python-support".
 )
 
