@@ -17,32 +17,16 @@ Supported options:
   -h, --help            show this message and exit
 """
 
-# Semi-standard module versioning.
-__version__ = '0.9.6'
-
-# The following non-essential Debian packages need to be installed in order for
-# py2deb to work properly. Please note that this list does not include the
-# dependencies of deb-pkg-tools!
-#
-# TODO Document why we need these!
-debian_package_dependencies = (
-        'apt-file',
-        'apt-utils',
-        'build-essential',
-        'debhelper',
-        'dpkg-dev',
-        'python-all',
-        'python-pkg-resources',
-)
-
 # Standard library modules.
 import getopt
+import logging
 import os
 import sys
 import textwrap
 
-# External dependency.
+# External dependencies.
 import coloredlogs
+from deb_pkg_tools.utils import install_dependencies
 
 # Modules included in our package.
 from py2deb.backends.pip_accel_backend import build as build_with_pip_accel
@@ -50,6 +34,31 @@ from py2deb.backends.stdeb_backend import build as build_with_stdeb
 from py2deb.bootstrap import install
 from py2deb.config import config, load_config
 from py2deb.converter import convert
+
+# Semi-standard module versioning.
+__version__ = '0.9.7'
+
+# Initialize a logger for this module.
+logger = logging.getLogger()
+
+# The following non-essential Debian packages need to be installed in order for
+# py2deb to work properly. Please note that this list does not include the
+# dependencies of deb-pkg-tools!
+#
+# TODO Document why we need these!
+debian_package_dependencies = (
+    'apt-file',
+    'apt-utils',
+    'build-essential',
+    'debhelper',
+    'dpkg-dev',
+    'python-all',
+    'python-pkg-resources',
+)
+
+install_dependencies(package='py2deb',
+                     dependencies=debian_package_dependencies,
+                     logger=logger)
 
 def main():
 
