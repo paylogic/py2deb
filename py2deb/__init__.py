@@ -31,12 +31,11 @@ from deb_pkg_tools.utils import install_dependencies
 # Modules included in our package.
 from py2deb.backends.pip_accel_backend import build as build_with_pip_accel
 from py2deb.backends.stdeb_backend import build as build_with_stdeb
-from py2deb.bootstrap import install
 from py2deb.config import config, load_config
 from py2deb.converter import convert
 
 # Semi-standard module versioning.
-__version__ = '0.9.7'
+__version__ = '0.9.8'
 
 # Initialize a logger for this module.
 logger = logging.getLogger()
@@ -124,7 +123,8 @@ def main():
         return
 
     if do_install:
-        install()
+        import py2deb.bootstrap
+        py2deb.bootstrap.install()
 
     if arguments:
         converted = convert(arguments,
