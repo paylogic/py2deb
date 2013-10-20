@@ -32,10 +32,10 @@ def convert(pip_install_args, repository=None, backend=build_with_stdeb, auto_in
     logger.debug("Created build directory: %s", format_path(build_dir))
     # Find package replacements.
     replacements = dict(config.items('replacements'))
-    # Tell pip to extract into the build directory
-    pip_install_args.extend(['-b', build_dir])
+    # Tell pip to extract into our build directory.
+    pip_install_args = list(pip_install_args) + ['-b', build_dir]
     # Generate list of requirements.
-    requirements = get_required_packages(pip_install_args,
+    requirements = get_required_packages(pip_install_args=pip_install_args,
                                          name_prefix=config.get('general', 'name-prefix'),
                                          replacements=replacements,
                                          build_dir=build_dir,
