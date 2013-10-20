@@ -108,7 +108,7 @@ def dpkg_buildpackage(package, verbose):
         # by default. We don't want this so we override this behavior.
         os.environ['DH_OPTIONS'] = '--no-guessing-deps'
     if run(command, package.directory, verbose):
-        raise Exception, "Failed to build package %s!" % package.debian_name
+        raise BackendFailed, "Failed to build package %s!" % package.debian_name
     logger.debug("%s: Scanning for generated Debian packages ..", package.name)
     parent_directory = os.path.dirname(package.directory)
     for filename in os.listdir(parent_directory):
