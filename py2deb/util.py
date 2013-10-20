@@ -110,7 +110,7 @@ def find_ubuntu_release():
     """
     lsb_release = os.popen('lsb_release --short --codename 2>/dev/null')
     distribution = lsb_release.read().strip()
-    logger.debug("Detected Ubuntu release: %s", distribution[0].upper() + distribution[1:])
+    logger.debug("Detected Ubuntu release: %s", distribution.capitalize())
     return distribution
 
 def find_python_version():
@@ -130,13 +130,27 @@ def check_supported_platform():
     Determine whether the old (0.6.0) or new (0.6.0+git) release of ``stdeb``
     should be used to convert Python packages to Debian packages.
     """
+    # First let's make sure we're running some form of Debian Linux.
+    if not os.path.isfile('/etc/debian_version'):
+        raise Exception, compact("""
+            To run py2deb (and stdeb) you need to be running Debian Linux or a
+            derived Linux distribution like Ubuntu!
+        """)
+    # Now determine whether we are running either one of the Ubuntu Linux
+    # distribution releases Lucid Lynx (10.04 LTS) or Precise Pangolin (12.04
+    # LTS). These are the only Debian Linux derived distribution releases on
+    # which py2deb is currently tested and supported.
     ubuntu_release = find_ubuntu_release()
     python_version = find_python_version()
     if ubuntu_release == 'lucid' and python_version != 'python2.6':
-        raise Exception, "On Ubuntu 10.04 you should use Python 2.6 to run py2deb! (you are using %s)" % python_version
+        msg = "On Ubuntu 10.04 you should use Python 2.6 to run py2deb! (you are using %s)"
+        raise Exception, msg % python_version
     elif ubuntu_release == 'precise' and python_version != 'python2.7':
-        raise Exception, "On Ubuntu 12.04 you should use Python 2.7 to run py2deb! (you are using %s)" % python_version
+        msg = "On Ubuntu 12.04 you should use Python 2.7 to run py2deb! (you are using %s)"
+        raise Exception, msg % python_version
     elif ubuntu_release not in ('lucid', 'precise'):
-        logger.warn("py2deb was developed for and tested on Ubuntu 10.04 (Python 2.6)"
-                    " and Ubuntu 12.04 (Python 2.7). Since we appear to be running on"
-                    " another platform you may experience breakage!")
+        logger.warn(compact("""
+            py2deb was developed for and tested on Ubuntu 10.04 (Python 2.6)
+            and Ubuntu 12.04 (Python 2.7). Since we appear to be running on
+            another platform you may experience breakage!
+        """))

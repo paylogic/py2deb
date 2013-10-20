@@ -1,7 +1,7 @@
 # Fake stdeb module that loads the right version of stdeb depending on platform.
 #
 # Author: Peter Odding <peter@peterodding.com>
-# Last Change: August 13, 2013
+# Last Change: October 20, 2013
 #
 # The py2deb package bundles two copies of stdeb:
 #
@@ -22,8 +22,10 @@ import sys
 
 def pick_stdeb_release():
     # Find the newest version of the `python-all' package available on the
-    # current platform (regardless of whether it is already installed).
-    handle = os.popen("apt-cache show python-all | awk '/^Version:/ {print $2}' | sort --version-sort | tail -n1")
+    # current platform (regardless of whether it is currently installed).
+    # XXX `sort --version-sort' isn't supported in Ubuntu 9.04 (Jaunty) and it
+    # looks like `sort --general-numeric-sort' works fine for our purpose.
+    handle = os.popen("apt-cache show python-all | awk '/^Version:/ {print $2}' | sort --general-numeric-sort | tail -n1")
     python_all_version = handle.read().strip()
     handle.close()
     # Use dpkg's support for raw version comparisons to check whether the
