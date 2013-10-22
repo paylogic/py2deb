@@ -26,10 +26,10 @@ def build(context):
     # Make sure we clean up the temporary directory afterwards...
     try:
         # Download the package, build the package, create a binary distribution
-        # archive and sanitize the contents of the archive (all using pip-accel).
-        members = get_binary_dist(package.name, package.version, package.directory)
-        # Install the sanitized binary distribution inside the build directory.
-        install_binary_dist(members,
+        # archive, sanitize the contents of the archive and install the
+        # sanitized binary distribution inside the build directory (all using
+        # pip-accel).
+        install_binary_dist(rewrite_filenames(package),
                             prefix=os.path.join(build_directory, 'usr'),
                             python='/usr/bin/%s' % find_python_version())
         # Get the Python requirements converted to Debian dependencies.
@@ -58,6 +58,15 @@ def build(context):
         return build_package(build_directory)
     finally:
         shutil.rmtree(build_directory)
+
+def rewrite_filenames(package):
+    # Download the package, build the package, create a binary distribution
+    # archive and sanitize the contents of the archive (all using pip-accel).
+    for member, handle in get_binary_dist(package.name, package.version, package.directory):
+        # Rewrite /site-packages/ to /dist-packages/. For details see
+        # https://wiki.debian.org/Python#Deviations_from_upstream.
+        member.name = member.name.replace('/site-packages/', '/dist-packages/')
+        yield member, handle
 
 def find_shared_object_files(directory):
     shared_objects = []
