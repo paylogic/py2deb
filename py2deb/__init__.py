@@ -26,7 +26,6 @@ import textwrap
 
 # External dependencies.
 import coloredlogs
-from deb_pkg_tools.utils import install_dependencies
 
 # Modules included in our package.
 from py2deb.backends.pip_accel_backend import build as build_with_pip_accel
@@ -35,7 +34,7 @@ from py2deb.config import config, load_config
 from py2deb.converter import convert
 
 # Semi-standard module versioning.
-__version__ = '0.10.2'
+__version__ = '0.10.3'
 
 # Initialize a logger for this module.
 logger = logging.getLogger()
@@ -55,10 +54,6 @@ debian_package_dependencies = (
     'python-setuptools',    # Required by stdeb to build packages.
     'python-support',       # Required by stdeb to avoid "dpkg-checkbuilddeps: Unmet build dependencies: python-support".
 )
-
-install_dependencies(package='py2deb',
-                     dependencies=debian_package_dependencies,
-                     logger=logger)
 
 def main():
 
