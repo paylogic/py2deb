@@ -9,7 +9,6 @@ import tempfile
 # External dependencies.
 import pip_accel
 import pip.exceptions
-from debian.debfile import DebFile
 from humanfriendly import format_path
 
 # Modules included in our package.
@@ -70,20 +69,20 @@ def convert_real(pip_install_args, repository=None, backend=build_with_stdeb, au
         # Tell pip to extract into our build directory.
         pip_install_args = list(pip_install_args) + ['-b', build_dir]
         # Generate list of requirements.
-        requirements = get_required_packages(pip_install_args=pip_install_args,
-                                             name_prefix=config.get('general', 'name-prefix'),
-                                             replacements=replacements,
-                                             build_dir=build_dir,
-                                             config=config)
-        logger.debug("Required packages: %r", requirements)
-        converted = []
+        primary_packages, packages_to_build = \
+            get_required_packages(pip_install_args=pip_install_args,
+                                  name_prefix=config.get('general', 'name-prefix'),
+                                  replacements=replacements,
+                                  build_dir=build_dir,
+                                  config=config)
+        logger.debug("Primary packages (direct dependencies): %r", primary_packages)
+        logger.debug("Packages to build (dependencies without replacements): %r", packages_to_build)
         repository = repository or config.get('general', 'repository')
-        for package in requirements:
+        for package in packages_to_build:
             result = find_existing_debs(package, repository)
             if result:
-                archive = result[-1]
                 logger.info("Skipping conversion of %s (existing archive found: %s).",
-                             package.name, format_path(archive))
+                             package.name, format_path(result[-1]))
             else:
                 logger.info("Converting %s to %s ..", package.name, package.debian_name)
                 pathname = backend(dict(package=package,
@@ -99,10 +98,7 @@ def convert_real(pip_install_args, repository=None, backend=build_with_stdeb, au
                 logger.info("Finished converting %s to %s (%s).",
                             package.name, package.debian_name,
                             format_path(new_path))
-                archive = new_path
-            debfile = DebFile(archive)
-            converted.append('%(Package)s (=%(Version)s)' % debfile.debcontrol())
-        return converted
+        return ['%s (=%s)' % (p.debian_name, p.release) for p in primary_packages]
     finally:
         # Clean up the build directory.
         logger.debug("Cleaning up build directory: %s", build_dir)
@@ -116,39 +112,41 @@ def find_existing_debs(package, repository):
 
 def get_required_packages(pip_install_args, name_prefix, replacements, build_dir, config):
     """
-    Find the packages that have to be converted to Debian packages (excludes
-    packages that have replacements).
+    Find the Python package(s) required to install the Python package(s) that
+    the user requested to be converted. This includes transitive dependencies.
+
+    :param pip_install_args: The arguments to be passed to ``pip install`` (a
+                             list of strings).
+    :param name_prefix: The string prefixed to names of converted packages.
+    :param replacements: A dictionary of replacement packages.
+    :param build_dir: Pathname of temporary build directory (a string).
+    :param config: :py:class:`ConfigParser.RawConfigParser` object.
     """
     pip_arguments = ['install', '--ignore-installed'] + pip_install_args
-    # Create a dictionary of packages downloaded by pip-accel.
-    packages = {}
-    for name, version, directory in get_source_dists(pip_arguments, build_dir):
-        package = Package(name, version, directory, name_prefix, config)
-        packages[package.name] = package
+    # Create a dictionary of all packages downloaded by pip-accel.
+    all_packages = {}
+    # Also keep a list of the packages that the user requested to install. This
+    # excludes transitive dependencies.
+    primary_packages = []
+    for requirement in get_source_dists(pip_arguments, build_dir):
+        package = Package(requirement.name, requirement.version,
+                          requirement.source_directory, name_prefix, config)
+        all_packages[package.name] = package
+        if requirement.is_direct:
+            primary_packages.append(package)
     # Create a list of packages to ignore.
-    to_ignore = []
-    for pkg_name, package in packages.iteritems():
+    packages_with_replacements = []
+    for pkg_name, package in all_packages.iteritems():
         if pkg_name in replacements:
-            to_ignore.extend(get_related_packages(pkg_name, packages))
+            packages_with_replacements.extend(get_related_packages(pkg_name, all_packages))
     # Yield packages that should be build.
-    to_build = []
-    for pkg_name, package in packages.iteritems():
-        if pkg_name not in to_ignore:
-            to_build.append(package)
+    packages_to_build = []
+    for pkg_name, package in all_packages.iteritems():
+        if pkg_name not in packages_with_replacements:
+            packages_to_build.append(package)
         else:
             logger.warn("%s is in the ignore list and will not be build.", pkg_name)
-    return sorted(to_build, key=lambda p: p.name.lower())
-
-def get_related_packages(pkg_name, packages):
-    """
-    Creates a list of all related packages.
-    """
-    related = []
-    if pkg_name in packages:
-        related.append(pkg_name)
-        for dependency in packages.get(pkg_name).py_dependencies:
-            related.extend(get_related_packages(dependency, packages))
-    return related
+    return sorted_packages(primary_packages), sorted_packages(packages_to_build)
 
 def get_source_dists(pip_arguments, build_dir, max_retries=10):
     """
@@ -167,6 +165,20 @@ def get_source_dists(pip_arguments, build_dir, max_retries=10):
                 pip_accel.download_source_dists(pip_arguments, build_dir)
         else:
             raise Exception, "pip-accel failed to get the source dists %i times." % max_retries
+
+def get_related_packages(pkg_name, packages):
+    """
+    Creates a list of all related packages.
+    """
+    related = []
+    if pkg_name in packages:
+        related.append(pkg_name)
+        for dependency in packages.get(pkg_name).py_dependencies:
+            related.extend(get_related_packages(dependency, packages))
+    return related
+
+def sorted_packages(packages):
+    return sorted(packages, key=lambda p: p.name.lower())
 
 class RedirectOutput:
 
