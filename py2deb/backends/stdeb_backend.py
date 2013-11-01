@@ -51,7 +51,7 @@ def patch_control(package, config):
     :py:func:`debianize()`) to modify the package metadata and inject the
     Python package's dependencies as Debian package dependencies.
     """
-    logger.debug("%s: Patching control file of %s", package.name)
+    logger.debug("%s: Patching control file ..", package.name)
     control_file = os.path.join(package.directory, 'debian', 'control')
     with open(control_file, 'r') as handle:
         paragraphs = list(Deb822.iter_paragraphs(handle))
