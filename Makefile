@@ -22,8 +22,9 @@ default:
 	@echo "    VIRTUAL_ENV = $(VIRTUAL_ENV)"
 	@echo
 
-test:
-	python setup.py test
+test: init
+	test -x "$(VIRTUAL_ENV)/bin/py.test" || (. "$(VIRTUAL_ENV)/bin/activate" && pip-accel install pytest)
+	py.test -s
 
 clean:
 	rm -Rf build dist *.egg *.egg-info
@@ -31,9 +32,12 @@ clean:
 reset: clean
 	# (Re)create the Python virtual environment.
 	rm -Rf "$(VIRTUAL_ENV)"
-	virtualenv "$(VIRTUAL_ENV)"
+	make --no-print-directory init
+
+init:
+	test -x "$(VIRTUAL_ENV)/bin/python" || virtualenv "$(VIRTUAL_ENV)"
 	# Install pip-accel for faster installation of dependencies from PyPI.
-	. "$(VIRTUAL_ENV)/bin/activate" && pip install pip-accel
+	test -x "$(VIRTUAL_ENV)/bin/pip-accel" || (. "$(VIRTUAL_ENV)/bin/activate" && pip install pip-accel)
 	# Use pip-accel to install all dependencies based on requirements.txt.
 	. "$(VIRTUAL_ENV)/bin/activate" && pip-accel install -r requirements.txt
 	# Install py2deb using pip instead of pip-accel because we specifically

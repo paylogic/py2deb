@@ -5,7 +5,7 @@
 # Authors:
 #  - Arjan Verwer <arjan.verwer@gmail.com>
 #  - Peter Odding <peter@peterodding.com>
-# Last Change: August 11, 2013
+# Last Change: November 1, 2013
 # URL: https://github.com/paylogic/py2deb
 #
 # Please note that py2deb bundles two copies of stdeb (see `stdeb.py').
@@ -45,5 +45,4 @@ setup(name='py2deb',
       py_modules=['stdeb'],
       package_data={'py2deb': ['config/*.ini']},
       install_requires=requirements,
-      entry_points={'console_scripts': ['py2deb = py2deb:main']},
-      test_suite='py2deb.tests')
+      entry_points={'console_scripts': ['py2deb = py2deb:main']})
