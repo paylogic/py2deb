@@ -69,6 +69,22 @@ def test_conversion_of_package_with_dependencies(tmpdir):
     assert has_dependency(package_fields['Depends'], 'python-humanfriendly')
     assert has_dependency(package_fields['Depends'], 'python-pip')
 
+def test_conversion_of_replacements(tmpdir):
+    """
+    Test case that converts pail 0.2 (some random package that has PIL/Pillow
+    as a dependency and few other dependencies) and its dependencies
+    (coloredlogs, humanfriendly and pip) to Debian packages.
+    """
+    directory = str(tmpdir)
+    package_name = 'pail'
+    package_version = '0.2'
+    convert(['%s==%s' % (package_name, package_version)], repository=directory, verbose=True)
+    package_fields = inspect_package(find_package_archive(directory, package_name))
+    assert has_dependency(package_fields['Depends'], 'python')
+    assert has_dependency(package_fields['Depends'], 'python-imaging')
+    assert has_dependency(package_fields['Depends'], 'python-setuptools')
+    assert has_dependency(package_fields['Depends'], 'python-webob')
+
 def find_package_archive(directory, package_name=None):
     archives = []
     for entry in os.listdir(directory):
