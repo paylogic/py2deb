@@ -94,6 +94,18 @@ class Package:
         return [req.key for req in self.python_requirements]
 
     @property
+    def debian_dependency(self):
+        """
+        The entry in a Debian package's ``Depends:`` field required to depend
+        on the converted package.
+        """
+        replacements = dict(self.config.items('replacements'))
+        if self.name in replacements:
+            return replacements[self.name]
+        else:
+            return '%s (=%s)' % (self.debian_name, self.release)
+
+    @property
     def debian_dependencies(self):
         """
         List with required Debian packages of this Python package in the

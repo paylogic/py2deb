@@ -98,7 +98,7 @@ def convert_real(pip_install_args, repository=None, backend=build_with_stdeb, au
                 logger.info("Finished converting %s to %s (%s).",
                             package.name, package.debian_name,
                             format_path(new_path))
-        return ['%s (=%s)' % (p.debian_name, p.release) for p in primary_packages]
+        return [p.debian_dependency for p in primary_packages]
     finally:
         # Clean up the build directory.
         logger.debug("Cleaning up build directory: %s", build_dir)
@@ -145,7 +145,7 @@ def get_required_packages(pip_install_args, name_prefix, replacements, build_dir
         if pkg_name not in packages_with_replacements:
             packages_to_build.append(package)
         else:
-            logger.warn("%s is in the ignore list and will not be build.", pkg_name)
+            logger.warn("%s is in the ignore list (it won't be converted).", pkg_name)
     return sorted_packages(primary_packages), sorted_packages(packages_to_build)
 
 def get_source_dists(pip_arguments, build_dir, max_retries=10):
