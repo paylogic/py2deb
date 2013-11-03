@@ -1,7 +1,7 @@
 # Tests for py2deb.
 #
-# Author: Peter Odding <peter@peterodding.com>
-# Last Change: November 2, 2013
+# Author: Peter Odding <peter.odding@paylogic.com>
+# Last Change: November 3, 2013
 
 # Standard library modules.
 import logging

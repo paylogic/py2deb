@@ -1,7 +1,7 @@
 # Fake stdeb module that loads the right version of stdeb depending on platform.
 #
-# Author: Peter Odding <peter@peterodding.com>
-# Last Change: October 20, 2013
+# Author: Peter Odding <peter.odding@paylogic.com>
+# Last Change: November 3, 2013
 #
 # The py2deb package bundles two copies of stdeb:
 #

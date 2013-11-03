@@ -4,8 +4,8 @@
 #
 # Authors:
 #  - Arjan Verwer <arjan.verwer@gmail.com>
-#  - Peter Odding <peter@peterodding.com>
-# Last Change: November 1, 2013
+#  - Peter Odding <peter.odding@paylogic.com>
+# Last Change: November 3, 2013
 # URL: https://github.com/paylogic/py2deb
 #
 # Please note that py2deb bundles two copies of stdeb (see `stdeb.py').
@@ -38,11 +38,11 @@ setup(name='py2deb',
       version=version_string,
       description='Converts Python packages to Debian packages (including dependencies)',
       long_description=readme_text,
-      author='Arjan Verwer & Peter Odding',
-      author_email='arjan.verwer@gmail.com, peter.odding@paylogic.eu',
+      author='Arjan Verwer, Peter Odding',
+      author_email='arjan.verwer@gmail.com, peter.odding@paylogic.com',
       url='https://github.com/paylogic/py2deb',
       packages=find_packages(),
       py_modules=['stdeb'],
-      package_data={'py2deb': ['config/*.ini']},
+      package_data={'py2deb': ['backends/*.sh', 'config/*.ini']},
       install_requires=requirements,
       entry_points={'console_scripts': ['py2deb = py2deb:main']})

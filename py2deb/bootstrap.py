@@ -1,7 +1,7 @@
 # Bootstrap script for py2deb.
 #
-# Author: Peter Odding <peter@peterodding.com>
-# Last Change: October 12, 2013
+# Author: Peter Odding <peter.odding@paylogic.com>
+# Last Change: November 3, 2013
 # URL: https://github.com/paylogic/py2deb
 #
 # This Python module implements the `py2deb --install' command. It converts

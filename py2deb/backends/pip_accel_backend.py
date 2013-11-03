@@ -62,10 +62,6 @@ def build(context):
             if len(sections) == 1:
                 overrides = dict(parser.items(sections[0]))
                 logger.debug("Loaded overrides from %s: %s.", format_path(stdeb_cfg), overrides)
-                try:
-                    del overrides['Xs-Python-Version']
-                except Exception:
-                    pass
                 control_fields = merge_control_fields(control_fields, overrides)
                 logger.debug("Merged overrides: %s.", control_fields)
         except Exception, e:
@@ -75,14 +71,24 @@ def build(context):
         # Patch any fields for which overrides are present in the configuration
         # file bundled with py2deb or provided by the user.
         control_fields = patch_control_file(package, control_fields)
-        # Generate the DEBIAN/control file.
+        # Remove the XS-Python-Version field that may have been included from
+        # the stdeb.cfg file.
+        try:
+            del overrides['Xs-Python-Version']
+        except Exception:
+            pass
+        # Create the DEBIAN directory.
         os.mkdir(os.path.join(build_directory, 'DEBIAN'))
-        # TODO Find a way to preserve author/maintainer fields.
+        # Generate the DEBIAN/control file.
         control_file = os.path.join(build_directory, 'DEBIAN', 'control')
         logger.debug("Saving control fields to %s ..", format_path(control_file))
         with open(control_file, 'w') as handle:
             control_fields.dump(handle)
-        # TODO Post installation script to generate byte code files?!
+        # Install pre-removal script to cleanup byte code files.
+        backends_directory = os.path.dirname(os.path.abspath(__file__))
+        prerm_target = os.path.join(build_directory, 'DEBIAN', 'prerm')
+        shutil.copy(os.path.join(backends_directory, 'prerm.sh'), prerm_target)
+        os.chmod(prerm_target, 0755)
         return build_package(build_directory)
     finally:
         shutil.rmtree(build_directory)

@@ -1,7 +1,7 @@
 # Makefile for py2deb.
 #
-# Author: Peter Odding <peter@peterodding.com>
-# Last Change: November 1, 2013
+# Author: Peter Odding <peter.odding@paylogic.com>
+# Last Change: November 3, 2013
 
 WORKON_HOME ?= $(HOME)/.virtualenvs
 VIRTUAL_ENV ?= $(WORKON_HOME)/py2deb
