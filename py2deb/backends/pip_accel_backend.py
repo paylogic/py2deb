@@ -52,6 +52,7 @@ def build(context):
                                                      Priority='optional',
                                                      Section='python',
                                                      Maintainer='py2deb'))
+        logger.debug("Control field defaults: %s.", control_fields)
         # Merge the fields defined in stdeb.cfg into the control fields?
         stdeb_cfg = os.path.join(package.directory, 'stdeb.cfg')
         try:
@@ -77,7 +78,9 @@ def build(context):
         # Generate the DEBIAN/control file.
         os.mkdir(os.path.join(build_directory, 'DEBIAN'))
         # TODO Find a way to preserve author/maintainer fields.
-        with open(os.path.join(build_directory, 'DEBIAN', 'control'), 'w') as handle:
+        control_file = os.path.join(build_directory, 'DEBIAN', 'control')
+        logger.debug("Saving control fields to %s ..", format_path(control_file))
+        with open(control_file, 'w') as handle:
             control_fields.dump(handle)
         # TODO Post installation script to generate byte code files?!
         return build_package(build_directory)
