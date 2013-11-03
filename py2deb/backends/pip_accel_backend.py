@@ -6,7 +6,6 @@ import shutil
 import subprocess
 import sys
 import tempfile
-import time
 
 # External dependencies.
 from deb_pkg_tools.package import build_package
@@ -14,7 +13,8 @@ from debian.deb822 import Deb822
 from pip_accel.bdist import get_binary_dist, install_binary_dist
 
 # Modules included in our package.
-from py2deb.util import find_python_version, patch_control_file
+from py2deb.util import (find_python_version, get_tagged_description,
+                         patch_control_file)
 
 # Initialize a logger for this module.
 logger = logging.getLogger(__name__)
@@ -45,7 +45,7 @@ def build(context):
         control_fields = Deb822(dict(
           Package=package.debian_name,
           Version=package.release,
-          Description=time.strftime('Packaged by py2deb on %B %e, %Y at %H:%M'),
+          Description=get_tagged_description(),
           Depends=', '.join(sorted(dependencies)),
           Priority='optional',
           Section='python',

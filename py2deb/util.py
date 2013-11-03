@@ -3,6 +3,7 @@ import logging
 import os
 import re
 import sys
+import time
 
 # External dependencies.
 from deb_pkg_tools.control import merge_control_fields
@@ -101,6 +102,13 @@ def run(command, wd=None, verbose=False):
             if exitcode:
                 sys.stderr.write(output)
     return exitcode
+
+def get_tagged_description():
+  """
+  Get a package description tagged with the name `py2deb` and the current
+  date/time.
+  """
+  return compact(time.strftime('Packaged by py2deb on %B %e, %Y at %H:%M'))
 
 def find_ubuntu_release():
     """

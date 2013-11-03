@@ -5,7 +5,6 @@ import os
 import pipes
 import shutil
 import sys
-import time
 
 # External dependencies.
 from deb_pkg_tools.control import merge_control_fields
@@ -16,7 +15,7 @@ from stdeb import __version__ as stdeb_version
 
 # Modules included in our package.
 from py2deb.exceptions import BackendFailed
-from py2deb.util import patch_control_file, run
+from py2deb.util import get_tagged_description, patch_control_file, run
 
 # Initialize a logger for this module.
 logger = logging.getLogger(__name__)
@@ -64,7 +63,7 @@ def patch_control(package, config):
         #  - Make sure the word py2deb occurs in the package description. This
         #    makes `apt-cache search py2deb' report packages created by py2deb.
         overrides = dict(Package=package.debian_name,
-                         Description=time.strftime("Packaged by py2deb on %B %e, %Y at %H:%M"),
+                         Description=get_tagged_description(),
                          Depends=', '.join(package.debian_dependencies))
         paragraphs[1] = merge_control_fields(paragraphs[1], overrides)
         # Patch any fields for which overrides are present in the configuration
