@@ -1,4 +1,5 @@
 # Standard library modules.
+import ConfigParser
 import logging
 import os
 import pipes
@@ -8,8 +9,9 @@ import sys
 import tempfile
 
 # External dependencies.
+from deb_pkg_tools.control import merge_control_fields, unparse_control_fields
 from deb_pkg_tools.package import build_package
-from debian.deb822 import Deb822
+from humanfriendly import format_path
 from pip_accel.bdist import get_binary_dist, install_binary_dist
 
 # Modules included in our package.
@@ -34,24 +36,47 @@ def build(context):
                             python='/usr/bin/%s' % find_python_version())
         # Get the Python requirements converted to Debian dependencies.
         dependencies = [find_python_version()] + package.debian_dependencies
-        # Look for shared object files in the package tree.
+        # If the package installs shared object files, find their dependencies
+        # on other system packages. Also determine the package's architecture
+        # based on the architecture of the shared object files (if any).
         shared_objects = find_shared_object_files(build_directory)
         architecture = determine_package_architecture(shared_objects)
         if shared_objects:
             dependencies += find_library_dependencies(shared_objects)
+        # Generate the control fields.
+        control_fields = unparse_control_fields(dict(Package=package.debian_name,
+                                                     Version=package.release,
+                                                     Description=get_tagged_description(),
+                                                     Architecture=architecture,
+                                                     Depends=dependencies,
+                                                     Priority='optional',
+                                                     Section='python',
+                                                     Maintainer='py2deb'))
+        # Merge the fields defined in stdeb.cfg into the control fields?
+        stdeb_cfg = os.path.join(package.directory, 'stdeb.cfg')
+        try:
+            parser = ConfigParser.RawConfigParser()
+            parser.read(stdeb_cfg)
+            sections = parser.sections()
+            if len(sections) == 1:
+                overrides = dict(parser.items(sections[0]))
+                logger.debug("Loaded overrides from %s: %s.", format_path(stdeb_cfg), overrides)
+                try:
+                    del overrides['XS-Python-Version']
+                except Exception:
+                    pass
+                control_fields = merge_control_fields(control_fields, overrides)
+                logger.debug("Merged overrides: %s.", control_fields)
+        except Exception, e:
+            if os.path.isfile(stdeb_cfg):
+                logger.warn("Failed to load overrides from %s!", format_path(stdeb_cfg))
+                logger.exception(e)
+        # Patch any fields for which overrides are present in the configuration
+        # file bundled with py2deb or provided by the user.
+        control_fields = patch_control_file(package, control_fields)
         # Generate the DEBIAN/control file.
         os.mkdir(os.path.join(build_directory, 'DEBIAN'))
         # TODO Find a way to preserve author/maintainer fields.
-        control_fields = Deb822(dict(
-          Package=package.debian_name,
-          Version=package.release,
-          Description=get_tagged_description(),
-          Depends=', '.join(sorted(dependencies)),
-          Priority='optional',
-          Section='python',
-          Architecture=architecture,
-          Maintainer='py2deb'))
-        control_fields = patch_control_file(package, control_fields)
         with open(os.path.join(build_directory, 'DEBIAN', 'control'), 'w') as handle:
             control_fields.dump(handle)
         # TODO Post installation script to generate byte code files?!
