@@ -55,12 +55,16 @@ class Package:
         """
         parser = ConfigParser.RawConfigParser()
         for filename in self.find_egg_info_files('PKG-INFO'):
+            logger.debug("Reading package metadata from %s ..")
             fp = StringIO.StringIO()
             fp.write('[DEFAULT]\n')
             with open(filename) as handle:
                 fp.write(handle.read())
             fp.seek(0)
-            parser.readfp(fp)
+            try:
+                parser.readfp(fp)
+            except Exception, e:
+                logger.warn("Failed to read package metadata: %s.", e)
         fields = {}
         for name, value in parser.items('DEFAULT'):
             fields[name.lower()] = value
@@ -83,7 +87,6 @@ class Package:
                     elif line:
                         requirements.append(Requirement.parse(line))
         logger.debug("Python requirements of %s (%s): %r", self.name, self.version, requirements)
-        logger.debug("Package metadata: %s", self.metadata)
         return requirements
 
     @property
