@@ -12,12 +12,15 @@
 #   the virtual package name.
 
 # Standard library modules.
+import ConfigParser
 import glob
-import os
 import logging
+import os
+import StringIO
 
 # External dependencies.
-import pkg_resources
+from pkg_resources import Requirement
+from humanfriendly import concatenate, pluralize
 
 # Internal modules.
 from py2deb.util import transform_package_name
@@ -46,23 +49,41 @@ class Package:
         return "Package(name=%r, version=%r)" % (self.name, self.version)
 
     @property
+    def metadata(self):
+        """
+        Return package metadata loaded from the ``PKG-INFO`` file.
+        """
+        parser = ConfigParser.RawConfigParser()
+        for filename in self.find_egg_info_files('PKG-INFO'):
+            fp = StringIO.StringIO()
+            fp.write('[DEFAULT]\n')
+            with open(filename) as handle:
+                fp.write(handle.read())
+            fp.seek(0)
+            parser.readfp(fp)
+        fields = {}
+        for name, value in parser.items('DEFAULT'):
+            fields[name.lower()] = value
+        return fields
+
+    @property
     def python_requirements(self):
         """
         Returns a list of :py:class:`pkg_resources.Requirement` objects.
         """
         requirements = []
-        # requires.txt contains the Python package requirements/dependencies.
-        pattern = os.path.join(self.directory, 'pip-egg-info/*.egg-info/requires.txt')
-        for filename in glob.glob(pattern):
+        # The file `requires.txt' contains the Python package requirements.
+        for filename in self.find_egg_info_files('requires.txt'):
             with open(filename) as handle:
                 for line in handle:
                     line = line.strip()
-                    if line and not line.isspace():
-                        # Stop at extra requirements (optional dependencies).
-                        if line.startswith('['):
-                            break
-                        requirements.append(pkg_resources.Requirement.parse(line))
+                    # Stop at extra requirements (optional dependencies).
+                    if line.startswith('['):
+                        break
+                    elif line:
+                        requirements.append(Requirement.parse(line))
         logger.debug("Python requirements of %s (%s): %r", self.name, self.version, requirements)
+        logger.debug("Package metadata: %s", self.metadata)
         return requirements
 
     @property
@@ -139,3 +160,18 @@ class Package:
         dependencies = sorted(dependencies)
         logger.debug("Debian requirements of %s (%s): %r", self.debian_name, self.version, dependencies)
         return dependencies
+
+    def find_egg_info_files(self, pattern):
+        """
+        When pip unpacks a source distribution it creates a subdirectory
+        ``pip-egg-info`` which contains the package's metadata in a declarative
+        and easy to parse format. This method finds such metadata files.
+
+        :param pattern: The :py:mod:`glob` pattern to search for (a string).
+        :returns: A list of matched filenames (strings).
+        """
+        full_pattern = os.path.join(self.directory, 'pip-egg-info', '*.egg-info', pattern)
+        logger.debug("Looking for `%s' file(s) using pattern %s ..", pattern, full_pattern)
+        matches = glob.glob(full_pattern)
+        logger.debug("Matched %s: %s", pluralize(len(matches), "file", "files"), concatenate(matches))
+        return matches

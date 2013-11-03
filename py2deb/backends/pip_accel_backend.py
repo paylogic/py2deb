@@ -46,12 +46,12 @@ def build(context):
         # Generate the control fields.
         control_fields = unparse_control_fields(dict(Package=package.debian_name,
                                                      Version=package.release,
+                                                     Maintainer=find_package_maintainer(package),
                                                      Description=get_tagged_description(),
                                                      Architecture=architecture,
                                                      Depends=dependencies,
                                                      Priority='optional',
-                                                     Section='python',
-                                                     Maintainer='py2deb'))
+                                                     Section='python'))
         logger.debug("Control field defaults: %s.", control_fields)
         # Merge the fields defined in stdeb.cfg into the control fields?
         stdeb_cfg = os.path.join(package.directory, 'stdeb.cfg')
@@ -63,7 +63,7 @@ def build(context):
                 overrides = dict(parser.items(sections[0]))
                 logger.debug("Loaded overrides from %s: %s.", format_path(stdeb_cfg), overrides)
                 try:
-                    del overrides['XS-Python-Version']
+                    del overrides['Xs-Python-Version']
                 except Exception:
                     pass
                 control_fields = merge_control_fields(control_fields, overrides)
@@ -151,3 +151,16 @@ def find_library_dependencies(shared_objects):
         return dependencies
     finally:
         shutil.rmtree(fake_source_directory)
+
+def find_package_maintainer(package):
+    metadata = package.metadata
+    maintainer = metadata.get('maintainer')
+    maintainer_email = metadata.get('maintainer-email')
+    if not maintainer:
+        maintainer = metadata.get('author')
+        maintainer_email = metadata.get('author-email')
+    if maintainer and maintainer_email:
+        maintainer = '%s <%s>' % (maintainer, maintainer_email)
+    elif not maintainer:
+        maintainer = 'Unknown'
+    return maintainer
