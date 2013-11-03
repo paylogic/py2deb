@@ -22,6 +22,9 @@ from py2deb.util import check_supported_platform
 # Initialize a logger for this module.
 logger = logging.getLogger(__name__)
 
+# Increase the verbosity of the stdeb logger.
+logging.getLogger('stdeb').setLevel(logging.DEBUG)
+
 def convert(pip_install_args, repository=None, backend=build_with_stdeb, auto_install=False, verbose=False):
     """
     Convert Python packages to Debian packages. This function is a wrapper for
