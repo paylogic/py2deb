@@ -1,7 +1,7 @@
 # Direct dependencies of py2deb.
 coloredlogs >= 0.4.6
 humanfriendly >= 1.5
-pip-accel >= 0.11.3
+pip-accel >= 0.11.4
 deb-pkg-tools >= 1.9.9
 # Provides the debian.deb822 module. A direct dependency of py2deb.
 # Ideally we should be able to use the version provided by the
