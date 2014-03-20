@@ -3,18 +3,20 @@ Usage: py2deb [OPTIONS] -- PIP_INSTALL_ARGS
 
 Supported options:
 
-  -c, --config=FILE     set the user configuration file
-  -r, --repo=DIR        override the default repository directory
-  -p, --prefix=STR      set package name prefix (defaults to `python-')
-  -P, --print-deps      prints a valid value for the `Depends` line of a Debian
-                        control file with the package names and pinned versions
-                        of all built packages
-  -s, --with-stdeb      use the stdeb backend to build the Debian package
-  -p, --with-pip-accel  use the pip-accel backend to build the Debian package
-  -v, --verbose         make more noise (can be repeated)
-  -i, --install         install py2deb using Debian packages (bootstrapping)
-  -y, --yes             automatically install missing system packages
-  -h, --help            show this message and exit
+  -c, --config=FILE          set the user configuration file
+  -r, --repository=DIR       override the default repository directory
+      --name-prefix=STR      set package name prefix (default: python)
+      --install-prefix=PATH  set installation prefix path (default: none)
+  -p, --print-deps           prints a valid value for the `Depends` line of a
+                             Debian control file with the package names and
+                             pinned versions of built (transitive) packages
+      --with-stdeb           use stdeb backend to build Debian package(s)
+      --with-pip-accel       use pip-accel backend to build Debian package(s)
+      --install              install py2deb using Debian packages
+                             (bootstrapping)
+  -y, --yes                  automatically install missing system packages
+  -v, --verbose              make more noise (can be repeated)
+  -h, --help                 show this message and exit
 """
 
 # Standard library modules.
@@ -34,7 +36,7 @@ from py2deb.config import config, load_config
 from py2deb.converter import convert
 
 # Semi-standard module versioning.
-__version__ = '0.13.1'
+__version__ = '0.13.2'
 
 # Initialize a logger for this module.
 logger = logging.getLogger()
@@ -72,32 +74,32 @@ def main():
     do_install = False
 
     # Parse command line options
-    options, arguments = getopt.gnu_getopt(sys.argv[1:], 'ic:r:p:Pspyvh',
-            ['install', 'config=', 'repo=', 'name-prefix=', 'install-prefix=', 'print-deps', 'with-stdeb', 'with-pip-accel', 'verbose', 'yes', 'help'])
+    options, arguments = getopt.gnu_getopt(sys.argv[1:], 'c:r:pyvh',
+            ['install', 'config=', 'repository=', 'name-prefix=', 'install-prefix=', 'print-deps', 'with-stdeb', 'with-pip-accel', 'yes', 'verbose', 'help'])
 
     # Validate the command line options and map them to variables
     for option, value in options:
-        if option in ('-i', '--install'):
+        if option == '--install':
             do_install = True
         elif option in ('-c', '--config'):
             config_file = os.path.abspath(value)
             if not os.path.isfile(config_file):
                 msg = "Configuration file doesn't exist! (%s)"
                 raise Exception, msg % config_file
-        elif option in ('-r', '--repo'):
+        elif option in ('-r', '--repository'):
             repository = os.path.abspath(value)
             if not os.path.isdir(repository):
                 msg = "Repository directory doesn't exist! (%s)"
                 raise Exception, msg % repository
-        elif option in ('-p', '--name-prefix'):
+        elif option == '--name-prefix':
             name_prefix = value
         elif option == '--install-prefix':
             install_prefix = value
-        elif option in ('-P', '--print-deps'):
+        elif option in ('-p', '--print-deps'):
             print_dependencies = True
-        elif option in ('-s', '--with-stdeb'):
+        elif option == '--with-stdeb':
             backend = build_with_stdeb
-        elif option in ('-p', '--with-pip-accel'):
+        elif option == '--with-pip-accel':
             backend = build_with_pip_accel
         elif option in ('-y', '--yes'):
             auto_install = True
