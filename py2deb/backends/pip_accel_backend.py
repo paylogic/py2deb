@@ -91,11 +91,12 @@ def build(context):
         logger.debug("Saving control fields to %s ..", format_path(control_file))
         with open(control_file, 'w') as handle:
             control_fields.dump(handle)
-        # Install pre-removal script to cleanup byte code files.
+        # Install post-installation and pre-removal scripts.
         backends_directory = os.path.dirname(os.path.abspath(__file__))
-        prerm_target = os.path.join(build_directory, 'DEBIAN', 'prerm')
-        shutil.copy(os.path.join(backends_directory, 'prerm.sh'), prerm_target)
-        os.chmod(prerm_target, 0755)
+        for script_name in ('postinst', 'prerm'):
+            target = os.path.join(build_directory, 'DEBIAN', script_name)
+            shutil.copy(os.path.join(backends_directory, '%s.sh' % script_name), target)
+            os.chmod(target, 0755)
         return build_package(build_directory)
     finally:
         shutil.rmtree(build_directory)
