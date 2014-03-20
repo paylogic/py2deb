@@ -3,7 +3,9 @@ import ConfigParser
 import logging
 import os
 import pipes
+import re
 import shutil
+import StringIO
 import subprocess
 import sys
 import tempfile
@@ -15,6 +17,7 @@ from humanfriendly import format_path
 from pip_accel.bdist import get_binary_dist, install_binary_dist
 
 # Modules included in our package.
+from py2deb.config import config
 from py2deb.util import (find_python_version, get_tagged_description,
                          patch_control_file)
 
@@ -31,8 +34,12 @@ def build(context):
         # archive, sanitize the contents of the archive and install the
         # sanitized binary distribution inside the build directory (all using
         # pip-accel).
+        if config.has_option('general', 'install-prefix'):
+            install_prefix = config.get('general', 'install-prefix')
+        else:
+            install_prefix = '/usr'
         install_binary_dist(rewrite_filenames(package),
-                            prefix=os.path.join(build_directory, 'usr'),
+                            prefix=os.path.join(build_directory, install_prefix.lstrip('/')),
                             python='/usr/bin/%s' % find_python_version())
         # Get the Python requirements converted to Debian dependencies.
         dependencies = [find_python_version()] + package.debian_dependencies
@@ -96,10 +103,28 @@ def build(context):
 def rewrite_filenames(package):
     # Download the package, build the package, create a binary distribution
     # archive and sanitize the contents of the archive (all using pip-accel).
+    custom_install_prefix = config.has_option('general', 'install-prefix')
     for member, handle in get_binary_dist(package.name, package.version, package.directory):
-        # Rewrite /site-packages/ to /dist-packages/. For details see
-        # https://wiki.debian.org/Python#Deviations_from_upstream.
-        member.name = member.name.replace('/site-packages/', '/dist-packages/')
+        if custom_install_prefix:
+            # Strip the complete /usr/lib/pythonX.Y/site-packages/ prefix so we
+            # can replace it with the custom installation prefix (at this point
+            # /usr/ has already been stripped by get_binary_dist()).
+            member.name = re.sub(r'lib/python\d+(\.\d+)*/(dist|site)-packages/', 'lib/', member.name)
+            # Rewrite executable Python scripts so they know about the custom
+            # installation prefix.
+            if member.name.startswith('bin/'):
+                lines = handle.readlines()
+                if lines and re.match(r'^#!.*\bpython', lines[0]):
+                    i = 0
+                    while i < len(lines) and lines[i].startswith('#'):
+                        i += 1
+                    directory = os.path.join(config.get('general', 'install-prefix'), 'lib')
+                    lines.insert(i, 'import sys; sys.path.insert(0, %r)\n' % directory)
+                handle = StringIO.StringIO(''.join(lines))
+        else:
+            # Rewrite /site-packages/ to /dist-packages/. For details see
+            # https://wiki.debian.org/Python#Deviations_from_upstream.
+            member.name = member.name.replace('/site-packages/', '/dist-packages/')
         yield member, handle
 
 def find_shared_object_files(directory):

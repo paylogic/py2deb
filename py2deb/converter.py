@@ -34,8 +34,17 @@ def convert(pip_install_args, repository=None, backend=build_with_stdeb, auto_in
     """
     # Make sure we're running on a supported configuration.
     check_supported_platform()
+    # If the user requested to build packages with a custom installation
+    # prefix, the pip-accel backend is our only option.
+    if config.has_option('general', 'install-prefix'):
+        return convert_real(pip_install_args,
+                            repository=repository,
+                            backend=build_with_pip_accel,
+                            auto_install=auto_install,
+                            verbose=verbose)
+    # Try to build the package with the requested backend but fall back to
+    # the alternative backend if the requested backend fails.
     try:
-        # Try to build the package with the requested backend.
         return convert_real(pip_install_args,
                             repository=repository,
                             backend=backend,
@@ -52,7 +61,6 @@ def convert(pip_install_args, repository=None, backend=build_with_stdeb, auto_in
             alternative_backend = build_with_stdeb
         else:
             raise
-        # Fall back to the alternative backend if the requested backend fails.
         return convert_real(pip_install_args,
                             repository=repository,
                             backend=alternative_backend,

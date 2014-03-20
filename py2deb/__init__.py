@@ -34,7 +34,7 @@ from py2deb.config import config, load_config
 from py2deb.converter import convert
 
 # Semi-standard module versioning.
-__version__ = '0.12.3'
+__version__ = '0.13'
 
 # Initialize a logger for this module.
 logger = logging.getLogger()
@@ -65,6 +65,7 @@ def main():
     config_file = None
     repository = None
     name_prefix = None
+    install_prefix = None
     print_dependencies = False
     verbose = False
     auto_install = False
@@ -72,7 +73,7 @@ def main():
 
     # Parse command line options
     options, arguments = getopt.gnu_getopt(sys.argv[1:], 'ic:r:p:Pspyvh',
-            ['install', 'config=', 'repo=', 'prefix=', 'print-deps', 'with-stdeb', 'with-pip-accel', 'verbose', 'yes', 'help'])
+            ['install', 'config=', 'repo=', 'name-prefix=', 'install-prefix=', 'print-deps', 'with-stdeb', 'with-pip-accel', 'verbose', 'yes', 'help'])
 
     # Validate the command line options and map them to variables
     for option, value in options:
@@ -88,8 +89,10 @@ def main():
             if not os.path.isdir(repository):
                 msg = "Repository directory doesn't exist! (%s)"
                 raise Exception, msg % repository
-        elif option in ('-p', '--prefix'):
+        elif option in ('-p', '--name-prefix'):
             name_prefix = value
+        elif option == '--install-prefix':
+            install_prefix = value
         elif option in ('-P', '--print-deps'):
             print_dependencies = True
         elif option in ('-s', '--with-stdeb'):
@@ -113,6 +116,8 @@ def main():
         load_config(config_file)
     if name_prefix:
         config.set('general', 'name-prefix', name_prefix)
+    if install_prefix:
+        config.set('general', 'install-prefix', install_prefix)
 
     if not (do_install or arguments):
         usage()
