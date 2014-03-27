@@ -36,9 +36,10 @@ class Package:
 
     def __init__(self, name, version, directory, name_prefix, config):
         self.name = name.lower()
+        self.name_prefix = name_prefix
+        self.debian_name = transform_package_name(self.name_prefix, self.name)
         self.version = version
         self.directory = os.path.abspath(directory)
-        self.name_prefix = name_prefix
         self.config = config
         self.py_requirements = self.python_requirements or []
 
@@ -55,7 +56,7 @@ class Package:
         """
         parser = ConfigParser.RawConfigParser()
         for filename in self.find_egg_info_files('PKG-INFO'):
-            logger.debug("Reading package metadata from %s ..")
+            logger.debug("Reading package metadata from %s ..", filename)
             fp = StringIO.StringIO()
             fp.write('[DEFAULT]\n')
             with open(filename) as handle:
@@ -64,7 +65,7 @@ class Package:
             try:
                 parser.readfp(fp)
             except Exception, e:
-                logger.warn("Failed to read package metadata: %s.", e)
+                logger.warn("Failed to read package metadata: %s", e)
         fields = {}
         for name, value in parser.items('DEFAULT'):
             fields[name.lower()] = value
@@ -95,13 +96,6 @@ class Package:
         The version number and release number, separated by a dash.
         """
         return "%s-1" % self.version
-
-    @property
-    def debian_name(self):
-        """
-        The name of the Debian package corresponding to the Python package.
-        """
-        return transform_package_name(self.name)
 
     @property
     def debian_file_pattern(self):
@@ -144,7 +138,7 @@ class Package:
             if req.key in replacements:
                 dependencies.append(replacements[req.key])
             else:
-                name = transform_package_name(req.key)
+                name = transform_package_name(self.name_prefix, req.key)
                 if not req.specs:
                     dependencies.append(name)
                 else:

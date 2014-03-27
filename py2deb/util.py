@@ -51,18 +51,19 @@ def patch_control_file(package, control_fields):
 
 previously_transformed_names = {}
 
-def transform_package_name(python_package):
+def transform_package_name(name_prefix, python_package_name):
     """
     Transforms the name of a Python package as found on PyPi into the name that
     we want it to have as a Debian package using a prefix and a seperator.
     """
-    if python_package not in previously_transformed_names:
-        if config.has_option(python_package, 'debian-name'):
-            debian_package = config.get(python_package, 'debian-name')
-            logger.debug("Package %s has overridden Debian package name configured: %s", python_package, debian_package)
+    if python_package_name not in previously_transformed_names:
+        if config.has_option(python_package_name, 'debian-name'):
+            # FIXME This should not apply when a custom name prefix has been given?!
+            debian_package = config.get(python_package_name, 'debian-name')
+            logger.debug("Package %s has overridden Debian package name configured: %s", python_package_name, debian_package)
         else:
             # Apply the package name prefix.
-            debian_package = '%s-%s' % (config.get('general', 'name-prefix'), python_package)
+            debian_package = '%s-%s' % (name_prefix, python_package_name)
             normalized_words = debian_package.lower().split('-')
             logger.debug("Transforming package name, step 1: Split words (%r)", normalized_words)
             # Remove repeating words.
@@ -77,8 +78,8 @@ def transform_package_name(python_package):
             # Make sure that the only non-alphanumeric character is the dash.
             debian_package = re.sub('[^a-z0-9]+', '-', ' '.join(deduplicated_words)).strip('-')
             logger.debug("Transforming package name, step 3: Normalizing special characters (%r)", debian_package)
-        previously_transformed_names[python_package] = debian_package
-    return previously_transformed_names[python_package]
+        previously_transformed_names[python_package_name] = debian_package
+    return previously_transformed_names[python_package_name]
 
 def run(command, wd=None, verbose=False):
     """

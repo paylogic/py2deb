@@ -80,14 +80,22 @@ def convert_real(pip_install_args, repository=None, backend=build_with_stdeb, au
         # Tell pip to extract into our build directory.
         pip_install_args = list(pip_install_args) + ['-b', build_dir]
         # Generate list of requirements.
+        name_prefix = config.get('general', 'name-prefix')
         primary_packages, packages_to_build = \
             get_required_packages(pip_install_args=pip_install_args,
-                                  name_prefix=config.get('general', 'name-prefix'),
+                                  name_prefix=name_prefix,
                                   replacements=replacements,
                                   build_dir=build_dir,
                                   config=config)
-        logger.debug("Primary packages (direct dependencies): %r", primary_packages)
-        logger.debug("Packages to build (dependencies without replacements): %r", packages_to_build)
+        logger.debug("Primary packages (given on the command line): %r", primary_packages)
+        logger.debug("Packages to build (all dependencies except those with replacements): %r", packages_to_build)
+        # If we're building packages with a custom installation prefix
+        if config.has_option('general', 'install-prefix'):
+            if len(primary_packages) == 1:
+                logger.info("Resetting name of primary package %s to %s ..", primary_packages[0], name_prefix)
+                primary_packages[0].debian_name = name_prefix
+            else:
+                logger.warn("FYI: You requested to build more than one primary package with a custom install prefix, in this case there's no primary package whose name can be reset.")
         repository = repository or config.get('general', 'repository')
         for package in packages_to_build:
             result = find_existing_debs(package, repository)
@@ -95,7 +103,10 @@ def convert_real(pip_install_args, repository=None, backend=build_with_stdeb, au
                 logger.info("Skipping conversion of %s (existing archive found: %s).",
                              package.name, format_path(result[-1]))
             else:
-                logger.info("Converting %s to %s ..", package.name, package.debian_name)
+                if package.name != package.debian_name:
+                    logger.info("Converting %s to %s ..", package.name, package.debian_name)
+                else:
+                    logger.info("Converting %s ..", package.name)
                 pathname = backend(dict(package=package,
                                         replacements=replacements,
                                         config=config,
@@ -132,6 +143,10 @@ def get_required_packages(pip_install_args, name_prefix, replacements, build_dir
     :param replacements: A dictionary of replacement packages.
     :param build_dir: Pathname of temporary build directory (a string).
     :param config: :py:class:`ConfigParser.RawConfigParser` object.
+    :returns: Two lists with :py:class:`py2deb.package.Package` objects. The
+              first list contains the package(s) that py2deb was directly
+              requested to build by the user while the second list also
+              contains all transitive dependencies.
     """
     pip_arguments = ['install', '--ignore-installed'] + pip_install_args
     # Create a dictionary of all packages downloaded by pip-accel.
