@@ -26,6 +26,11 @@ logger = logging.getLogger(__name__)
 
 def build(context):
     package = context['package']
+    # Check whether the package is to be installed under a custom installation
+    # prefix. If it is we are building an isolated package, this means the
+    # Debian control file doesn't need fields like `Provides', `Replaces',
+    # `Conflicts', etc.
+    is_isolated_package = config.has_option('general', 'install-prefix')
     # Create a temporary directory to put the generated package in.
     build_directory = tempfile.mkdtemp()
     # Make sure we clean up the temporary directory afterwards...
@@ -34,11 +39,11 @@ def build(context):
         # archive, sanitize the contents of the archive and install the
         # sanitized binary distribution inside the build directory (all using
         # pip-accel).
-        if config.has_option('general', 'install-prefix'):
+        if is_isolated_package:
             install_prefix = config.get('general', 'install-prefix')
         else:
             install_prefix = '/usr'
-        install_binary_dist(rewrite_filenames(package),
+        install_binary_dist(rewrite_filenames(package, is_isolated_package),
                             prefix=os.path.join(build_directory, install_prefix.lstrip('/')),
                             python='/usr/bin/%s' % find_python_version())
         # Get the Python requirements converted to Debian dependencies.
@@ -76,8 +81,10 @@ def build(context):
                 logger.warn("Failed to load overrides from %s!", format_path(stdeb_cfg))
                 logger.exception(e)
         # Patch any fields for which overrides are present in the configuration
-        # file bundled with py2deb or provided by the user.
-        control_fields = patch_control_file(package, control_fields)
+        # file bundled with py2deb or provided by the user? (only for system
+        # wide packages)
+        if not is_isolated_package:
+            control_fields = patch_control_file(package, control_fields)
         # Remove the XS-Python-Version field that may have been included from
         # the stdeb.cfg file.
         try:
@@ -101,12 +108,11 @@ def build(context):
     finally:
         shutil.rmtree(build_directory)
 
-def rewrite_filenames(package):
+def rewrite_filenames(package, is_isolated_package):
     # Download the package, build the package, create a binary distribution
     # archive and sanitize the contents of the archive (all using pip-accel).
-    custom_install_prefix = config.has_option('general', 'install-prefix')
     for member, handle in get_binary_dist(package.name, package.version, package.directory):
-        if custom_install_prefix:
+        if is_isolated_package:
             # Strip the complete /usr/lib/pythonX.Y/site-packages/ prefix so we
             # can replace it with the custom installation prefix (at this point
             # /usr/ has already been stripped by get_binary_dist()).
