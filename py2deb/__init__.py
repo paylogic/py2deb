@@ -37,10 +37,10 @@ from py2deb.config import config, load_config
 from py2deb.converter import convert
 
 # Semi-standard module versioning.
-__version__ = '0.13.6'
+__version__ = '0.13.7'
 
 # Initialize a logger for this module.
-logger = logging.getLogger()
+logger = logging.getLogger(__name__)
 
 # The following non-essential Debian packages need to be installed in order for
 # py2deb to work properly. Please note that this list does not include the
