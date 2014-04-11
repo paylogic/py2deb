@@ -12,7 +12,7 @@ import tempfile
 
 # External dependencies.
 from deb_pkg_tools.control import merge_control_fields, unparse_control_fields
-from deb_pkg_tools.package import build_package
+from deb_pkg_tools.package import build_package, clean_package_tree
 from humanfriendly import format_path
 from pip_accel.bdist import get_binary_dist, install_binary_dist
 
@@ -43,8 +43,10 @@ def build(context):
             install_prefix = config.get('general', 'install-prefix')
         else:
             install_prefix = '/usr'
+        directory = os.path.join(build_directory, install_prefix.lstrip('/'))
+        clean_package_tree(directory)
         install_binary_dist(rewrite_filenames(package, is_isolated_package),
-                            prefix=os.path.join(build_directory, install_prefix.lstrip('/')),
+                            prefix=directory,
                             python='/usr/bin/%s' % find_python_version())
         # Get the Python requirements converted to Debian dependencies.
         dependencies = [find_python_version()] + package.debian_dependencies
