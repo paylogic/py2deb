@@ -9,6 +9,7 @@ import tempfile
 import pip_accel
 import pip.exceptions
 from humanfriendly import format_path
+from pip_accel.deps import sanity_check_dependencies
 
 # Modules included in our package.
 from py2deb.backends.pip_accel_backend import build as build_with_pip_accel
@@ -106,6 +107,7 @@ def convert_real(pip_install_args, repository=None, backend=build_with_stdeb, au
                     logger.info("Converting %s to %s ..", package.name, package.debian_name)
                 else:
                     logger.info("Converting %s ..", package.name)
+                sanity_check_dependencies(package.name, auto_install)
                 pathname = backend(dict(package=package,
                                         replacements=replacements,
                                         config=config,

@@ -10,7 +10,6 @@ import sys
 from deb_pkg_tools.control import merge_control_fields
 from deb_pkg_tools.package import clean_package_tree
 from debian.deb822 import Deb822
-from pip_accel.deps import sanity_check_dependencies
 from stdeb import __version__ as stdeb_version
 
 # Modules included in our package.
@@ -24,7 +23,6 @@ def build(context):
     debianize(context['package'], context['verbose'])
     patch_control(context['package'], context['config'])
     apply_script(context['package'], context['config'], context['verbose'])
-    sanity_check_dependencies(context['package'].name, context['auto_install'])
     clean_package_tree(context['package'].directory)
     return dpkg_buildpackage(context['package'], context['verbose'])
 
