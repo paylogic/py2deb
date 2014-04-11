@@ -44,11 +44,11 @@ def build(context):
         else:
             install_prefix = '/usr'
         directory = os.path.join(build_directory, install_prefix.lstrip('/'))
-        apply_script(context['config'], package.name, directory, context['verbose'])
-        clean_package_tree(directory)
         install_binary_dist(rewrite_filenames(package, is_isolated_package),
                             prefix=directory,
                             python='/usr/bin/%s' % find_python_version())
+        apply_script(context['config'], package.name, directory, context['verbose'])
+        clean_package_tree(directory)
         # Get the Python requirements converted to Debian dependencies.
         dependencies = [find_python_version()] + package.debian_dependencies
         # If the package installs shared object files, find their dependencies

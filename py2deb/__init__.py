@@ -37,7 +37,7 @@ from py2deb.config import config, load_config
 from py2deb.converter import convert
 
 # Semi-standard module versioning.
-__version__ = '0.13.8'
+__version__ = '0.13.9'
 
 # Initialize a logger for this module.
 logger = logging.getLogger(__name__)
