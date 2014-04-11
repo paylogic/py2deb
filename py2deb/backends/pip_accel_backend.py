@@ -1,5 +1,6 @@
 # Standard library modules.
 import ConfigParser
+import glob
 import logging
 import os
 import pipes
@@ -43,12 +44,19 @@ def build(context):
             install_prefix = config.get('general', 'install-prefix')
         else:
             install_prefix = '/usr'
-        directory = os.path.join(build_directory, install_prefix.lstrip('/'))
+        absolute_install_prefix = os.path.join(build_directory, install_prefix.lstrip('/'))
         install_binary_dist(rewrite_filenames(package, is_isolated_package),
-                            prefix=directory,
+                            prefix=absolute_install_prefix,
                             python='/usr/bin/%s' % find_python_version())
-        apply_script(context['config'], package.name, directory, context['verbose'])
-        clean_package_tree(directory)
+        # Find the package install directory within the temporary install prefix.
+        if is_isolated_package:
+            package_install_directory = os.path.join(absolute_install_prefix, 'lib')
+        else:
+            dist_packages = glob.glob(os.path.join(absolute_install_prefix, 'lib/python*/dist-packages'))
+            assert len(dist_packages) == 1
+            package_install_directory = dist_packages[0]
+        apply_script(context['config'], package.name, package_install_directory, context['verbose'])
+        clean_package_tree(package_install_directory)
         # Get the Python requirements converted to Debian dependencies.
         dependencies = [find_python_version()] + package.debian_dependencies
         # If the package installs shared object files, find their dependencies
