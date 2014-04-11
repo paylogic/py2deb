@@ -14,7 +14,7 @@ from stdeb import __version__ as stdeb_version
 
 # Modules included in our package.
 from py2deb.exceptions import BackendFailed
-from py2deb.util import get_tagged_description, patch_control_file, run
+from py2deb.util import apply_script, get_tagged_description, patch_control_file, run
 
 # Initialize a logger for this module.
 logger = logging.getLogger(__name__)
@@ -22,7 +22,7 @@ logger = logging.getLogger(__name__)
 def build(context):
     debianize(context['package'], context['verbose'])
     patch_control(context['package'], context['config'])
-    apply_script(context['package'], context['config'], context['verbose'])
+    apply_script(context['config'], context['package'].name, context['package'].directory, context['verbose'])
     clean_package_tree(context['package'].directory)
     return dpkg_buildpackage(context['package'], context['verbose'])
 
@@ -72,21 +72,6 @@ def patch_control(package, config):
         handle.write('\n')
         paragraphs[1].dump(handle)
     logger.debug("%s: Control file has been patched.", package.name)
-
-def apply_script(package, config, verbose):
-    """
-    Checks if a line of shell script is defined in the config and
-    executes it with the directory of the package as the current
-    working directory.
-    """
-    if config.has_option(package.name, 'script'):
-        command = config.get(package.name, 'script')
-        logger.debug("%s: Executing shell command %s in %s ..",
-                     package.name, command, package.directory)
-        if run(command, package.directory, verbose):
-            msg = "Failed to apply script to %s!"
-            raise BackendFailed, msg % package.name
-        logger.debug("%s: Shell command has been executed.", package.name)
 
 def dpkg_buildpackage(package, verbose):
     """

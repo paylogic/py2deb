@@ -18,8 +18,8 @@ from pip_accel.bdist import get_binary_dist, install_binary_dist
 
 # Modules included in our package.
 from py2deb.config import config
-from py2deb.util import (find_python_version, get_tagged_description,
-                         patch_control_file)
+from py2deb.util import (apply_script, find_python_version,
+                         get_tagged_description, patch_control_file)
 
 # Initialize a logger for this module.
 logger = logging.getLogger(__name__)
@@ -44,6 +44,7 @@ def build(context):
         else:
             install_prefix = '/usr'
         directory = os.path.join(build_directory, install_prefix.lstrip('/'))
+        apply_script(context['config'], package.name, directory, context['verbose'])
         clean_package_tree(directory)
         install_binary_dist(rewrite_filenames(package, is_isolated_package),
                             prefix=directory,

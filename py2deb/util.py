@@ -10,6 +10,7 @@ from deb_pkg_tools.control import merge_control_fields
 
 # Modules included in our package.
 from py2deb.config import config
+from py2deb.exceptions import BackendFailed
 
 # Initialize a logger for this module.
 logger = logging.getLogger(__name__)
@@ -80,6 +81,21 @@ def transform_package_name(name_prefix, python_package_name):
             logger.debug("Transforming package name, step 3: Normalizing special characters (%r)", debian_package)
         previously_transformed_names[python_package_name] = debian_package
     return previously_transformed_names[python_package_name]
+
+def apply_script(config, package_name, directory, verbose):
+    """
+    Checks if a line of shell script is defined in the configuration and
+    executes it with the directory of the package as the current working
+    directory.
+    """
+    if config.has_option(package_name, 'script'):
+        command = config.get(package_name, 'script')
+        logger.debug("%s: Executing shell command %s in %s ..",
+                     package_name, command, directory)
+        if run(command, directory, verbose) != 0:
+            msg = "Failed to apply script to %s!"
+            raise BackendFailed, msg % package_name
+        logger.debug("%s: Shell command has been executed.", package_name)
 
 def run(command, wd=None, verbose=False):
     """
