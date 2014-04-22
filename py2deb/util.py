@@ -50,37 +50,30 @@ def patch_control_file(package, control_fields):
         control_fields = merge_control_fields(control_fields, overrides)
     return control_fields
 
-previously_transformed_names = {}
-
-def transform_package_name(name_prefix, python_package_name):
+def transform_package_name(name_prefix, python_package_name, is_isolated_package=False):
     """
     Transforms the name of a Python package as found on PyPi into the name that
     we want it to have as a Debian package using a prefix and a seperator.
     """
-    if python_package_name not in previously_transformed_names:
-        if config.has_option(python_package_name, 'debian-name'):
-            # FIXME This should not apply when a custom name prefix has been given?!
-            debian_package = config.get(python_package_name, 'debian-name')
-            logger.debug("Package %s has overridden Debian package name configured: %s", python_package_name, debian_package)
-        else:
-            # Apply the package name prefix.
-            debian_package = '%s-%s' % (name_prefix, python_package_name)
-            normalized_words = debian_package.lower().split('-')
-            logger.debug("Transforming package name, step 1: Split words (%r)", normalized_words)
-            # Remove repeating words.
-            deduplicated_words = list(normalized_words)
-            i = 0
-            while i < len(deduplicated_words):
-                if i + 1 < len(deduplicated_words) and deduplicated_words[i] == deduplicated_words[i + 1]:
-                    deduplicated_words.pop(i)
-                else:
-                    i += 1
-            logger.debug("Transforming package name, step 2: Removed redundant words (%r)", deduplicated_words)
-            # Make sure that the only non-alphanumeric character is the dash.
-            debian_package = re.sub('[^a-z0-9]+', '-', ' '.join(deduplicated_words)).strip('-')
-            logger.debug("Transforming package name, step 3: Normalizing special characters (%r)", debian_package)
-        previously_transformed_names[python_package_name] = debian_package
-    return previously_transformed_names[python_package_name]
+    if not is_isolated_package and config.has_option(python_package_name, 'debian-name'):
+        debian_package = config.get(python_package_name, 'debian-name')
+        logger.debug("Package %s has overridden Debian package name configured: %s", python_package_name, debian_package)
+    else:
+        # Apply the package name prefix.
+        debian_package = '%s-%s' % (name_prefix, python_package_name)
+        normalized_words = debian_package.lower().split('-')
+        # Remove repeating words.
+        deduplicated_words = list(normalized_words)
+        i = 0
+        while i < len(deduplicated_words):
+            if i + 1 < len(deduplicated_words) and deduplicated_words[i] == deduplicated_words[i + 1]:
+                deduplicated_words.pop(i)
+            else:
+                i += 1
+        # Make sure that the only non-alphanumeric character is the dash.
+        debian_package = re.sub('[^a-z0-9]+', '-', ' '.join(deduplicated_words)).strip('-')
+        logger.debug("Package %s has normalized Debian package name %s", python_package_name, debian_package)
+    return debian_package
 
 def apply_script(config, package_name, directory, verbose):
     """

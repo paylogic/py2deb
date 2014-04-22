@@ -37,7 +37,8 @@ class Package:
     def __init__(self, name, version, directory, name_prefix, config):
         self.name = name.lower()
         self.name_prefix = name_prefix
-        self.debian_name = transform_package_name(self.name_prefix, self.name)
+        self.is_isolated_package = config.has_option('general', 'install-prefix')
+        self.debian_name = transform_package_name(self.name_prefix, self.name, self.is_isolated_package)
         self.version = version
         self.directory = os.path.abspath(directory)
         self.config = config
@@ -138,7 +139,7 @@ class Package:
             if req.key in replacements:
                 dependencies.append(replacements[req.key])
             else:
-                name = transform_package_name(self.name_prefix, req.key)
+                name = transform_package_name(self.name_prefix, req.key, self.is_isolated_package)
                 if not req.specs:
                     dependencies.append(name)
                 else:

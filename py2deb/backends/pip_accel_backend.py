@@ -27,11 +27,6 @@ logger = logging.getLogger(__name__)
 
 def build(context):
     package = context['package']
-    # Check whether the package is to be installed under a custom installation
-    # prefix. If it is we are building an isolated package, this means the
-    # Debian control file doesn't need fields like `Provides', `Replaces',
-    # `Conflicts', etc.
-    is_isolated_package = config.has_option('general', 'install-prefix')
     # Create a temporary directory to put the generated package in.
     build_directory = tempfile.mkdtemp()
     # Make sure we clean up the temporary directory afterwards...
@@ -40,16 +35,16 @@ def build(context):
         # archive, sanitize the contents of the archive and install the
         # sanitized binary distribution inside the build directory (all using
         # pip-accel).
-        if is_isolated_package:
+        if package.is_isolated_package:
             install_prefix = config.get('general', 'install-prefix')
         else:
             install_prefix = '/usr'
         absolute_install_prefix = os.path.join(build_directory, install_prefix.lstrip('/'))
-        install_binary_dist(rewrite_filenames(package, is_isolated_package),
+        install_binary_dist(rewrite_filenames(package, package.is_isolated_package),
                             prefix=absolute_install_prefix,
                             python='/usr/bin/%s' % find_python_version())
         # Find the package install directory within the temporary install prefix.
-        if is_isolated_package:
+        if package.is_isolated_package:
             package_install_directory = os.path.join(absolute_install_prefix, 'lib')
         else:
             dist_packages = glob.glob(os.path.join(absolute_install_prefix, 'lib/python*/dist-packages'))
@@ -94,7 +89,7 @@ def build(context):
         # Patch any fields for which overrides are present in the configuration
         # file bundled with py2deb or provided by the user? (only for system
         # wide packages)
-        if not is_isolated_package:
+        if not package.is_isolated_package:
             control_fields = patch_control_file(package, control_fields)
         # Remove the XS-Python-Version field that may have been included from
         # the stdeb.cfg file.
