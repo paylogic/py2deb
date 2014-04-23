@@ -37,7 +37,7 @@ from py2deb.config import config, load_config
 from py2deb.converter import convert
 
 # Semi-standard module versioning.
-__version__ = '0.13.11'
+__version__ = '0.13.12'
 
 # Initialize a logger for this module.
 logger = logging.getLogger(__name__)
@@ -45,8 +45,6 @@ logger = logging.getLogger(__name__)
 # The following non-essential Debian packages need to be installed in order for
 # py2deb to work properly. Please note that this list does not include the
 # dependencies of deb-pkg-tools!
-#
-# TODO Document why we need these!
 debian_package_dependencies = (
     'apt-file',             # Required by stdeb to figure out dependencies on system packages.
     'build-essential',      # Required by stdeb to compile binary packages.
@@ -93,9 +91,11 @@ def main():
                 msg = "Repository directory doesn't exist! (%s)"
                 raise Exception, msg % repository
         elif option == '--name-prefix':
-            name_prefix = value
+            name_prefix = value.strip()
+            assert name_prefix, "Please provide a non-empty name prefix!"
         elif option == '--install-prefix':
-            install_prefix = value
+            install_prefix = value.strip()
+            assert install_prefix, "Please provide a non-empty installation prefix!"
         elif option == '--report-deps':
             report_dependencies = value
         elif option == '--with-stdeb':
