@@ -3,8 +3,10 @@ Usage: py2deb [OPTIONS] -- PIP_INSTALL_ARGS
 
 Supported options:
 
-  -c, --config=FILE          set the user configuration file
+  -c, --config=FILE          set the user configuration file (defaults
+                             to the environment variable PY2DEB_CONFIG)
   -r, --repository=DIR       override the default repository directory
+                             (defaults to the environment variable PY2DEB_REPO)
       --name-prefix=STR      set package name prefix (default: python)
       --install-prefix=PATH  set installation prefix path (default: none)
       --report-deps=PATH     generates a valid value for the `Depends` line of
@@ -16,7 +18,8 @@ Supported options:
       --install              install py2deb using Debian packages
                              (bootstrapping)
   -y, --yes                  automatically install missing system packages
-  -v, --verbose              make more noise (can be repeated)
+  -v, --verbose              make more noise (defaults to the environment
+                             variable PY2DEB_VERBOSE)
   -h, --help                 show this message and exit
 """
 
@@ -37,7 +40,7 @@ from py2deb.config import config, load_config
 from py2deb.converter import convert
 
 # Semi-standard module versioning.
-__version__ = '0.13.12'
+__version__ = '0.13.13'
 
 # Initialize a logger for this module.
 logger = logging.getLogger(__name__)
@@ -63,12 +66,12 @@ def main():
 
     # Command line option defaults
     backend = build_with_stdeb
-    config_file = None
-    repository = None
+    config_file = os.environ.get('PY2DEB_CONFIG')
+    repository = os.environ.get('PY2DEB_REPO')
     name_prefix = None
     install_prefix = None
     report_dependencies = None
-    verbose = False
+    verbose = os.environ.get('PY2DEB_VERBOSE')
     auto_install = False
     do_install = False
 
@@ -105,7 +108,6 @@ def main():
         elif option in ('-y', '--yes'):
             auto_install = True
         elif option in ('-v', '--verbose'):
-            coloredlogs.increase_verbosity()
             verbose = True
         elif option in ('-h', '--help'):
             usage()
@@ -113,6 +115,9 @@ def main():
         else:
             msg = "Unrecognized option: %s"
             raise Exception, msg % option
+
+    if verbose:
+      coloredlogs.increase_verbosity()
 
     # Initialize the configuration.
     if config_file:
