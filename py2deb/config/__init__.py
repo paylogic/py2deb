@@ -12,20 +12,19 @@ logger = logging.getLogger(__name__)
 # Initialize the configuration parser.
 config = ConfigParser.RawConfigParser()
 
-# Load the bundled configuration.
-bundled_config_file = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'py2deb.ini')
-logger.debug("Loading bundled configuration: %s", format_path(bundled_config_file))
-config.read(bundled_config_file)
-
-def load_config(filename):
+def load_config(description, filename):
     """
-    Load the py2deb configuration file.
+    Load a py2deb configuration file.
 
-    param filename: Filename of user configuration file (a string).
-    :returns: A :py:class:`ConfigParser.RawConfigParser` object.
+    param filename: Filename of configuration file (a string).
     """
-    # Load the configuration bundled with py2deb.
-    # Load the configuration provided by the user?
-    filename = os.path.abspath(filename)
-    logger.debug("Loading user configuration: %s", format_path(filename))
-    config.read(filename)
+    if os.path.isfile(filename):
+        logger.debug("Loading %s configuration file: %s", description, format_path(filename))
+        config.read(filename)
+
+# Load the configuration file bundled with py2deb.
+load_config('bundled', os.path.join(os.path.dirname(os.path.abspath(__file__)), 'py2deb.ini'))
+
+# Load the configuration file(s) on the host system.
+load_config('system wide', '/etc/py2deb.ini')
+load_config('user', os.path.expanduser('~/.py2deb.ini'))

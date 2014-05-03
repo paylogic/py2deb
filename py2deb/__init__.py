@@ -21,6 +21,18 @@ Supported options:
   -v, --verbose              make more noise (defaults to the environment
                              variable PY2DEB_VERBOSE)
   -h, --help                 show this message and exit
+
+Some of py2deb's behavior can be changed using configuration files and a
+default configuration file is bundled with py2deb. Configuration options,
+environment variables and command line options are evaluated in the following
+order, where later entries override earlier ones:
+
+ 1. The configuration file bundled with py2deb.
+ 2. The configuration file /etc/py2deb.ini (if it exists).
+ 3. The configuration file ~/.py2deb.ini (if it exists).
+ 4. The environment variables PY2DEB_CONFIG, PY2DEB_REPO and PY2DEB_VERBOSE
+    (if they are set).
+ 5. The command line options.
 """
 
 # Standard library modules.
@@ -40,7 +52,7 @@ from py2deb.config import config, load_config
 from py2deb.converter import convert
 
 # Semi-standard module versioning.
-__version__ = '0.13.13'
+__version__ = '0.13.14'
 
 # Initialize a logger for this module.
 logger = logging.getLogger(__name__)
@@ -117,11 +129,11 @@ def main():
             raise Exception, msg % option
 
     if verbose:
-      coloredlogs.increase_verbosity()
+        coloredlogs.increase_verbosity()
 
     # Initialize the configuration.
     if config_file:
-        load_config(config_file)
+        load_config('custom', config_file)
     if name_prefix:
         config.set('general', 'name-prefix', name_prefix)
     if install_prefix:
