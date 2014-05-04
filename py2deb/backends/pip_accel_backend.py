@@ -50,7 +50,7 @@ def build(context):
             dist_packages = glob.glob(os.path.join(absolute_install_prefix, 'lib/python*/dist-packages'))
             assert len(dist_packages) == 1
             package_install_directory = dist_packages[0]
-        apply_script(context['config'], package.name, package_install_directory, context['verbose'])
+        apply_script(context['config'], package.name, package_install_directory)
         clean_package_tree(package_install_directory)
         # Get the Python requirements converted to Debian dependencies.
         dependencies = [find_python_version()] + package.debian_dependencies

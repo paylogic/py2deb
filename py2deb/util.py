@@ -7,6 +7,7 @@ import time
 
 # External dependencies.
 from deb_pkg_tools.control import merge_control_fields
+from executor import execute
 
 # Modules included in our package.
 from py2deb.config import config
@@ -14,21 +15,6 @@ from py2deb.exceptions import BackendFailed
 
 # Initialize a logger for this module.
 logger = logging.getLogger(__name__)
-
-class Workin:
-
-    def __init__(self, wd):
-        self.wd = wd
-        self.old_wd = None
-
-    def __enter__(self):
-        if self.wd:
-            self.old_wd = os.getcwd()
-            os.chdir(self.wd)
-
-    def __exit__(self, exc_type, exc_value, traceback):
-        if self.old_wd:
-            os.chdir(self.old_wd)
 
 def compact(text, **kw):
     """
@@ -75,7 +61,7 @@ def transform_package_name(name_prefix, python_package_name, is_isolated_package
         logger.debug("Package %s has normalized Debian package name %s", python_package_name, debian_package)
     return debian_package
 
-def apply_script(config, package_name, directory, verbose):
+def apply_script(config, package_name, directory):
     """
     Checks if a line of shell script is defined in the configuration and
     executes it with the directory of the package as the current working
@@ -85,33 +71,10 @@ def apply_script(config, package_name, directory, verbose):
         command = config.get(package_name, 'script')
         logger.debug("%s: Executing shell command %s in %s ..",
                      package_name, command, directory)
-        if run(command, directory, verbose) != 0:
+        if execute(command, directory=directory) != 0:
             msg = "Failed to apply script to %s!"
             raise BackendFailed, msg % package_name
         logger.debug("%s: Shell command has been executed.", package_name)
-
-def run(command, wd=None, verbose=False):
-    """
-    Advanced version of :py:func:`os.system()` that can change the working
-    directory and silence external commands (if the command ends with a nonzero
-    exit code the output will be shown anyway).
-
-    :param command: The shell command line to execute (a string).
-    :param wd: The working directory for the command (a string, optional).
-    :param verbose: ``True`` if the output of the command should be shown,
-                    ``False`` if the output should be hidden (the default).
-    """
-    logger.debug("Executing external command: %s", command)
-    with Workin(wd):
-        if verbose:
-            exitcode = os.system(command + ' 1>&2')
-        else:
-            handle = os.popen(command + ' 2>&1')
-            output = handle.read()
-            exitcode = handle.close()
-            if exitcode:
-                sys.stderr.write(output)
-    return exitcode
 
 def get_tagged_description():
   """

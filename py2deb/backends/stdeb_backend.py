@@ -10,11 +10,12 @@ import sys
 from deb_pkg_tools.control import merge_control_fields
 from deb_pkg_tools.package import clean_package_tree
 from debian.deb822 import Deb822
+from executor import execute
 from stdeb import __version__ as stdeb_version
 
 # Modules included in our package.
 from py2deb.exceptions import BackendFailed
-from py2deb.util import apply_script, get_tagged_description, patch_control_file, run
+from py2deb.util import apply_script, get_tagged_description, patch_control_file
 
 # Initialize a logger for this module.
 logger = logging.getLogger(__name__)
@@ -22,7 +23,7 @@ logger = logging.getLogger(__name__)
 def build(context):
     debianize(context['package'], context['verbose'])
     patch_control(context['package'], context['config'])
-    apply_script(context['config'], context['package'].name, context['package'].directory, context['verbose'])
+    apply_script(context['config'], context['package'].name, context['package'].directory)
     clean_package_tree(context['package'].directory)
     return dpkg_buildpackage(context['package'], context['verbose'])
 
@@ -38,7 +39,7 @@ def debianize(package, verbose):
     command = [python, 'setup.py', '--command-packages=stdeb.command', 'debianize']
     if stdeb_version == '0.6.0': # The "old" version of stdeb.
         command.append('--ignore-install-requires')
-    if run(' '.join(command), package.directory, verbose):
+    if not execute(*command, directory=package.directory, check=False):
         raise BackendFailed, "Failed to debianize package! (%s)" % package.name
     logger.debug("%s: Finished debianizing package.", package.name)
 
@@ -89,7 +90,7 @@ def dpkg_buildpackage(package, verbose):
         # XXX stdeb 0.6.0+git uses dh_python2, which guesses dependencies
         # by default. We don't want this so we override this behavior.
         os.environ['DH_OPTIONS'] = '--no-guessing-deps'
-    if run(command, package.directory, verbose):
+    if execute(command, directory=package.directory):
         raise BackendFailed, "Failed to build package %s!" % package.debian_name
     logger.debug("%s: Scanning for generated Debian packages ..", package.name)
     parent_directory = os.path.dirname(package.directory)

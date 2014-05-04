@@ -1,7 +1,7 @@
 # Bootstrap script for py2deb.
 #
 # Author: Peter Odding <peter.odding@paylogic.com>
-# Last Change: November 3, 2013
+# Last Change: May 4, 2014
 # URL: https://github.com/paylogic/py2deb
 #
 # This Python module implements the `py2deb --install' command. It converts
@@ -18,7 +18,7 @@ import tempfile
 # External dependencies.
 from deb_pkg_tools import debian_package_dependencies as deb_pkg_tools_dependencies
 from deb_pkg_tools.repo import activate_repository, deactivate_repository, update_repository
-from deb_pkg_tools.utils import execute
+from executor import execute
 from humanfriendly import concatenate
 from py2deb import debian_package_dependencies as py2deb_dependencies
 from py2deb.converter import convert
