@@ -9,10 +9,12 @@ Supported options:
                              (defaults to the environment variable PY2DEB_REPO)
       --name-prefix=STR      set package name prefix (default: python)
       --install-prefix=PATH  set installation prefix path (default: none)
+      --rename=FROM,TO       override the default package name conversion from
+                             Python packages to Debian packages
       --report-deps=PATH     generates a valid value for the `Depends` line of
                              a Debian control file with the package names and
-                             pinned versions of built (transitive) packages and
-                             saves it to the given file
+                             pinned versions of built (transitive) packages
+                             and saves it to the given file
       --with-stdeb           use stdeb backend to build Debian package(s)
       --with-pip-accel       use pip-accel backend to build Debian package(s)
       --install              install py2deb using Debian packages
@@ -52,7 +54,7 @@ from py2deb.config import config, load_config
 from py2deb.converter import convert
 
 # Semi-standard module versioning.
-__version__ = '0.13.15'
+__version__ = '0.14'
 
 # Initialize a logger for this module.
 logger = logging.getLogger(__name__)
@@ -82,14 +84,18 @@ def main():
     repository = os.environ.get('PY2DEB_REPO')
     name_prefix = None
     install_prefix = None
+    packages_to_rename = {}
     report_dependencies = None
     verbose = os.environ.get('PY2DEB_VERBOSE')
     auto_install = False
     do_install = False
 
     # Parse command line options
-    options, arguments = getopt.gnu_getopt(sys.argv[1:], 'c:r:yvh',
-            ['install', 'config=', 'repository=', 'name-prefix=', 'install-prefix=', 'report-deps=', 'with-stdeb', 'with-pip-accel', 'yes', 'verbose', 'help'])
+    options, arguments = getopt.gnu_getopt(sys.argv[1:], 'c:r:yvh', [
+        'install', 'config=', 'repository=', 'name-prefix=', 'install-prefix=',
+        'rename=', 'report-deps=', 'with-stdeb', 'with-pip-accel',
+        'yes', 'verbose', 'help'
+    ])
 
     # Validate the command line options and map them to variables
     for option, value in options:
@@ -107,10 +113,15 @@ def main():
                 raise Exception, msg % repository
         elif option == '--name-prefix':
             name_prefix = value.strip()
-            assert name_prefix, "Please provide a non-empty name prefix!"
+            assert name_prefix, "Please provide a nonempty name prefix!"
         elif option == '--install-prefix':
             install_prefix = value.strip()
-            assert install_prefix, "Please provide a non-empty installation prefix!"
+            assert install_prefix, "Please provide a nonempty installation prefix!"
+        elif option == '--rename':
+            python_name, _, debian_name = map(str.strip, value.partition(','))
+            assert python_name, "Please provide a nonempty Python package name to --rename!"
+            assert debian_name, "Please provide a nonempty Debian package name to --rename!"
+            packages_to_rename[python_name.lower()] = debian_name.lower()
         elif option == '--report-deps':
             report_dependencies = value
         elif option == '--with-stdeb':
@@ -151,6 +162,7 @@ def main():
         converted_dependencies = convert(arguments,
                                          backend=backend,
                                          repository=repository,
+                                         packages_to_rename=packages_to_rename,
                                          auto_install=auto_install,
                                          verbose=verbose)
         if report_dependencies:

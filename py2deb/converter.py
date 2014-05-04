@@ -25,7 +25,7 @@ logger = logging.getLogger(__name__)
 # Increase the verbosity of the stdeb logger.
 logging.getLogger('stdeb').setLevel(logging.DEBUG)
 
-def convert(pip_install_args, repository=None, backend=build_with_stdeb, auto_install=False, verbose=False):
+def convert(pip_install_args, repository=None, packages_to_rename={}, backend=build_with_stdeb, auto_install=False, verbose=False):
     """
     Convert Python packages to Debian packages. This function is a wrapper for
     the real conversion function (:py:func:`convert_real()`). If the requested
@@ -39,6 +39,7 @@ def convert(pip_install_args, repository=None, backend=build_with_stdeb, auto_in
     if config.has_option('general', 'install-prefix'):
         return convert_real(pip_install_args,
                             repository=repository,
+                            packages_to_rename=packages_to_rename,
                             backend=build_with_pip_accel,
                             auto_install=auto_install,
                             verbose=verbose)
@@ -47,6 +48,7 @@ def convert(pip_install_args, repository=None, backend=build_with_stdeb, auto_in
     try:
         return convert_real(pip_install_args,
                             repository=repository,
+                            packages_to_rename=packages_to_rename,
                             backend=backend,
                             auto_install=auto_install,
                             verbose=verbose)
@@ -63,11 +65,12 @@ def convert(pip_install_args, repository=None, backend=build_with_stdeb, auto_in
             raise
         return convert_real(pip_install_args,
                             repository=repository,
+                            packages_to_rename=packages_to_rename,
                             backend=alternative_backend,
                             auto_install=auto_install,
                             verbose=verbose)
 
-def convert_real(pip_install_args, repository=None, backend=build_with_stdeb, auto_install=False, verbose=False):
+def convert_real(pip_install_args, repository=None, packages_to_rename={}, backend=build_with_stdeb, auto_install=False, verbose=False):
     """
     Convert Python packages to Debian packages.
     """
@@ -89,13 +92,11 @@ def convert_real(pip_install_args, repository=None, backend=build_with_stdeb, au
                                   config=config)
         logger.debug("Primary packages (given on the command line): %r", primary_packages)
         logger.debug("Packages to build (all dependencies except those with replacements): %r", packages_to_build)
-        # If we're building packages with a custom installation prefix
-        if config.has_option('general', 'install-prefix'):
-            if len(primary_packages) == 1:
-                logger.info("Resetting name of primary package %s to %s ..", primary_packages[0], name_prefix)
-                primary_packages[0].debian_name = name_prefix
-            else:
-                logger.warn("FYI: You requested to build more than one primary package with a custom install prefix, in this case there's no primary package whose name can be reset.")
+        for package in packages_to_build:
+            name_override = packages_to_rename.get(package.name.lower())
+            if name_override:
+                logger.info("Resetting name of package %s to %s ..", package.name, name_override)
+                package.debian_name = name_override
         repository = repository or config.get('general', 'repository')
         for package in packages_to_build:
             result = find_existing_debs(package, repository)
