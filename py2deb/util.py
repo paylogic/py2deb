@@ -71,7 +71,7 @@ def apply_script(config, package_name, directory):
         command = config.get(package_name, 'script')
         logger.debug("%s: Executing shell command %s in %s ..",
                      package_name, command, directory)
-        if execute(command, directory=directory) != 0:
+        if not execute(command, directory=directory, check=False):
             msg = "Failed to apply script to %s!"
             raise BackendFailed, msg % package_name
         logger.debug("%s: Shell command has been executed.", package_name)
