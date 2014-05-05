@@ -110,7 +110,6 @@ def convert_real(pip_install_args, repository=None, packages_to_rename={}, backe
                     logger.info("Converting %s ..", package.name)
                 sanity_check_dependencies(package.name, auto_install)
                 pathname = backend(dict(package=package,
-                                        replacements=replacements,
                                         config=config,
                                         verbose=verbose,
                                         auto_install=auto_install))
