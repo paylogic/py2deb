@@ -1,104 +1,169 @@
-# Tests for py2deb.
-#
-# Author: Peter Odding <peter.odding@paylogic.com>
-# Last Change: November 3, 2013
+"""
+Automated tests for py2deb
+==========================
+"""
 
 # Standard library modules.
+import fnmatch
+import functools
+import glob
 import logging
 import os
+import re
+import shutil
+import tempfile
 
 # External dependencies.
 import coloredlogs
 from deb_pkg_tools.package import inspect_package
+from executor import execute
 
-# Internal modules.
-from py2deb.converter import convert
+# Initialize a logger.
+logger = logging.getLogger(__name__)
+execute = functools.partial(execute, logger=logger)
 
-# Initialize logging to the terminal.
+# Initialize (verbose) logging to the terminal.
 coloredlogs.install()
-coloredlogs.set_level(logging.DEBUG)
+coloredlogs.increase_verbosity()
 
-# TODO Test that packages can actually be installed?! (only when os.getuid() == 0)
+# Find the sample packages that we're going to build during our tests.
+TESTS_DIRECTORY = os.path.dirname(os.path.abspath(__file__))
+TRIVIAL_PACKAGE_DIRECTORY = os.path.join(TESTS_DIRECTORY, 'samples', 'trivial-package')
 
-def test_conversion_of_simple_package_without_dependencies(tmpdir):
-    """
-    A simple test case that converts coloredlogs==0.4.8 (a simple Python source
-    package without any dependencies) to a Debian package.
-    """
-    directory = str(tmpdir)
-    package_name = 'coloredlogs'
-    package_version = '0.4.8'
-    expected_package_maintainer = 'Peter Odding <peter@peterodding.com>'
-    expected_debian_version = '%s-1' % package_version
-    # Use py2deb to convert the Python package to a Debian package.
-    debian_dependencies = convert(['%s==%s' % (package_name, package_version)], repository=directory, verbose=True)
-    # Make sure the generated "Depends:" string is what we would expect it to be.
-    assert debian_dependencies == ['python-%s (=%s)' % (package_name, expected_debian_version)]
-    # Check the metadata fields of the generated package.
-    package_fields = inspect_package(find_package_archive(directory))
-    assert package_fields['Package'] == 'python-%s' % package_name
-    assert package_fields['Version'] == expected_debian_version
-    assert package_fields['Architecture'] == 'all'
-    assert package_fields['Maintainer'] == expected_package_maintainer
-    # Make sure a dependency on Python was added.
-    assert has_dependency(package_fields['Depends'], 'python')
+def test_conversion_of_simple_package():
 
-def test_conversion_of_package_with_dependencies(tmpdir):
     """
-    Test case that converts pip-accel 0.10.4 and its dependencies (coloredlogs,
-    humanfriendly and pip) to Debian packages.
-    """
-    directory = str(tmpdir)
-    package_name = 'pip-accel'
-    package_version = '0.10.4'
-    expected_package_maintainer = 'Peter Odding <peter.odding@paylogic.eu>'
-    expected_debian_version = '%s-1' % package_version
-    # Use py2deb to convert the Python package to a Debian package.
-    debian_dependencies = convert(['%s==%s' % (package_name, package_version)], repository=directory, verbose=True)
-    # Make sure the generated "Depends:" string is what we would expect it to be.
-    assert debian_dependencies == ['python-%s (=%s)' % (package_name, expected_debian_version)]
-    # Check the metadata fields of the generated package.
-    package_fields = inspect_package(find_package_archive(directory, package_name))
-    assert package_fields['Package'] == 'python-%s' % package_name
-    assert package_fields['Version'] == expected_debian_version
-    assert package_fields['Architecture'] == 'all'
-    assert package_fields['Maintainer'] == expected_package_maintainer
-    # Make sure the proper dependencies were added.
-    assert has_dependency(package_fields['Depends'], 'python')
-    assert has_dependency(package_fields['Depends'], 'python-coloredlogs')
-    assert has_dependency(package_fields['Depends'], 'python-humanfriendly')
-    assert has_dependency(package_fields['Depends'], 'python-pip')
+    Convert a simple Python package (coloredlogs_) without any dependencies to
+    a Debian package archive and sanity check the result. The conversion is
+    done twice, once for each backend (stdeb vs pip-accel). Performs several
+    static checks on the metadata and contents of the resulting package
+    archive.
 
-def test_conversion_of_replacements(tmpdir):
+    .. _coloredlogs: https://pypi.python.org/pypi/coloredlogs
     """
-    Test case that converts pail 0.2 (some random package that has PIL/Pillow
-    as a dependency and few other dependencies) and its dependencies
-    (coloredlogs, humanfriendly and pip) to Debian packages.
-    """
-    directory = str(tmpdir)
-    package_name = 'pail'
-    package_version = '0.2'
-    convert(['%s==%s' % (package_name, package_version)], repository=directory, verbose=True)
-    package_fields = inspect_package(find_package_archive(directory, package_name))
-    assert has_dependency(package_fields['Depends'], 'python')
-    assert has_dependency(package_fields['Depends'], 'python-imaging')
-    assert has_dependency(package_fields['Depends'], 'python-setuptools')
-    assert has_dependency(package_fields['Depends'], 'python-webob')
 
-def find_package_archive(directory, package_name=None):
-    archives = []
-    for entry in os.listdir(directory):
-        pathname = os.path.join(directory, entry)
-        if (os.path.isfile(pathname) and entry.endswith('.deb') and
-                ((not package_name) or package_name in entry)):
-            archives.append(pathname)
-    assert len(archives) == 1
-    return archives[0]
+    for py2deb_backend_option in ['--with-stdeb', '--with-pip-accel']:
+
+        # Use a temporary directory as py2deb's repository directory so that we can
+        # easily find the *.deb archive generated by py2deb.
+        with TemporaryDirectory() as directory:
+
+            # Run py2deb as a subprocess so that everything including py2deb.main() is run.
+            execute('py2deb', '--repository=%s' % directory, py2deb_backend_option, 'coloredlogs==0.4.8')
+
+            # Find the generated Debian package archive.
+            archives = glob.glob('%s/*.deb' % directory)
+            logger.debug("Found generated archive(s): %s", archives)
+            assert len(archives) == 1
+
+            # Use deb-pkg-tools to inspect the generated package.
+            metadata, contents = inspect_package(archives[0])
+            logger.debug("Metadata of generated package: %s", dict(metadata))
+            logger.debug("Contents of generated package: %s", dict(contents))
+
+            # Check the package metadata. It should look something like this:
+            #
+            # The package metadata produced by the stdeb backend:
+            #
+            #   {'Architecture': 'all',
+            #    'Depends': 'python2.7, python (>= 2.7.1-0ubuntu2), python (<< 2.8)',
+            #    'Description': 'Packaged by py2deb on May 7, 2014 at 00:58',
+            #    'Installed-Size': '82',
+            #    'Maintainer': 'Peter Odding <peter@peterodding.com>',
+            #    'Package': 'python-coloredlogs',
+            #    'Priority': 'optional',
+            #    'Section': 'python',
+            #    'Source': 'coloredlogs',
+            #    'Version': '0.4.8-1'}
+            #
+            # The package metadata produced by the pip-accel backend:
+            #
+            #   ?
+            #
+            assert metadata['Package'] == 'python-coloredlogs'
+            assert metadata['Version'].startswith('0.4.8')
+            assert metadata['Architecture'] == 'all'
+
+            # There should be exactly one dependency: some version of Python.
+            assert has_dependency(metadata['Depends'], r'^python(\d+(\.\d+)*)?$')
+
+            # Don't care about the format here as long as essential information is retained.
+            assert 'Peter Odding' in metadata['Maintainer']
+            assert 'peter@peterodding.com' in metadata['Maintainer']
+
+            # Check the package contents. It should look something like this:
+            #
+            # The package contents produced by the stdeb backend:
+            #
+            #  {'/': ArchiveEntry(permissions='drwxr-xr-x', owner='root', group='root', size=0, modified='2014-05-07 00:58', target=''),
+            #   '/usr/bin/ansi2html': ArchiveEntry(permissions='-rwxr-xr-x', owner='root', group='root', size=317, modified='2014-05-07 00:58', target=''),
+            #   '/usr/lib/python2.7/dist-packages/coloredlogs/__init__.py': ArchiveEntry(permissions='lrwxrwxrwx', owner='root', group='root', size=0, modified='2014-05-07 00:58', target='../../../../share/pyshared/coloredlogs/__init__.py'),
+            #   '/usr/lib/python2.7/dist-packages/coloredlogs/converter.py': ArchiveEntry(permissions='lrwxrwxrwx', owner='root', group='root', size=0, modified='2014-05-07 00:58', target='../../../../share/pyshared/coloredlogs/converter.py'),
+            #   '/usr/share/pyshared/coloredlogs/__init__.py': ArchiveEntry(permissions='-rw-r--r--', owner='root', group='root', size=9991, modified='2014-05-07 00:58', target=''),
+            #   '/usr/share/pyshared/coloredlogs/converter.py': ArchiveEntry(permissions='-rw-r--r--', owner='root', group='root', size=3816, modified='2014-05-07 00:58', target=''),
+            #   ...}
+
+            # Check for the two *.py files that should be installed by the package.
+            assert len(find_file(contents, '/usr/lib/python*/dist-packages/coloredlogs/__init__.py')) == 1
+            assert len(find_file(contents, '/usr/lib/python*/dist-packages/coloredlogs/converter.py')) == 1
+
+            # Make sure the file ownership and permissions are sane.
+            entry = find_file(contents, '/usr/lib/python*/dist-packages/coloredlogs/__init__.py').values()[0]
+            assert entry.owner == 'root'
+            assert entry.group == 'root'
+            assert entry.permissions in ('lrwxrwxrwx', # stdeb (the pyshared mechanism)
+                                         '-rw-r--r--') # pip-accel (the dumb backend :-)
+
+class TemporaryDirectory(object):
+
+    """
+    Easy temporary directory creation & cleanup using the :keyword:`with` statement:
+
+    .. code-block:: python
+
+       with TemporaryDirectory() as directory:
+           # Do something useful here.
+           assert os.path.isdir(directory)
+    """
+
+    def __enter__(self):
+        self.temporary_directory = tempfile.mkdtemp()
+        logger.debug("Created temporary directory: %s", self.temporary_directory)
+        return self.temporary_directory
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        logger.debug("Cleaning up temporary directory: %s", self.temporary_directory)
+        shutil.rmtree(self.temporary_directory)
+        del self.temporary_directory
 
 def has_dependency(depends_line, package_name):
+    """
+    Check if a package has a certain dependency.
+
+    :param depends_line: The ``Depends:`` line of a binary package (a string).
+    :param package_name: The name/version of the package (a string containing a
+                         regular expression).
+    :returns: ``True`` if the package has the dependency, ``False`` otherwise.
+    """
     for dependency in depends_line.split(','):
-        tokens = dependency.split()
-        if tokens and tokens[0] == package_name:
+        if re.match(package_name, dependency.strip()):
             return True
+
+def find_file(contents, pattern):
+    """
+    Find the file(s) matching the given filename pattern in the dictionary of
+    Debian package archive entries reported by
+    :py:func:`deb_pkg_tools.package.inspect_package()`.
+
+    :param contents: The dictionary of package archive entries.
+    :param pattern: The filename pattern to match (:py:mod:`fnmatch` syntax).
+    :returns: A subset of the original dictionary, containing only entries
+              matching the pattern.
+    """
+    matches = {}
+    for filename, metadata in contents.iteritems():
+        if fnmatch.fnmatch(filename, pattern):
+            matches[filename] = metadata
+    return matches
 
 # vim: ts=4 sw=4 et

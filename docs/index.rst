@@ -29,3 +29,6 @@ the `py2deb` package.
 
 .. automodule:: stdeb
    :members:
+
+.. automodule:: py2deb.tests.test_py2deb
+   :members:
