@@ -1,4 +1,7 @@
-# Custom exceptions raised by py2deb.
+"""
+py2deb.exceptions: Custom exceptions raised by py2deb
+=====================================================
+"""
 
 class Py2debError(Exception):
     """

@@ -1,7 +1,7 @@
 # Makefile for py2deb.
 #
 # Author: Peter Odding <peter.odding@paylogic.com>
-# Last Change: November 3, 2013
+# Last Change: May 6, 2014
 
 WORKON_HOME ?= $(HOME)/.virtualenvs
 VIRTUAL_ENV ?= $(WORKON_HOME)/py2deb
@@ -22,7 +22,7 @@ default:
 	@echo "    VIRTUAL_ENV = $(VIRTUAL_ENV)"
 	@echo
 
-test: init
+test: install
 	test -x "$(VIRTUAL_ENV)/bin/py.test" || (. "$(VIRTUAL_ENV)/bin/activate" && pip-accel install pytest)
 	py.test -s
 
@@ -32,9 +32,9 @@ clean:
 reset: clean
 	# (Re)create the Python virtual environment.
 	rm -Rf "$(VIRTUAL_ENV)"
-	make --no-print-directory init
+	make --no-print-directory install
 
-init:
+install:
 	test -x "$(VIRTUAL_ENV)/bin/python" || virtualenv "$(VIRTUAL_ENV)"
 	# Install pip-accel for faster installation of dependencies from PyPI.
 	test -x "$(VIRTUAL_ENV)/bin/pip-accel" || (. "$(VIRTUAL_ENV)/bin/activate" && pip install pip-accel)
@@ -43,6 +43,13 @@ init:
 	# Install py2deb using pip instead of pip-accel because we specifically
 	# *don't* want a cached binary distribution archive to be installed :-)
 	. "$(VIRTUAL_ENV)/bin/activate" && pip install --no-deps .
+
+docs: install
+	. "$(VIRTUAL_ENV)/bin/activate" && pip-accel install sphinx
+	cd docs && make html
+	if which gnome-open >/dev/null 2>&1; then \
+		gnome-open "docs/build/html/index.html"; \
+	fi
 
 stdeb.cfg:
 	python -c 'from py2deb import generate_stdeb_cfg; generate_stdeb_cfg()' > stdeb.cfg

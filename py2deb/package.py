@@ -1,3 +1,10 @@
+# vim: fileencoding=utf-8
+
+"""
+py2deb.package: Model of a Python → Debian package during conversion
+====================================================================
+"""
+
 # From http://www.debian.org/doc/debian-policy/ch-relationships.html#s-virtual:
 #
 #   If a relationship field has a version number attached, only real packages

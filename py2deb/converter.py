@@ -1,3 +1,8 @@
+"""
+py2deb.converter: The backend-independent parts of the conversion process
+=========================================================================
+"""
+
 # Standard library modules.
 import glob
 import logging

@@ -1,3 +1,8 @@
+"""
+pip-accel backend for py2deb
+============================
+"""
+
 # Standard library modules.
 import ConfigParser
 import glob

@@ -1,19 +1,21 @@
-# Fake stdeb module that loads the right version of stdeb depending on platform.
-#
-# Author: Peter Odding <peter.odding@paylogic.com>
-# Last Change: November 3, 2013
-#
-# The py2deb package bundles two copies of stdeb:
-#
-#   -------------------------------------------------
-#   | Directory | Version   | Source | Platform     |
-#   | --------- | --------- | ------ | ------------ |
-#   | stdeb_old | 0.6.0     | PyPI   | Ubuntu 10.04 |
-#   | stdeb_new | 0.6.0+git | GitHub | Ubuntu 12.04 |
-#   -------------------------------------------------
-#
-# This trickery is needed because stdeb 0.6.0+git is required on Ubuntu 12.04
-# but simply doesn't work on Ubuntu 10.04 and hasn't actually been released :-)
+"""
+The :py:mod:`stdeb` module bundled with :py:mod:`py2deb` is a "fake module"
+which loads the right version of stdeb depending on the current platform. The
+py2deb package bundles two copies of stdeb:
+
+=========  =========  =======  ===============================
+Directory  Version    Source   Platform
+=========  =========  =======  ===============================
+stdeb_old  0.6.0      PyPI_    Ubuntu 10.04 (Lucid Lynx)
+stdeb_new  0.6.0+git  GitHub_  Ubuntu 12.04 (Precise Pangolin)
+=========  =========  =======  ===============================
+
+This trickery is needed because stdeb 0.6.0+git is required on Ubuntu 12.04
+but simply doesn't work on Ubuntu 10.04 and hasn't actually been released :-)
+
+.. _PyPI: https://pypi.python.org/pypi/stdeb
+.. _GitHub: https://github.com/astraw/stdeb
+"""
 
 # Standard library modules.
 import os
@@ -21,8 +23,12 @@ import pipes
 import sys
 
 def pick_stdeb_release():
-    # Find the newest version of the `python-all' package available on the
-    # current platform (regardless of whether it is currently installed).
+    """
+    Find the latest version of the ``python-all`` package available on the
+    current platform (regardless of whether it is currently installed) and
+    check whether it's equal to or greater than 2.6.6-3: If it is the new stdeb
+    is picked, otherwise the old stdeb is picked.
+    """
     # XXX `sort --version-sort' isn't supported in Ubuntu 9.04 (Jaunty) and it
     # looks like `sort --general-numeric-sort' works fine for our purpose.
     handle = os.popen("apt-cache show python-all | awk '/^Version:/ {print $2}' | sort --general-numeric-sort | tail -n1")

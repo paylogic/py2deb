@@ -1,3 +1,8 @@
+"""
+stdeb backend for py2deb
+========================
+"""
+
 # Standard library modules.
 import fnmatch
 import logging
