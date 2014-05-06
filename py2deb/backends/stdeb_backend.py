@@ -98,7 +98,7 @@ def dpkg_buildpackage(package, verbose):
         # XXX stdeb 0.6.0+git uses dh_python2, which guesses dependencies
         # by default. We don't want this so we override this behavior.
         os.environ['DH_OPTIONS'] = '--no-guessing-deps'
-    if execute(command, directory=package.directory):
+    if not execute(command, directory=package.directory):
         raise BackendFailed, "Failed to build package %s!" % package.debian_name
     logger.debug("%s: Scanning for generated Debian packages ..", package.name)
     parent_directory = os.path.dirname(package.directory)
