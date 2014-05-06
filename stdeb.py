@@ -1,4 +1,7 @@
 """
+Customized stdeb module
+=======================
+
 The :py:mod:`stdeb` module bundled with :py:mod:`py2deb` is a "fake module"
 which loads the right version of stdeb depending on the current platform. The
 py2deb package bundles two copies of stdeb:
@@ -37,8 +40,10 @@ def pick_stdeb_release():
     # Use dpkg's support for raw version comparisons to check whether the
     # newest available version of the `python-all' package is >= 2.6.6-3.
     if os.system("dpkg --compare-versions %s '>=' 2.6.6-3" % pipes.quote(python_all_version)) == 0:
-        return __import__('stdeb_new')
+        stdeb = __import__('stdeb_new')
     else:
-        return __import__('stdeb_old')
+        stdeb = __import__('stdeb_old')
+    stdeb.__doc__ = __doc__
+    return stdeb
 
 sys.modules['stdeb'] = pick_stdeb_release()

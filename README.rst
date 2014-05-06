@@ -1,5 +1,6 @@
 The Python to Debian package converter
 ======================================
+
 The Python to Debian package converter, also known as Py2Deb, is exactly what the name implies:
 A program that converts Python packages to Debian packages.
 It is the result of an internship assignment at Paylogic.
@@ -31,27 +32,18 @@ Download the source and run (as root or in a virtual environment)::
 
 How does it work?
 -----------------
-Py2Deb accepts the following commands:
 
-Usage: py2deb [OPTIONS] -- PIP_ARGS [PIP_OPTIONS]
+The py2deb program is a wrapper for pip / pip-accel. For example, if you would
+run ``pip-accel coloredlogs -r other_packages.txt`` to install several
+packages, you can do ``py2deb coloredlogs -r other_packages.txt`` to convert
+those same packages to Debian packages.
 
-Supported options:
-
--c, --config=FILE  override the default configuration file
--p, --print-deps   prints a valid value for the `Depends` line of a
-                   debian control file with the package names and
-                   pinned versions of all built pacakges
--v, --verbose      more output
--y, --yes          automatically confirm installation of system-wide dependencies
--h, --help         show this message and exit
-
-For example, if you would run ``pip-accel coloredlogs -r other_packages.txt`` to install several packages, you can do
-``py2deb coloredlogs -r other_packages.txt`` to convert those same packages to Debian packages.
-
-For the steps it takes to generate Debian packages you can read the source code and/or look at ``workflow/workflow.png``
+For the steps it takes to generate Debian packages you can read the source code
+and/or look at ``workflow/workflow.png``
 
 Nice to know
 ------------
+
 stdeb
   The PyPI version of stdeb (0.6.0) relies on ``py_support``, which is deprecated. The source from their github (0.6.0+git) relies on ``dh_python2``.
   If you use ``Ubuntu 10.04 LTS`` you will not have access to ``dh_python2`` because ``dh_python2`` is included in ``python-all (2.6.5-1)``, while

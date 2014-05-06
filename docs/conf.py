@@ -11,7 +11,12 @@ sys.path.insert(0, os.path.abspath('..'))
 # -- General configuration -----------------------------------------------------
 
 # Sphinx extension module names.
-extensions = ['sphinx.ext.doctest', 'sphinx.ext.autodoc', 'sphinx.ext.intersphinx']
+extensions = [
+  'sphinx.ext.doctest',
+  'sphinx.ext.autodoc',
+  'sphinx.ext.intersphinx',
+  'sphinxcontrib.programoutput',
+]
 
 # Paths that contain templates, relative to this directory.
 templates_path = ['templates']
@@ -55,8 +60,12 @@ pygments_style = 'sphinx'
 
 # Refer to the Python standard library.
 # From: http://twistedmatrix.com/trac/ticket/4582.
-intersphinx_mapping = {'python': ('http://docs.python.org', None),
-                       'executor': ('http://executor.readthedocs.org/en/latest', None)}
+intersphinx_mapping = {
+    'debpkgtools': ('http://deb-pkg-tools.readthedocs.org/en/latest', None),
+    'executor': ('http://executor.readthedocs.org/en/latest', None),
+    'pipaccel': ('http://pip-accel.readthedocs.org/en/latest', None),
+    'python': ('http://docs.python.org', None)
+}
 
 # -- Options for HTML output ---------------------------------------------------
 

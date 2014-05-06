@@ -31,6 +31,9 @@ from py2deb.util import (apply_script, find_python_version,
 logger = logging.getLogger(__name__)
 
 def build(context):
+    """
+    Entry point for the :py:mod:`pip_accel` backend of :py:mod:`py2deb`.
+    """
     package = context['package']
     # Create a temporary directory to put the generated package in.
     build_directory = tempfile.mkdtemp()
@@ -120,8 +123,11 @@ def build(context):
         shutil.rmtree(build_directory)
 
 def rewrite_filenames(package, is_isolated_package):
-    # Download the package, build the package, create a binary distribution
-    # archive and sanitize the contents of the archive (all using pip-accel).
+    """
+    Download the package, build the package, create a binary distribution
+    archive and sanitize the contents of the archive (all using
+    :py:mod:`pip_accel`).
+    """
     for member, handle in get_binary_dist(package.name, package.version, package.directory):
         if is_isolated_package:
             # Strip the complete /usr/lib/pythonX.Y/site-packages/ prefix so we
@@ -146,6 +152,13 @@ def rewrite_filenames(package, is_isolated_package):
         yield member, handle
 
 def find_shared_object_files(directory):
+    """
+    Searches a directory tree for shared object files. Runs
+    ``strip --strip-unneeded`` on every ``*.so`` file it finds.
+
+    :param directory: The directory to search (a string).
+    :returns: A :py:class:`list` with pathnames of ``*.so`` files.
+    """
     shared_objects = []
     for root, dirs, files in os.walk(directory):
         for filename in files:
@@ -157,13 +170,19 @@ def find_shared_object_files(directory):
         logger.debug("Found one or more shared object files: %s", shared_objects)
     return shared_objects
 
-def determine_package_architecture(shared_objects):
+def determine_package_architecture(has_shared_objects):
+    """
+    Determine the architecture that a package should be tagged with: If a
+    package contains ``*.so`` files we're dealing with a compiled Python
+    module. To determine the applicable architecture, we simply take the
+    architecture of the current system and (for now) ignore the existence of
+    cross-compilation.
+
+    :param has_shared_objects: ``True`` if the package contains ``*.so`` files.
+    :returns: The architecture string, one of 'all', 'i386' or 'amd64'.
+    """
     logger.debug("Checking package architecture ..")
-    if shared_objects:
-        # We found one or more shared object files, i.e. we're dealing with a
-        # compiled Python module. To determine the applicable architecture, we
-        # simply take the architecture of the current system and (for now)
-        # ignore the existence of cross-compilation.
+    if has_shared_objects:
         if sys.maxsize > 2**32:
             logger.debug("We're running on a 64 bit system; assuming package is also 64 bit.")
             return 'amd64'
@@ -175,6 +194,15 @@ def determine_package_architecture(shared_objects):
         return 'all'
 
 def find_library_dependencies(shared_objects):
+    """
+    (Ab)uses the ``dpkg-shlibdeps`` program to find dependencies on system
+    libraries.
+
+    :param shared_objects: The pathnames of the ``*.so`` file(s) contained in
+                           the package.
+    :returns: A list of strings in the format of the entries on the
+              ``Depends:`` line of a binary package control file.
+    """
     logger.debug("Abusing `dpkg-shlibdeps' to find dependencies on shared libraries ..")
     # Create a fake source package, because `dpkg-shlibdeps' expects this.
     fake_source_directory = tempfile.mkdtemp()
@@ -202,6 +230,14 @@ def find_library_dependencies(shared_objects):
         shutil.rmtree(fake_source_directory)
 
 def find_package_maintainer(package):
+    """
+    Get the package maintainer name and e-mail address of a Python package and
+    combine them into a single string that can be embedded in a Debian
+    package.
+
+    :param package: A :py:class:`py2deb.package.Package` object.
+    :returns: A string describing the maintainer (defaults to 'Unknown').
+    """
     metadata = package.metadata
     maintainer = metadata.get('maintainer')
     maintainer_email = metadata.get('maintainer-email')

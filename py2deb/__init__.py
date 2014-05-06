@@ -1,4 +1,11 @@
 """
+Command line interface for py2deb
+=================================
+
+.. command-output:: py2deb --help
+"""
+
+usage_message = """
 Usage: py2deb [OPTIONS] -- PIP_INSTALL_ARGS
 
 Supported options:
@@ -177,7 +184,7 @@ def main():
                 handle.write("%s\n" % ", ".join(converted_dependencies))
 
 def usage():
-    print __doc__.strip()
+    print usage_message.strip()
 
 def generate_stdeb_cfg():
     print textwrap.dedent('''

@@ -1,7 +1,7 @@
 # Makefile for py2deb.
 #
 # Author: Peter Odding <peter.odding@paylogic.com>
-# Last Change: May 6, 2014
+# Last Change: May 7, 2014
 
 WORKON_HOME ?= $(HOME)/.virtualenvs
 VIRTUAL_ENV ?= $(WORKON_HOME)/py2deb
@@ -45,7 +45,7 @@ install:
 	. "$(VIRTUAL_ENV)/bin/activate" && pip install --no-deps .
 
 docs: install
-	. "$(VIRTUAL_ENV)/bin/activate" && pip-accel install sphinx
+	. "$(VIRTUAL_ENV)/bin/activate" && pip-accel install sphinx sphinxcontrib-programoutput
 	cd docs && make html
 	if which gnome-open >/dev/null 2>&1; then \
 		gnome-open "docs/build/html/index.html"; \

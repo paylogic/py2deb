@@ -26,6 +26,9 @@ from py2deb.util import apply_script, get_tagged_description, patch_control_file
 logger = logging.getLogger(__name__)
 
 def build(context):
+    """
+    Entry point for the :py:mod:`stdeb` backend of :py:mod:`py2deb`.
+    """
     debianize(context['package'], context['verbose'])
     patch_control(context['package'], context['config'])
     apply_script(context['config'], context['package'].name, context['package'].directory)
@@ -34,7 +37,7 @@ def build(context):
 
 def debianize(package, verbose):
     """
-    Debianize a Python package using stdeb.
+    Debianize a Python package using :py:mod:`stdeb`.
     """
     if os.path.isfile(os.path.join(package.directory, 'debian', 'control')):
         logger.warn("%s: Package was previously Debianized: Overwriting existing files!", package.name)
@@ -81,7 +84,7 @@ def patch_control(package, config):
 
 def dpkg_buildpackage(package, verbose):
     """
-    Builds the Debian package using dpkg-buildpackage.
+    Builds the Debian package using ``dpkg-buildpackage``.
     """
     logger.info("%s: Building package ..", package.debian_name)
     # XXX Always run the `dpkg-buildpackage' command in a clean environment.
