@@ -94,14 +94,10 @@ def convert_real(pip_install_args, repository=None, packages_to_rename={}, backe
                                   name_prefix=name_prefix,
                                   replacements=replacements,
                                   build_dir=build_dir,
-                                  config=config)
+                                  config=config,
+                                  packages_to_rename=packages_to_rename)
         logger.debug("Primary packages (given on the command line): %r", primary_packages)
         logger.debug("Packages to build (all dependencies except those with replacements): %r", packages_to_build)
-        for package in packages_to_build:
-            name_override = packages_to_rename.get(package.name.lower())
-            if name_override:
-                logger.info("Resetting name of package %s to %s ..", package.name, name_override)
-                package.debian_name = name_override
         repository = repository or config.get('general', 'repository')
         for package in packages_to_build:
             result = find_existing_debs(package, repository)
@@ -138,7 +134,7 @@ def find_existing_debs(package, repository):
     """
     return glob.glob(os.path.join(repository, package.debian_file_pattern))
 
-def get_required_packages(pip_install_args, name_prefix, replacements, build_dir, config):
+def get_required_packages(pip_install_args, name_prefix, replacements, build_dir, config, packages_to_rename):
     """
     Find the Python package(s) required to install the Python package(s) that
     the user requested to be converted. This includes transitive dependencies.
@@ -162,7 +158,8 @@ def get_required_packages(pip_install_args, name_prefix, replacements, build_dir
     primary_packages = []
     for requirement in get_source_dists(pip_arguments, build_dir):
         package = Package(requirement.name, requirement.version,
-                          requirement.source_directory, name_prefix, config)
+                          requirement.source_directory, name_prefix, config,
+                          packages_to_rename)
         all_packages[package.name] = package
         if requirement.is_direct:
             primary_packages.append(package)

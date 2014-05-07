@@ -41,11 +41,12 @@ class Package:
     Wrapper for Python packages that will be converted to Debian packages.
     """
 
-    def __init__(self, name, version, directory, name_prefix, config):
+    def __init__(self, name, version, directory, name_prefix, config, packages_to_rename):
         self.name = name.lower()
         self.name_prefix = name_prefix
+        self.packages_to_rename = packages_to_rename
         self.is_isolated_package = config.has_option('general', 'install-prefix')
-        self.debian_name = transform_package_name(self.name_prefix, self.name, self.is_isolated_package)
+        self.debian_name = transform_package_name(self.name_prefix, self.name, self.is_isolated_package, self.packages_to_rename)
         self.version = version
         self.directory = os.path.abspath(directory)
         self.config = config
@@ -146,7 +147,7 @@ class Package:
             if req.key in replacements:
                 dependencies.append(replacements[req.key])
             else:
-                name = transform_package_name(self.name_prefix, req.key, self.is_isolated_package)
+                name = transform_package_name(self.name_prefix, req.key, self.is_isolated_package, self.packages_to_rename)
                 if not req.specs:
                     dependencies.append(name)
                 else:
