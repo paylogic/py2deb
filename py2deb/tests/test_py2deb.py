@@ -207,14 +207,15 @@ def test_conversion_of_isolated_packages():
         # Run py2deb as a subprocess so that everything including py2deb.main() is run.
         execute('py2deb',
                 '--repository=%s' % directory,
-                '--name-prefix=my-pip-accel',
+                '--name-prefix=pip-accel',
                 '--install-prefix=/usr/lib/pip-accel',
-                # More or less regular use case (renaming the "top level" package):
-                # my-pip-accel-pip-accel → my-pip-accel
-                '--rename=pip-accel,my-pip-accel',
+                # By default py2deb will generate a package called
+                # `pip-accel-pip-accel'. The --no-name-prefix=PKG
+                # option can be used to avoid this.
+                '--no-name-prefix=pip-accel',
                 # Strange but valid use case (renaming a dependency):
-                # my-pip-accel-coloredlogs → my-pip-accel-coloredlogs-renamed
-                '--rename=coloredlogs,my-pip-accel-coloredlogs-renamed',
+                # pip-accel-coloredlogs → pip-accel-coloredlogs-renamed
+                '--rename=coloredlogs,pip-accel-coloredlogs-renamed',
                 'pip-accel==0.12')
 
         # Find the generated Debian package archives.
@@ -223,14 +224,14 @@ def test_conversion_of_isolated_packages():
 
         # Make sure the expected dependencies have been converted.
         assert sorted(package_name_from_filename(a) for a in archives) == sorted([
-            'my-pip-accel',
-            'my-pip-accel-coloredlogs-renamed',
-            'my-pip-accel-humanfriendly',
-            'my-pip-accel-pip',
+            'pip-accel',
+            'pip-accel-coloredlogs-renamed',
+            'pip-accel-humanfriendly',
+            'pip-accel-pip',
         ])
 
         # Use deb-pkg-tools to inspect pip-accel.
-        pathname = find_package_archive(archives, 'my-pip-accel')
+        pathname = find_package_archive(archives, 'pip-accel')
         metadata, contents = inspect_package(pathname)
         logger.debug("Metadata of generated package: %s", dict(metadata))
         logger.debug("Contents of generated package: %s", dict(contents))
@@ -238,7 +239,7 @@ def test_conversion_of_isolated_packages():
         # Check the package metadata. It should look something like this:
         #
         #  {'Architecture': 'all',
-        #   'Depends': 'my-pip-accel-coloredlogs-renamed (>= 0.4.6), my-pip-accel-humanfriendly (>= 1.6), my-pip-accel-pip (<< 1.5), my-pip-accel-pip (>= 1.4), python2.7',
+        #   'Depends': 'pip-accel-coloredlogs-renamed (>= 0.4.6), pip-accel-humanfriendly (>= 1.6), pip-accel-pip (<< 1.5), pip-accel-pip (>= 1.4), python2.7',
         #   'Description': 'Packaged by py2deb on May 7, 2014 at 15:21',
         #   'Installed-Size': '164',
         #   'Maintainer': 'Peter Odding <peter.odding@paylogic.eu>',
@@ -248,10 +249,10 @@ def test_conversion_of_isolated_packages():
         #   'Version': '0.12-1'}
 
         # Make sure the dependencies defined in `setup.py' have been preserved while their names have been converted.
-        assert has_dependency(metadata['Depends'], r'^my-pip-accel-coloredlogs-renamed \(>= 0\.4\.6\)$')
-        assert has_dependency(metadata['Depends'], r'^my-pip-accel-humanfriendly \(>= 1\.6\)$')
-        assert has_dependency(metadata['Depends'], r'^my-pip-accel-pip \(>= 1\.4\)$')
-        assert has_dependency(metadata['Depends'], r'^my-pip-accel-pip \(<< 1\.5\)$')
+        assert has_dependency(metadata['Depends'], r'^pip-accel-coloredlogs-renamed \(>= 0\.4\.6\)$')
+        assert has_dependency(metadata['Depends'], r'^pip-accel-humanfriendly \(>= 1\.6\)$')
+        assert has_dependency(metadata['Depends'], r'^pip-accel-pip \(>= 1\.4\)$')
+        assert has_dependency(metadata['Depends'], r'^pip-accel-pip \(<< 1\.5\)$')
         assert len(parse_depends(metadata['Depends'])) == 5
 
         # Check the package contents. It should look something like this:

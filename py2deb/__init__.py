@@ -14,8 +14,9 @@ Supported options:
                              to the environment variable PY2DEB_CONFIG)
   -r, --repository=DIR       override the default repository directory
                              (defaults to the environment variable PY2DEB_REPO)
-      --name-prefix=STR      set package name prefix (default: python)
       --install-prefix=PATH  set installation prefix path (default: none)
+      --name-prefix=STR      set package name prefix (default: python)
+      --no-name-prefix=PKG   don't apply the name prefix to the package PKG
       --rename=FROM,TO       override the default package name conversion from
                              Python packages to Debian packages
       --report-deps=PATH     generates a valid value for the `Depends` line of
@@ -61,7 +62,7 @@ from py2deb.config import config, load_config
 from py2deb.converter import convert
 
 # Semi-standard module versioning.
-__version__ = '0.14.2'
+__version__ = '0.14.3'
 
 # Initialize a logger for this module.
 logger = logging.getLogger(__name__)
@@ -99,9 +100,9 @@ def main():
 
     # Parse command line options
     options, arguments = getopt.gnu_getopt(sys.argv[1:], 'c:r:yvh', [
-        'install', 'config=', 'repository=', 'name-prefix=', 'install-prefix=',
-        'rename=', 'report-deps=', 'with-stdeb', 'with-pip-accel',
-        'yes', 'verbose', 'help'
+        'install', 'config=', 'repository=', 'install-prefix=', 'name-prefix=',
+        'no-name-prefix=', 'rename=', 'report-deps=', 'with-stdeb',
+        'with-pip-accel', 'yes', 'verbose', 'help'
     ])
 
     # Validate the command line options and map them to variables
@@ -124,6 +125,10 @@ def main():
         elif option == '--install-prefix':
             install_prefix = value.strip()
             assert install_prefix, "Please provide a nonempty installation prefix!"
+        elif option == '--no-name-prefix':
+            package_name = value.lower().strip()
+            assert package_name, "Please provide a nonempty package name to --no-name-prefix!"
+            packages_to_rename[package_name] = package_name
         elif option == '--rename':
             python_name, _, debian_name = map(str.strip, value.partition(','))
             assert python_name, "Please provide a nonempty Python package name to --rename!"
