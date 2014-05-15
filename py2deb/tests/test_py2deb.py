@@ -17,7 +17,7 @@ import tempfile
 
 # External dependencies.
 import coloredlogs
-from deb_pkg_tools.package import inspect_package
+from deb_pkg_tools.package import inspect_package, parse_filename
 from executor import execute
 
 # Initialize a logger.
@@ -139,7 +139,7 @@ def test_conversion_of_package_with_dependencies():
             logger.debug("Found generated archive(s): %s", archives)
 
             # Make sure the expected dependencies have been converted.
-            assert sorted(package_name_from_filename(a) for a in archives) == sorted([
+            assert sorted(parse_filename(a).name for a in archives) == sorted([
                 'python-chardet',
                 'python-coloredlogs',
                 'python-deb-pkg-tools',
@@ -223,7 +223,7 @@ def test_conversion_of_isolated_packages():
         logger.debug("Found generated archive(s): %s", archives)
 
         # Make sure the expected dependencies have been converted.
-        assert sorted(package_name_from_filename(a) for a in archives) == sorted([
+        assert sorted(parse_filename(a).name for a in archives) == sorted([
             'pip-accel',
             'pip-accel-coloredlogs-renamed',
             'pip-accel-humanfriendly',
@@ -322,17 +322,6 @@ class TemporaryDirectory(object):
         shutil.rmtree(self.temporary_directory)
         del self.temporary_directory
 
-def package_name_from_filename(pathname):
-    """
-    Find the name of a Debian package given a filename.
-
-    :param pathname: The pathname of the ``*.deb`` archive (a string).
-    :returns: The name of the package (a string).
-    """
-    filename = os.path.basename(pathname)
-    components = filename.split('_')
-    return components[0]
-
 def find_package_archive(available_archives, package_name):
     """
     Find the ``*.deb`` archive of a specific package. Raises an exception if
@@ -346,7 +335,7 @@ def find_package_archive(available_archives, package_name):
     """
     matches = []
     for pathname in available_archives:
-        if package_name_from_filename(pathname) == package_name:
+        if parse_filename(pathname).name == package_name:
             matches.append(pathname)
     assert len(matches) == 1, "Expected to match exactly one package archive!"
     return matches[0]
