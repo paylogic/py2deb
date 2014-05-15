@@ -19,6 +19,8 @@ Supported options:
       --no-name-prefix=PKG   don't apply the name prefix to the package PKG
       --rename=FROM,TO       override the default package name conversion from
                              Python packages to Debian packages
+      --inject-deps=PATH     inject dependencies on the converted package(s)
+                             into an existing control file
       --report-deps=PATH     generates a valid value for the `Depends` line of
                              a Debian control file with the package names and
                              pinned versions of built (transitive) packages
@@ -54,6 +56,7 @@ import textwrap
 
 # External dependencies.
 import coloredlogs
+from deb_pkg_tools.control import patch_control_file
 
 # Modules included in our package.
 from py2deb.backends.pip_accel_backend import build as build_with_pip_accel
@@ -62,7 +65,7 @@ from py2deb.config import config, load_config
 from py2deb.converter import convert
 
 # Semi-standard module versioning.
-__version__ = '0.14.3'
+__version__ = '0.14.4'
 
 # Initialize a logger for this module.
 logger = logging.getLogger(__name__)
@@ -94,6 +97,7 @@ def main():
     install_prefix = None
     packages_to_rename = {}
     report_dependencies = None
+    inject_dependencies = None
     verbose = os.environ.get('PY2DEB_VERBOSE')
     auto_install = False
     do_install = False
@@ -101,8 +105,8 @@ def main():
     # Parse command line options
     options, arguments = getopt.gnu_getopt(sys.argv[1:], 'c:r:yvh', [
         'install', 'config=', 'repository=', 'install-prefix=', 'name-prefix=',
-        'no-name-prefix=', 'rename=', 'report-deps=', 'with-stdeb',
-        'with-pip-accel', 'yes', 'verbose', 'help'
+        'no-name-prefix=', 'rename=', 'report-deps=', 'inject-deps=',
+        'with-stdeb', 'with-pip-accel', 'yes', 'verbose', 'help'
     ])
 
     # Validate the command line options and map them to variables
@@ -136,6 +140,9 @@ def main():
             packages_to_rename[python_name.lower()] = debian_name.lower()
         elif option == '--report-deps':
             report_dependencies = value
+        elif option == '--inject-deps':
+            inject_dependencies = value.strip()
+            assert os.path.isfile(inject_dependencies), "Please provide an existing control file to --inject-deps!"
         elif option == '--with-stdeb':
             backend = build_with_stdeb
         elif option == '--with-pip-accel':
@@ -171,12 +178,17 @@ def main():
         py2deb.bootstrap.install()
 
     if arguments:
+
         converted_dependencies = convert(arguments,
                                          backend=backend,
                                          repository=repository,
                                          packages_to_rename=packages_to_rename,
                                          auto_install=auto_install,
                                          verbose=verbose)
+
+        if inject_dependencies:
+            patch_control_file(inject_dependencies, dict(Depends=', '.join(converted_dependencies)))
+
         if report_dependencies:
             logger.debug("Converted dependencies to be reported: %s", converted_dependencies)
             if os.path.isfile(report_dependencies):
