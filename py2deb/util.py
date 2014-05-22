@@ -64,7 +64,7 @@ def transform_package_name(name_prefix, python_package_name, is_isolated_package
     python_package_key = python_package_name.lower()
     debian_package_name = packages_to_rename.get(python_package_key)
     if debian_package_name:
-        logger.debug("Package %s was renamed on the command line: %s", python_package_name)
+        logger.debug("Package %s was renamed on the command line: %s", python_package_name, debian_package_name)
     elif config.has_option(python_package_key, 'debian-name') and not is_isolated_package:
         debian_package_name = config.get(python_package_key, 'debian-name')
         logger.debug("Package %s has overridden Debian package name configured: %s", python_package_name, debian_package_name)
