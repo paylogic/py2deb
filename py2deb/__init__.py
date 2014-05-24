@@ -65,7 +65,7 @@ from py2deb.config import config, load_config
 from py2deb.converter import convert
 
 # Semi-standard module versioning.
-__version__ = '0.14.6'
+__version__ = '0.14.7'
 
 # Initialize a logger for this module.
 logger = logging.getLogger(__name__)
@@ -99,7 +99,7 @@ def main():
     report_dependencies = None
     inject_dependencies = None
     verbose = os.environ.get('PY2DEB_VERBOSE')
-    auto_install = False
+    auto_install = None
     do_install = False
 
     # Parse command line options
