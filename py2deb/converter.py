@@ -30,7 +30,7 @@ logger = logging.getLogger(__name__)
 # Increase the verbosity of the stdeb logger.
 logging.getLogger('stdeb').setLevel(logging.DEBUG)
 
-def convert(pip_install_args, repository=None, packages_to_rename={}, backend=build_with_stdeb, auto_install=False, verbose=False):
+def convert(pip_install_args, repository=None, packages_to_rename={}, backend=build_with_stdeb, auto_install=None, verbose=False):
     """
     Convert Python packages to Debian packages. This function is a wrapper for
     the real conversion function (:py:func:`convert_real()`). If the requested
@@ -75,7 +75,7 @@ def convert(pip_install_args, repository=None, packages_to_rename={}, backend=bu
                             auto_install=auto_install,
                             verbose=verbose)
 
-def convert_real(pip_install_args, repository=None, packages_to_rename={}, backend=build_with_stdeb, auto_install=False, verbose=False):
+def convert_real(pip_install_args, repository=None, packages_to_rename={}, backend=build_with_stdeb, auto_install=None, verbose=False):
     """
     Convert Python packages to Debian packages.
     """
