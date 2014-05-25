@@ -1,7 +1,7 @@
 # Makefile for py2deb.
 #
 # Author: Peter Odding <peter.odding@paylogic.com>
-# Last Change: May 7, 2014
+# Last Change: May 25, 2014
 
 WORKON_HOME ?= $(HOME)/.virtualenvs
 VIRTUAL_ENV ?= $(WORKON_HOME)/py2deb
@@ -27,7 +27,7 @@ test: install
 	py.test -s
 
 clean:
-	rm -Rf build dist *.egg *.egg-info
+	rm -Rf build dist *.egg *.egg-info docs/build
 
 reset: clean
 	# (Re)create the Python virtual environment.
