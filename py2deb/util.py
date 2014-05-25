@@ -56,13 +56,13 @@ def compact_repeating_words(words):
             i += 1
     return words
 
-def transform_package_name(name_prefix, python_package_name, is_isolated_package, packages_to_rename):
+def transform_package_name(name_prefix, python_package_name, is_isolated_package, name_mapping):
     """
     Transforms the name of a Python package as found on PyPI into the name that
     we want it to have as a Debian package using a prefix and a separator.
     """
     python_package_key = python_package_name.lower()
-    debian_package_name = packages_to_rename.get(python_package_key)
+    debian_package_name = name_mapping.get(python_package_key)
     if debian_package_name:
         logger.debug("Package %s was renamed on the command line: %s", python_package_name, debian_package_name)
     elif config.has_option(python_package_key, 'debian-name') and not is_isolated_package:

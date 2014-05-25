@@ -95,7 +95,7 @@ def main():
     repository = os.environ.get('PY2DEB_REPO')
     name_prefix = None
     install_prefix = None
-    packages_to_rename = {}
+    name_mapping = {}
     report_dependencies = None
     inject_dependencies = None
     verbose = os.environ.get('PY2DEB_VERBOSE')
@@ -132,12 +132,12 @@ def main():
         elif option == '--no-name-prefix':
             package_name = value.lower().strip()
             assert package_name, "Please provide a nonempty package name to --no-name-prefix!"
-            packages_to_rename[package_name] = package_name
+            name_mapping[package_name] = package_name
         elif option == '--rename':
             python_name, _, debian_name = map(str.strip, value.partition(','))
             assert python_name, "Please provide a nonempty Python package name to --rename!"
             assert debian_name, "Please provide a nonempty Debian package name to --rename!"
-            packages_to_rename[python_name.lower()] = debian_name.lower()
+            name_mapping[python_name.lower()] = debian_name.lower()
         elif option == '--report-deps':
             report_dependencies = value
         elif option == '--inject-deps':
@@ -182,7 +182,7 @@ def main():
         converted_dependencies = convert(arguments,
                                          backend=backend,
                                          repository=repository,
-                                         packages_to_rename=packages_to_rename,
+                                         name_mapping=name_mapping,
                                          auto_install=auto_install,
                                          verbose=verbose)
 
