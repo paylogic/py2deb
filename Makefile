@@ -1,7 +1,7 @@
 # Makefile for py2deb.
 #
 # Author: Peter Odding <peter.odding@paylogic.com>
-# Last Change: May 25, 2014
+# Last Change: May 26, 2014
 
 WORKON_HOME ?= $(HOME)/.virtualenvs
 VIRTUAL_ENV ?= $(WORKON_HOME)/py2deb
@@ -36,13 +36,9 @@ reset: clean
 
 install:
 	test -x "$(VIRTUAL_ENV)/bin/python" || virtualenv "$(VIRTUAL_ENV)"
-	# Install pip-accel for faster installation of dependencies from PyPI.
 	test -x "$(VIRTUAL_ENV)/bin/pip-accel" || (. "$(VIRTUAL_ENV)/bin/activate" && pip install pip-accel)
-	# Use pip-accel to install all dependencies based on requirements.txt.
 	. "$(VIRTUAL_ENV)/bin/activate" && pip-accel install -r requirements.txt
-	# Install py2deb using pip instead of pip-accel because we specifically
-	# *don't* want a cached binary distribution archive to be installed :-)
-	. "$(VIRTUAL_ENV)/bin/activate" && pip install --no-deps .
+	. "$(VIRTUAL_ENV)/bin/activate" && pip install --no-deps --editable .
 
 docs: install
 	. "$(VIRTUAL_ENV)/bin/activate" && pip-accel install sphinx sphinxcontrib-programoutput

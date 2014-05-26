@@ -11,8 +11,8 @@ import functools
 import glob
 import logging
 import os
-import re
 import shutil
+import sys
 import tempfile
 
 # External dependencies.
@@ -87,7 +87,7 @@ def test_conversion_of_simple_package():
             assert metadata['Architecture'] == 'all'
 
             # There should be exactly one dependency: some version of Python.
-            assert has_dependency(metadata['Depends'], r'^python(\d+(\.\d+)*)?$')
+            assert metadata['Depends'].matches('python%i.%i' % sys.version_info[:2])
 
             # Don't care about the format here as long as essential information is retained.
             assert 'Peter Odding' in metadata['Maintainer']
@@ -104,15 +104,15 @@ def test_conversion_of_simple_package():
             #   ...}
 
             # Check for the two *.py files that should be installed by the package.
-            assert len(find_file(contents, '/usr/lib/python*/dist-packages/coloredlogs/__init__.py')) == 1
-            assert len(find_file(contents, '/usr/lib/python*/dist-packages/coloredlogs/converter.py')) == 1
+            assert find_file(contents, '/usr/lib/python*/dist-packages/coloredlogs/__init__.py')
+            assert find_file(contents, '/usr/lib/python*/dist-packages/coloredlogs/converter.py')
 
             # Make sure the file ownership and permissions are sane.
-            entry = find_file(contents, '/usr/lib/python*/dist-packages/coloredlogs/__init__.py').values()[0]
-            assert entry.owner == 'root'
-            assert entry.group == 'root'
-            assert entry.permissions in ('lrwxrwxrwx', # stdeb (the pyshared mechanism)
-                                         '-rw-r--r--') # pip-accel (the dumb backend :-)
+            archive_entry = find_file(contents, '/usr/lib/python*/dist-packages/coloredlogs/__init__.py')
+            assert archive_entry.owner == 'root'
+            assert archive_entry.group == 'root'
+            assert archive_entry.permissions in ('lrwxrwxrwx', # stdeb (the pyshared mechanism)
+                                                 '-rw-r--r--') # pip-accel (the dumb backend :-)
 
 def test_conversion_of_package_with_dependencies():
 
@@ -184,11 +184,13 @@ def test_conversion_of_package_with_dependencies():
 
             # Make sure the dependencies defined in `stdeb.cfg' have been preserved.
             for configured_dependency in ['apt', 'apt-utils', 'binutils', 'dpkg-dev', 'fakeroot', 'gnupg', 'lintian']:
-                assert has_dependency(metadata['Depends'], '^%s$' % configured_dependency)
+                logger.debug("Checking configured dependency %s ..", configured_dependency)
+                assert metadata['Depends'].matches(configured_dependency) is not None
 
             # Make sure the dependencies defined in `setup.py' have been preserved.
             for python_dependency in ['python-chardet', 'python-coloredlogs', 'python-debian', 'python-executor', 'python-humanfriendly']:
-                assert has_dependency(metadata['Depends'], '^%s' % python_dependency)
+                logger.debug("Checking Python dependency %s ..", python_dependency)
+                assert metadata['Depends'].matches(python_dependency) is not None
 
 def test_conversion_of_isolated_packages():
 
@@ -249,11 +251,11 @@ def test_conversion_of_isolated_packages():
         #   'Version': '0.12-1'}
 
         # Make sure the dependencies defined in `setup.py' have been preserved while their names have been converted.
-        assert has_dependency(metadata['Depends'], r'^pip-accel-coloredlogs-renamed \(>= 0\.4\.6\)$')
-        assert has_dependency(metadata['Depends'], r'^pip-accel-humanfriendly \(>= 1\.6\)$')
-        assert has_dependency(metadata['Depends'], r'^pip-accel-pip \(>= 1\.4\)$')
-        assert has_dependency(metadata['Depends'], r'^pip-accel-pip \(<< 1\.5\)$')
-        assert len(parse_depends(metadata['Depends'])) == 5
+        assert metadata['Depends'].matches('pip-accel-coloredlogs-renamed', '0.4.6')
+        assert metadata['Depends'].matches('pip-accel-humanfriendly', '1.6')
+        assert metadata['Depends'].matches('pip-accel-pip', '1.4')
+        assert not metadata['Depends'].matches('pip-accel-pip', '1.3')
+        assert not metadata['Depends'].matches('pip-accel-pip', '1.5')
 
         # Check the package contents. It should look something like this:
         #
@@ -283,8 +285,7 @@ def test_conversion_of_isolated_packages():
         #   '/usr/lib/pip-accel/lib/pip_accel/utils.py': ArchiveEntry(permissions='-rw-r--r--', owner='root', group='root', size=1250, modified='2014-05-07 15:21', target='')}
 
         # Make sure the executable script has been installed and is marked as executable.
-        matches = find_file(contents, '/usr/lib/pip-accel/bin/pip-accel')
-        pip_accel_executable = matches['/usr/lib/pip-accel/bin/pip-accel']
+        pip_accel_executable = find_file(contents, '/usr/lib/pip-accel/bin/pip-accel')
         assert pip_accel_executable.permissions == '-rwxr-xr-x'
 
         # Verify the existence of some expected files (picked more or less at random).
@@ -340,28 +341,6 @@ def find_package_archive(available_archives, package_name):
     assert len(matches) == 1, "Expected to match exactly one package archive!"
     return matches[0]
 
-def has_dependency(depends_line, package_name):
-    """
-    Check if a package has a certain dependency.
-
-    :param depends_line: The ``Depends:`` line of a binary package (a string).
-    :param package_name: The name/version of the package (a string containing a
-                         regular expression).
-    :returns: ``True`` if the package has the dependency, ``False`` otherwise.
-    """
-    for dependency in parse_depends(depends_line):
-        if re.match(package_name, dependency.strip()):
-            return True
-
-def parse_depends(depends_line):
-    """
-    Parse the ``Depends:`` line of a binary package.
-
-    :param depends_line: The ``Depends:`` line of a binary package (a string).
-    :returns: The dependencies (a list of strings).
-    """
-    return [d.strip() for d in depends_line.split(',') if d and not d.isspace()]
-
 def find_file(contents, pattern):
     """
     Find the file(s) matching the given filename pattern in the dictionary of
@@ -373,10 +352,11 @@ def find_file(contents, pattern):
     :returns: A subset of the original dictionary, containing only entries
               matching the pattern.
     """
-    matches = {}
+    matches = []
     for filename, metadata in contents.iteritems():
         if fnmatch.fnmatch(filename, pattern):
-            matches[filename] = metadata
-    return matches
+            matches.append(metadata)
+    assert len(matches) == 1, "Expected to match exactly one archive entry!"
+    return matches[0]
 
 # vim: ts=4 sw=4 et nowrap
