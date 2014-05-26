@@ -41,15 +41,15 @@ class Package:
     Wrapper for Python packages that will be converted to Debian packages.
     """
 
-    def __init__(self, name, version, directory, name_prefix, config, name_mapping):
+    def __init__(self, name, version, directory, name_mapping, name_prefix, install_prefix, replacements):
         self.name = name.lower()
-        self.name_prefix = name_prefix
-        self.name_mapping = name_mapping
-        self.is_isolated_package = config.has_option('general', 'install-prefix')
-        self.debian_name = transform_package_name(self.name_prefix, self.name, self.is_isolated_package, self.name_mapping)
         self.version = version
         self.directory = os.path.abspath(directory)
-        self.config = config
+        self.name_mapping = name_mapping
+        self.name_prefix = name_prefix
+        self.is_isolated_package = bool(install_prefix)
+        self.replacements = replacements
+        self.debian_name = transform_package_name(self.name_prefix, self.name, self.is_isolated_package, self.name_mapping)
         self.py_requirements = self.python_requirements or []
 
     def __repr__(self):
@@ -126,9 +126,8 @@ class Package:
         The entry in a Debian package's ``Depends:`` field required to depend
         on the converted package.
         """
-        replacements = dict(self.config.items('replacements'))
-        if self.name in replacements:
-            return replacements[self.name]
+        if self.name in self.replacements:
+            return self.replacements[self.name]
         else:
             return '%s (=%s)' % (self.debian_name, self.release)
 
@@ -142,10 +141,9 @@ class Package:
         # Useful link:
         # http://www.python.org/dev/peps/pep-0440/#version-specifiers
         dependencies = []
-        replacements = dict(self.config.items('replacements'))
         for req in self.python_requirements:
-            if req.key in replacements:
-                dependencies.append(replacements[req.key])
+            if req.key in self.replacements:
+                dependencies.append(self.replacements[req.key])
             else:
                 name = transform_package_name(self.name_prefix, req.key, self.is_isolated_package, self.name_mapping)
                 if not req.specs:

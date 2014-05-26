@@ -65,7 +65,7 @@ from py2deb.config import config, load_config
 from py2deb.converter import convert
 
 # Semi-standard module versioning.
-__version__ = '0.14.7'
+__version__ = '0.14.8'
 
 # Initialize a logger for this module.
 logger = logging.getLogger(__name__)
@@ -164,10 +164,14 @@ def main():
     # Initialize the configuration.
     if config_file:
         load_config('custom', config_file)
-    if name_prefix:
-        config.set('general', 'name-prefix', name_prefix)
-    if install_prefix:
-        config.set('general', 'install-prefix', install_prefix)
+
+    # Load the configuration defaults.
+    if not repository and config.has_option('general', 'repository'):
+        repository = config.get('general', 'repository')
+    if not name_prefix and config.has_option('general', 'name-prefix'):
+        name_prefix = config.get('general', 'name-prefix')
+    if not install_prefix and config.has_option('general', 'install-prefix'):
+        install_prefix = config.get('general', 'install-prefix')
 
     if not (do_install or arguments):
         usage()
@@ -183,6 +187,8 @@ def main():
                                          backend=backend,
                                          repository=repository,
                                          name_mapping=name_mapping,
+                                         name_prefix=name_prefix,
+                                         install_prefix=install_prefix,
                                          auto_install=auto_install,
                                          verbose=verbose)
 

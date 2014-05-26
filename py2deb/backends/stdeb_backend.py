@@ -30,7 +30,7 @@ def build(context):
     Entry point for the :py:mod:`stdeb` backend of :py:mod:`py2deb`.
     """
     debianize(context['package'], context['verbose'])
-    patch_control(context['package'], context['config'])
+    patch_control(context['package'])
     apply_script(context['config'], context['package'].name, context['package'].directory)
     clean_package_tree(context['package'].directory)
     return dpkg_buildpackage(context['package'], context['verbose'])
@@ -51,7 +51,7 @@ def debianize(package, verbose):
         raise BackendFailed, "Failed to debianize package! (%s)" % package.name
     logger.debug("%s: Finished debianizing package.", package.name)
 
-def patch_control(package, config):
+def patch_control(package):
     """
     Patch the control file of a 'Debianized' Python package (see
     :py:func:`debianize()`) to modify the package metadata and inject the

@@ -23,7 +23,6 @@ from humanfriendly import format_path
 from pip_accel.bdist import get_binary_dist, install_binary_dist
 
 # Modules included in our package.
-from py2deb.config import config
 from py2deb.util import (apply_script, find_python_version,
                          get_tagged_description, patch_control_file)
 
@@ -44,11 +43,11 @@ def build(context):
         # sanitized binary distribution inside the build directory (all using
         # pip-accel).
         if package.is_isolated_package:
-            install_prefix = config.get('general', 'install-prefix')
+            install_prefix = context['install_prefix']
         else:
             install_prefix = '/usr'
         absolute_install_prefix = os.path.join(build_directory, install_prefix.lstrip('/'))
-        install_binary_dist(rewrite_filenames(package, package.is_isolated_package),
+        install_binary_dist(rewrite_filenames(package, package.is_isolated_package, install_prefix),
                             prefix=absolute_install_prefix,
                             python='/usr/bin/%s' % find_python_version())
         # Find the package install directory within the temporary install prefix.
@@ -122,7 +121,7 @@ def build(context):
     finally:
         shutil.rmtree(build_directory)
 
-def rewrite_filenames(package, is_isolated_package):
+def rewrite_filenames(package, is_isolated_package, install_prefix):
     """
     Download the package, build the package, create a binary distribution
     archive and sanitize the contents of the archive (all using
@@ -142,7 +141,7 @@ def rewrite_filenames(package, is_isolated_package):
                     i = 0
                     while i < len(lines) and lines[i].startswith('#'):
                         i += 1
-                    directory = os.path.join(config.get('general', 'install-prefix'), 'lib')
+                    directory = os.path.join(install_prefix, 'lib')
                     lines.insert(i, 'import sys; sys.path.insert(0, %r)\n' % directory)
                 handle = StringIO.StringIO(''.join(lines))
         else:

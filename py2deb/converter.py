@@ -30,7 +30,9 @@ logger = logging.getLogger(__name__)
 # Increase the verbosity of the stdeb logger.
 logging.getLogger('stdeb').setLevel(logging.DEBUG)
 
-def convert(pip_install_args, repository=None, name_mapping={}, backend=build_with_stdeb, auto_install=None, verbose=False):
+def convert(pip_install_args, repository, name_prefix, install_prefix=None,
+            name_mapping={}, backend=build_with_stdeb, auto_install=None,
+            verbose=False):
     """
     Convert Python packages to Debian packages. This function is a wrapper for
     the real conversion function (:py:func:`convert_real()`). If the requested
@@ -41,10 +43,12 @@ def convert(pip_install_args, repository=None, name_mapping={}, backend=build_wi
     check_supported_platform()
     # If the user requested to build packages with a custom installation
     # prefix, the pip-accel backend is our only option.
-    if config.has_option('general', 'install-prefix'):
+    if install_prefix:
         return convert_real(pip_install_args,
                             repository=repository,
                             name_mapping=name_mapping,
+                            name_prefix=name_prefix,
+                            install_prefix=install_prefix,
                             backend=build_with_pip_accel,
                             auto_install=auto_install,
                             verbose=verbose)
@@ -54,6 +58,8 @@ def convert(pip_install_args, repository=None, name_mapping={}, backend=build_wi
         return convert_real(pip_install_args,
                             repository=repository,
                             name_mapping=name_mapping,
+                            name_prefix=name_prefix,
+                            install_prefix=install_prefix,
                             backend=backend,
                             auto_install=auto_install,
                             verbose=verbose)
@@ -71,11 +77,13 @@ def convert(pip_install_args, repository=None, name_mapping={}, backend=build_wi
         return convert_real(pip_install_args,
                             repository=repository,
                             name_mapping=name_mapping,
+                            name_prefix=name_prefix,
+                            install_prefix=install_prefix,
                             backend=alternative_backend,
                             auto_install=auto_install,
                             verbose=verbose)
 
-def convert_real(pip_install_args, repository=None, name_mapping={}, backend=build_with_stdeb, auto_install=None, verbose=False):
+def convert_real(pip_install_args, repository, name_prefix, install_prefix, name_mapping, backend, auto_install, verbose):
     """
     Convert Python packages to Debian packages.
     """
@@ -88,17 +96,15 @@ def convert_real(pip_install_args, repository=None, name_mapping={}, backend=bui
         # Tell pip to extract into our build directory.
         pip_install_args = list(pip_install_args) + ['-b', build_dir]
         # Generate list of requirements.
-        name_prefix = config.get('general', 'name-prefix')
         primary_packages, packages_to_build = \
             get_required_packages(pip_install_args=pip_install_args,
+                                  name_mapping=name_mapping,
                                   name_prefix=name_prefix,
+                                  install_prefix=install_prefix,
                                   replacements=replacements,
-                                  build_dir=build_dir,
-                                  config=config,
-                                  name_mapping=name_mapping)
+                                  build_dir=build_dir)
         logger.debug("Primary packages (given on the command line): %r", primary_packages)
         logger.debug("Packages to build (all dependencies except those with replacements): %r", packages_to_build)
-        repository = repository or config.get('general', 'repository')
         for package in packages_to_build:
             result = find_existing_debs(package, repository)
             if result:
@@ -112,6 +118,8 @@ def convert_real(pip_install_args, repository=None, name_mapping={}, backend=bui
                 sanity_check_dependencies(package.name, auto_install)
                 pathname = backend(dict(package=package,
                                         config=config,
+                                        name_prefix=name_prefix,
+                                        install_prefix=install_prefix,
                                         verbose=verbose,
                                         auto_install=auto_install))
                 old_path = os.path.realpath(pathname)
@@ -134,7 +142,7 @@ def find_existing_debs(package, repository):
     """
     return glob.glob(os.path.join(repository, package.debian_file_pattern))
 
-def get_required_packages(pip_install_args, name_prefix, replacements, build_dir, config, name_mapping):
+def get_required_packages(pip_install_args, name_mapping, name_prefix, install_prefix, replacements, build_dir):
     """
     Find the Python package(s) required to install the Python package(s) that
     the user requested to be converted. This includes transitive dependencies.
@@ -144,7 +152,6 @@ def get_required_packages(pip_install_args, name_prefix, replacements, build_dir
     :param name_prefix: The string prefixed to names of converted packages.
     :param replacements: A dictionary of replacement packages.
     :param build_dir: Pathname of temporary build directory (a string).
-    :param config: :py:class:`ConfigParser.RawConfigParser` object.
     :returns: Two lists with :py:class:`py2deb.package.Package` objects. The
               first list contains the package(s) that py2deb was directly
               requested to build by the user while the second list also
@@ -157,9 +164,13 @@ def get_required_packages(pip_install_args, name_prefix, replacements, build_dir
     # excludes transitive dependencies.
     primary_packages = []
     for requirement in get_source_dists(pip_arguments, build_dir):
-        package = Package(requirement.name, requirement.version,
-                          requirement.source_directory, name_prefix, config,
-                          name_mapping)
+        package = Package(name=requirement.name,
+                          version=requirement.version,
+                          directory=requirement.source_directory,
+                          name_mapping=name_mapping,
+                          name_prefix=name_prefix,
+                          install_prefix=install_prefix,
+                          replacements=replacements)
         all_packages[package.name] = package
         if requirement.is_direct:
             primary_packages.append(package)
