@@ -96,11 +96,28 @@ def apply_script(config, package_name, directory):
         logger.debug("%s: Shell command has been executed.", package_name)
 
 def get_tagged_description():
-  """
-  Get a package description tagged with the name `py2deb` and the current
-  date/time.
-  """
-  return compact(time.strftime('Packaged by py2deb on %B %e, %Y at %H:%M'))
+    """
+    Get a package description tagged with the name `py2deb` and the current
+    date/time.
+    """
+    return compact(time.strftime('Packaged by py2deb on %B %e, %Y at %H:%M'))
+
+def find_architecture():
+    """
+    Find the Debian architecture of the current environment.
+
+    :returns: The Debian architecture (a string like ``i386`` or ``amd64``).
+    """
+    architecture = execute('uname', '--machine', capture=True, logger=logger)
+    if architecture == 'i686':
+        return 'i386'
+    elif architecture == 'x86_64':
+        return 'amd64'
+    else:
+        raise Exception(compact("""
+            The current architecture is not supported by py2deb!
+            (architecture reported by uname -m: {architecture})
+        """, architecture=architecture))
 
 def find_ubuntu_release():
     """

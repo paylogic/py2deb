@@ -4,9 +4,9 @@ py2deb.converter: The backend-independent parts of the conversion process
 """
 
 # Standard library modules.
-import glob
 import logging
 import os
+import re
 import shutil
 import tempfile
 
@@ -140,7 +140,12 @@ def find_existing_debs(package, repository):
     """
     Find existing ``*.deb`` package archives that were previously generated.
     """
-    return glob.glob(os.path.join(repository, package.debian_file_pattern))
+    matches = []
+    pattern = package.debian_file_pattern
+    for entry in os.listdir(repository):
+        if re.match(pattern, entry):
+            matches.append(os.path.join(repository, entry))
+    return matches
 
 def get_required_packages(pip_install_args, name_mapping, name_prefix, install_prefix, replacements, build_dir):
     """

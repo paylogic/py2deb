@@ -23,6 +23,7 @@ import ConfigParser
 import glob
 import logging
 import os
+import re
 import StringIO
 
 # External dependencies.
@@ -30,7 +31,7 @@ from pkg_resources import Requirement
 from humanfriendly import concatenate, pluralize
 
 # Internal modules.
-from py2deb.util import transform_package_name
+from py2deb.util import find_architecture, transform_package_name
 
 # Initialize the logger.
 logger = logging.getLogger(__name__)
@@ -109,9 +110,11 @@ class Package:
     @property
     def debian_file_pattern(self):
         """
-        Filename pattern to find Debian package archives for the Python package.
+        Regular expression to find Debian package archives for the Python package.
         """
-        return '%s_%s_*.deb' % (self.debian_name, self.release)
+        return r'^%s_%s_(all|%s)\.deb$' % (re.escape(self.debian_name),
+                                           re.escape(self.release),
+                                           re.escape(find_architecture()))
 
     @property
     def py_dependencies(self):
