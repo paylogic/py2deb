@@ -31,8 +31,8 @@ logger = logging.getLogger(__name__)
 logging.getLogger('stdeb').setLevel(logging.DEBUG)
 
 def convert(pip_install_args, repository, name_prefix, install_prefix=None,
-            name_mapping={}, backend=build_with_stdeb, auto_install=None,
-            verbose=False):
+            alternatives=set(), name_mapping={}, backend=build_with_stdeb,
+            auto_install=None, verbose=False):
     """
     Convert Python packages to Debian packages. This function is a wrapper for
     the real conversion function (:py:func:`convert_real()`). If the requested
@@ -49,6 +49,7 @@ def convert(pip_install_args, repository, name_prefix, install_prefix=None,
                             name_mapping=name_mapping,
                             name_prefix=name_prefix,
                             install_prefix=install_prefix,
+                            alternatives=alternatives,
                             backend=build_with_pip_accel,
                             auto_install=auto_install,
                             verbose=verbose)
@@ -60,6 +61,7 @@ def convert(pip_install_args, repository, name_prefix, install_prefix=None,
                             name_mapping=name_mapping,
                             name_prefix=name_prefix,
                             install_prefix=install_prefix,
+                            alternatives=set(),
                             backend=backend,
                             auto_install=auto_install,
                             verbose=verbose)
@@ -79,11 +81,12 @@ def convert(pip_install_args, repository, name_prefix, install_prefix=None,
                             name_mapping=name_mapping,
                             name_prefix=name_prefix,
                             install_prefix=install_prefix,
+                            alternatives=set(),
                             backend=alternative_backend,
                             auto_install=auto_install,
                             verbose=verbose)
 
-def convert_real(pip_install_args, repository, name_prefix, install_prefix, name_mapping, backend, auto_install, verbose):
+def convert_real(pip_install_args, repository, name_prefix, install_prefix, alternatives, name_mapping, backend, auto_install, verbose):
     """
     Convert Python packages to Debian packages.
     """
@@ -120,6 +123,7 @@ def convert_real(pip_install_args, repository, name_prefix, install_prefix, name
                                         config=config,
                                         name_prefix=name_prefix,
                                         install_prefix=install_prefix,
+                                        alternatives=alternatives,
                                         verbose=verbose,
                                         auto_install=auto_install))
                 old_path = os.path.realpath(pathname)

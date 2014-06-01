@@ -10,5 +10,6 @@ PACKAGE_NAME="`basename "$SCRIPT_NAME" .postinst`"
 if [ -z "$PACKAGE_NAME" ]; then
   echo "Warning: Failed to determine name of package! (py2deb postinst script)" >&2
 else
+  # Compile *.py files to *.pyc files.
   dpkg -L $PACKAGE_NAME | grep '\.py$' | xargs --delimiter '\n' --no-run-if-empty python -m py_compile || true
 fi

@@ -65,7 +65,7 @@ from py2deb.config import config, load_config
 from py2deb.converter import convert
 
 # Semi-standard module versioning.
-__version__ = '0.14.9'
+__version__ = '0.15'
 
 # Initialize a logger for this module.
 logger = logging.getLogger(__name__)
@@ -96,6 +96,7 @@ def main():
     name_prefix = None
     install_prefix = None
     name_mapping = {}
+    alternatives = set()
     report_dependencies = None
     inject_dependencies = None
     verbose = os.environ.get('PY2DEB_VERBOSE')
@@ -104,9 +105,10 @@ def main():
 
     # Parse command line options
     options, arguments = getopt.gnu_getopt(sys.argv[1:], 'c:r:yvh', [
-        'install', 'config=', 'repository=', 'install-prefix=', 'name-prefix=',
-        'no-name-prefix=', 'rename=', 'report-deps=', 'inject-deps=',
-        'with-stdeb', 'with-pip-accel', 'yes', 'verbose', 'help'
+        'install', 'config=', 'repository=', 'install-prefix=',
+        'install-alternative=', 'name-prefix=', 'no-name-prefix=', 'rename=',
+        'report-deps=', 'inject-deps=', 'with-stdeb', 'with-pip-accel', 'yes',
+        'verbose', 'help'
     ])
 
     # Validate the command line options and map them to variables
@@ -123,12 +125,17 @@ def main():
             if not os.path.isdir(repository):
                 msg = "Repository directory doesn't exist! (%s)"
                 raise Exception, msg % repository
-        elif option == '--name-prefix':
-            name_prefix = value.strip()
-            assert name_prefix, "Please provide a nonempty name prefix!"
         elif option == '--install-prefix':
             install_prefix = value.strip()
             assert install_prefix, "Please provide a nonempty installation prefix!"
+        elif option == '--install-alternative':
+            link, _, path = (s.strip() for s in value.partition(','))
+            assert link, "Please provide the link name of the alternative! (the pathname before the comma)"
+            assert path, "Please provide the pathname of the alternative! (the pathname after the comma)"
+            alternatives.add((link, path))
+        elif option == '--name-prefix':
+            name_prefix = value.strip()
+            assert name_prefix, "Please provide a nonempty name prefix!"
         elif option == '--no-name-prefix':
             package_name = value.lower().strip()
             assert package_name, "Please provide a nonempty package name to --no-name-prefix!"
@@ -189,6 +196,7 @@ def main():
                                          name_mapping=name_mapping,
                                          name_prefix=name_prefix,
                                          install_prefix=install_prefix,
+                                         alternatives=alternatives,
                                          auto_install=auto_install,
                                          verbose=verbose)
 

@@ -114,8 +114,33 @@ def build(context):
         # Install post-installation and pre-removal scripts.
         backends_directory = os.path.dirname(os.path.abspath(__file__))
         for script_name in ('postinst', 'prerm'):
+            source = os.path.join(backends_directory, '%s.sh' % script_name)
             target = os.path.join(build_directory, 'DEBIAN', script_name)
-            shutil.copy(os.path.join(backends_directory, '%s.sh' % script_name), target)
+            # Read the shell script bundled with py2deb.
+            with open(source) as handle:
+                contents = list(handle)
+            if script_name == 'postinst':
+                # Install a program available inside the custom installation
+                # prefix in the system wide executable search path using the
+                # Debian alternatives system.
+                command_template = "update-alternatives --install {link} {name} {path} 0\n"
+                for link, path in context['alternatives']:
+                    if os.path.isfile(os.path.join(build_directory, path.lstrip('/'))):
+                        contents.append(command_template.format(link=pipes.quote(link),
+                                                                name=pipes.quote(os.path.basename(link)),
+                                                                path=pipes.quote(path)))
+            elif script_name == 'prerm':
+                # Cleanup the previously created alternative.
+                command_template = "update-alternatives --remove {name} {path}\n"
+                for link, path in context['alternatives']:
+                    if os.path.isfile(os.path.join(build_directory, path.lstrip('/'))):
+                        contents.append(command_template.format(name=pipes.quote(os.path.basename(link)),
+                                                                path=pipes.quote(path)))
+            # Save the shell script in the build directory.
+            with open(target, 'w') as handle:
+                for line in contents:
+                  handle.write(line)
+            # Make sure the shell script is executable.
             os.chmod(target, 0755)
         return build_package(build_directory)
     finally:
