@@ -5,7 +5,18 @@
 # URL: https://py2deb.readthedocs.org
 
 """
-Automated tests for the `py2deb` package.
+Test suite
+==========
+
+The :py:mod:`py2deb.tests` module contains the automated tests for `py2deb`.
+
+The makefile in the py2deb git repository uses pytest_ to run the test suite
+because of pytest's great error reporting. Nevertheless the test suite is
+written to be compatible with the :py:mod:`unittest` module (part of Python's
+standard library) so that the test suite can be run without additional external
+dependencies.
+
+.. _pytest: http://pytest.org/latest/goodpractises.html
 """
 
 # Standard library modules.

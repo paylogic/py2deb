@@ -7,7 +7,12 @@
 # URL: https://py2deb.readthedocs.org
 
 """
-The main module of py2deb, the Python to Debian package converter.
+Package converter
+=================
+
+The :py:mod:`py2deb` module is the main module of `py2deb`, the Python to
+Debian package converter. This module contains the package converter and
+supporting functionality.
 """
 
 # Standard library modules.

@@ -139,6 +139,5 @@ This software is licensed under the `MIT license`_.
 .. _GitHub project page: https://github.com/paylogic/py2deb
 .. _hosted on Read The Docs: https://py2deb.readthedocs.org
 .. _MIT license: http://en.wikipedia.org/wiki/MIT_License
-.. _pip-accel: https://github.com/paylogic/pip-accel
 .. _PyPI: https://pypi.python.org/pypi/py2deb
 .. _requirement files: http://www.pip-installer.org/en/latest/cookbook.html#requirements-files
