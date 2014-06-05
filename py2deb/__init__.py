@@ -4,6 +4,10 @@
 # Last Change: June 5, 2014
 # URL: https://py2deb.readthedocs.org
 
+"""
+The main module of py2deb, the Python to Debian package converter.
+"""
+
 # Standard library modules.
 import glob
 import logging
@@ -65,11 +69,11 @@ class PackageConverter(object):
 
     def set_repository(self, directory):
         """
-        Set the pathname of the directory where `py2deb` stores converted
-        packages. Raises :py:exc:`exceptions.ValueError` when the directory
-        doesn't exist.
+        Set pathname of directory where `py2deb` stores converted packages.
 
         :param directory: The pathname of a directory (a string).
+        :raises: :py:exc:`exceptions.ValueError` when the directory doesn't
+                 exist.
         """
         directory = os.path.abspath(directory)
         if not os.path.isdir(directory):
@@ -79,11 +83,11 @@ class PackageConverter(object):
 
     def set_name_prefix(self, prefix):
         """
-        Set the package name prefix to use during package conversion. Raises
-        :py:exc:`exceptions.ValueError` when no name prefix is provided (e.g.
-        an empty string).
+        Set package name prefix to use during package conversion.
 
         :param prefix: The name prefix to use (a string).
+        :raises: :py:exc:`exceptions.ValueError` when no name prefix is
+                 provided (e.g. an empty string).
         """
         if not prefix:
             raise ValueError("Please provide a nonempty name prefix!")
@@ -91,14 +95,14 @@ class PackageConverter(object):
 
     def rename_package(self, python_package_name, debian_package_name):
         """
-        Override the package name conversion algorithm for the given pair of
-        package names. Raises :py:exc:`exceptions.ValueError` when a package
-        name is not provided (e.g. an empty string).
+        Override package name conversion algorithm for given pair of names.
 
         :param python_package_name: The name of a Python package
                                     as found on PyPI (a string).
         :param debian_package_name: The name of the converted
                                     Debian package (a string).
+        :raises: :py:exc:`exceptions.ValueError` when a package name is not
+                 provided (e.g. an empty string).
         """
         if not python_package_name:
             raise ValueError("Please provide a nonempty Python package name!")
@@ -108,13 +112,15 @@ class PackageConverter(object):
 
     def set_install_prefix(self, directory):
         """
-        Set the installation prefix to use during package conversion. Raises
-        :py:exc:`exceptions.ValueError` when no installation prefix is provided
-        (e.g. an empty string). The installation directory doesn't have to
-        exist on the system where the package is converted.
+        Set installation prefix to use during package conversion.
+
+        The installation directory doesn't have to exist on the system where
+        the package is converted.
 
         :param directory: The pathname of the directory where the converted
                           packages should be installed (a string).
+        :raises: :py:exc:`exceptions.ValueError` when no installation prefix is
+                 provided (e.g. an empty string).
         """
         if not directory:
             raise ValueError("Please provide a nonempty installation prefix!")
@@ -130,11 +136,12 @@ class PackageConverter(object):
         self.auto_install = bool(enabled)
 
     def install_alternative(self, link, path):
-        """
+        r"""
+        Install system wide link for program installed in custom installation prefix.
+
         Use Debian's update-alternatives_ system to add an executable that's
         installed in a custom installation prefix to the system wide executable
-        search path. Raises :py:exc:`exceptions.ValueError` when one of the
-        paths is not provided (e.g. an empty string).
+        search path using a symbolic link.
 
         :param link: The generic name for the master link (a string). This is
                      the first argument passed to ``update-alternatives
@@ -142,15 +149,17 @@ class PackageConverter(object):
         :param path: The alternative being introduced for the master link (a
                      string). This is the third argument passed to
                      ``update-alternatives --install``.
+        :raises: :py:exc:`exceptions.ValueError` when one of the paths is not
+                 provided (e.g. an empty string).
 
         If this is a bit vague, consider the following example:
 
         .. code-block:: sh
 
-           $ py2deb --name-prefix=py2deb \\
-                    --no-name-prefix=py2deb \\
-                    --install-prefix=/usr/lib/py2deb \\
-                    --install-alternative=/usr/bin/py2deb,/usr/lib/py2deb/bin/py2deb \\
+           $ py2deb --name-prefix=py2deb \
+                    --no-name-prefix=py2deb \
+                    --install-prefix=/usr/lib/py2deb \
+                    --install-alternative=/usr/bin/py2deb,/usr/lib/py2deb/bin/py2deb \
                     py2deb==0.1
 
         This example will convert `py2deb` and its dependencies using a custom
@@ -170,14 +179,16 @@ class PackageConverter(object):
 
     def set_conversion_command(self, python_package_name, command):
         """
-        Set a shell command to be executed during the conversion process in the
-        directory containing the Python module(s) that are to be installed by
-        the converted package. Raises :py:exc:`exceptions.ValueError` when the
-        package name or command is not provided (e.g. an empty string).
+        Set shell command to be executed during conversion process.
+
+        The shell command is executed in the directory containing the Python
+        module(s) that are to be installed by the converted package.
 
         :param python_package_name: The name of a Python package
                                     as found on PyPI (a string).
         :param command: The shell command to execute (a string).
+        :raises: :py:exc:`exceptions.ValueError` when the package name or
+                 command is not provided (e.g. an empty string).
 
         .. warning:: This functionality allows arbitrary manipulation of the
                      Python modules to be installed by the converted package.
@@ -292,8 +303,7 @@ class PackageConverter(object):
 
     def convert(self, pip_install_arguments):
         """
-        Convert one or more Python packages to Debian packages according to the
-        previously set conversion options (or defaults).
+        Convert one or more Python packages to Debian packages.
 
         :param pip_install_arguments: The command line arguments to the ``pip
                                       install`` command.
@@ -329,20 +339,20 @@ class PackageConverter(object):
 
     def get_source_distributions(self, pip_install_arguments, build_directory):
         """
-        Use :py:mod:`pip_accel` to download and unpack the Python source
-        distribution archives of the requirements specified by the caller.
+        Use :py:mod:`pip_accel` to download and unpack Python source distributions.
+
         Retries several times if a download fails (so it doesn't fail
         immediately when a package index server returns a transient error).
-
-        If downloading fails (after several retries) this function raises
-        :py:exc:`pip.exceptions.DistributionNotFound`. This function can
-        also raise other exceptions raised by pip because it uses
-        :py:mod:`pip_accel` to call pip (as a Python API).
 
         :param pip_install_arguments: The command line arguments to the ``pip
                                       install`` command.
         :param build_directory: The pathname of a build directory (a string).
         :returns: A generator of :py:class:`PackageToConvert` objects.
+        :raises: When downloading fails even after several retries this
+                 function raises :py:exc:`pip.exceptions.DistributionNotFound`.
+                 This function can also raise other exceptions raised by pip
+                 because it uses :py:mod:`pip_accel` to call pip (as a Python
+                 API).
         """
         # Compose the `pip install' command line:
         #  - The command line arguments to `py2deb' are the command line
@@ -372,9 +382,13 @@ class PackageConverter(object):
 
     def transform_name(self, python_package_name):
         """
-        Transform the name of a Python package as found on PyPI into the name
-        that we want the package to have as a Debian package with a (custom)
-        prefix. Some examples:
+        Transform Python package name to Debian package name.
+
+        :param python_package_name: The name of a Python package
+                                    as found on PyPI (a string).
+        :returns: The transformed name (a string).
+
+        Examples:
 
         >>> from py2deb import PackageConverter
         >>> converter = PackageConverter()
@@ -383,10 +397,6 @@ class PackageConverter(object):
         >>> converter.set_name_prefix('my-custom-prefix')
         >>> converter.transform_name('example')
         'my-custom-prefix-example'
-
-        :param python_package_name: The name of a Python package
-                                    as found on PyPI (a string).
-        :returns: The transformed name (a string).
         """
         # Check for an override by the caller.
         debian_package_name = self.name_mapping.get(python_package_name.lower())
@@ -401,10 +411,12 @@ class PackageConverter(object):
     @cached_property
     def debian_architecture(self):
         """
-        Find the Debian architecture of the current environment using the
-        external command ``uname --machine``. If the output of the command is
-        not recognized an exception is raised.
+        Find Debian architecture of current environment.
 
+        Uses the external command ``uname --machine``.
+
+        :raises: If the output of the command is not recognized
+                 :py:exc:`Exception` is raised.
         :returns: The Debian architecture (a string like ``i386`` or ``amd64``).
         """
         architecture = execute('uname', '--machine', capture=True, logger=logger)
@@ -420,6 +432,8 @@ class PackageConverter(object):
 class PackageToConvert(object):
 
     """
+    Abstraction for Python packages to be converted to Debian packages.
+
     Contains a :py:class:`pip_accel.req.Requirement` object, has a back
     reference to the :py:class:`PackageConverter` and provides all of the
     Debian package metadata implied by the Python package metadata.
@@ -468,9 +482,10 @@ class PackageToConvert(object):
     @cached_property
     def debian_maintainer(self):
         """
-        Get the package maintainer name and e-mail address of a Python package
-        and combine them into a single string that can be embedded in a Debian
-        package.
+        Get the package maintainer's name and e-mail address.
+
+        The name and e-mail address are combined into a single string that can
+        be embedded in a Debian package.
         """
         maintainer = self.metadata.maintainer
         maintainer_email = self.metadata.maintainer_email
@@ -485,9 +500,11 @@ class PackageToConvert(object):
     @cached_property
     def debian_description(self):
         """
-        The Python package's description (a string) converted and reformatted
-        so that it can be used as the description of a Debian binary package.
-        The conversion process works as follows:
+        Python package description converted to Debian package description.
+
+        Converts and reformats the Python package's description so that it can
+        be used as the description of a Debian binary package. The conversion
+        process works as follows:
 
         1. The Python package's description is run through Docutils_ to convert
            reStructuredText_ to HTML, because reStructuredText is the de facto
@@ -564,9 +581,11 @@ class PackageToConvert(object):
     @cached_property
     def metadata(self):
         """
-        Get the Python package metadata, loaded from the ``PKG-INFO`` file
-        generated by ``pip`` when it unpacked the source distribution archive.
-        Returns an pkginfo.UnpackedSDist_ object.
+        Get the Python package metadata.
+
+        The metadata is loaded from the ``PKG-INFO`` file generated by ``pip``
+        when it unpacked the source distribution archive. Results in a
+        pkginfo.UnpackedSDist_ object.
 
         .. _pkginfo.UnpackedSDist: http://pythonhosted.org//pkginfo/distributions.html#introspecting-unpacked-source-distributions
         """
@@ -575,8 +594,10 @@ class PackageToConvert(object):
     @cached_property
     def has_custom_install_prefix(self):
         """
-        ``True`` if the package is being installed under a custom installation
-        prefix, ``False`` otherwise.
+        Check whether package is being installed under custom installation prefix.
+
+        :returns: ``True`` if the package is being installed under a custom
+                  installation prefix, ``False`` otherwise.
 
         A custom installation prefix is an installation prefix whose ``bin``
         directory is (likely) not available on the default executable search
@@ -587,9 +608,11 @@ class PackageToConvert(object):
     @cached_property
     def python_requirements(self):
         """
-        A list of :py:class:`pkg_resources.Requirement` objects, read from the
-        ``requires.txt`` file generated by pip when it unpacks a source
-        distribution archive.
+        Find requirements of Python package.
+
+        :returns: A list of :py:class:`pkg_resources.Requirement` objects, read
+                  from the ``requires.txt`` file generated by pip when it
+                  unpacks a source distribution archive.
         """
         requirements = []
         filename = self.find_egg_info_file('requires.txt')
@@ -609,9 +632,11 @@ class PackageToConvert(object):
     @cached_property
     def debian_dependencies(self):
         """
-        A list with Debian package relationships (strings) in the format of the
-        ``Depends:`` line of a Debian package ``control`` file. Based on
-        :py:data:`python_requirements`.
+        Find Debian dependencies of Python package.
+
+        :returns: A list with Debian package relationships (strings) in the
+                  format of the ``Depends:`` line of a Debian package
+                  ``control`` file. Based on :py:data:`python_requirements`.
         """
         # Useful link:
         # http://www.python.org/dev/peps/pep-0440/#version-specifiers
@@ -641,9 +666,10 @@ class PackageToConvert(object):
     @cached_property
     def existing_archive(self):
         """
-        Find the ``*.deb`` archive for the current package name and version.
-        Returns the pathname of the found archive or ``None`` if no existing
-        archive is found.
+        Find ``*.deb`` archive for current package name and version.
+
+        :returns: The pathname of the found archive (a string) or ``None`` if
+                  no existing archive is found.
         """
         return (self.converter.repository.find_package(self.debian_name, self.debian_version, 'all') or
                 self.converter.repository.find_package(self.debian_name, self.debian_version,
@@ -651,9 +677,7 @@ class PackageToConvert(object):
 
     def convert(self):
         """
-        Convert the current package from a Python package to a Debian package
-        according to the rules set by the user when they initialized the
-        package converter.
+        Convert current package from Python package to Debian package.
 
         :returns: The pathname of the generated ``*.deb`` archive.
         """
@@ -761,9 +785,11 @@ class PackageToConvert(object):
 
     def transform_binary_dist(self):
         """
-        Download and build the Python package (using :py:mod:`pip_accel`) and
-        change the names of the files included in the package to match the
-        layout corresponding to the given conversion options.
+        Build Python package and transform directory layout.
+
+        Builds the Python package (using :py:mod:`pip_accel`) and changes the
+        names of the files included in the package to match the layout
+        corresponding to the given conversion options.
 
         :returns: An iterable of tuples with two values each:
 
@@ -797,8 +823,9 @@ class PackageToConvert(object):
 
     def find_shared_object_files(self, directory):
         """
-        Searches the directory tree of the converted package for shared object
-        files. Runs ``strip --strip-unneeded`` on all ``*.so`` files found.
+        Search directory tree of converted package for shared object files.
+
+        Runs ``strip --strip-unneeded`` on all ``*.so`` files found.
 
         :param directory: The directory to search (a string).
         :returns: A :py:class:`list` with pathnames of ``*.so`` files.
@@ -816,13 +843,14 @@ class PackageToConvert(object):
 
     def find_system_dependencies(self, shared_object_files):
         """
-        (Ab)uses the ``dpkg-shlibdeps`` program to find dependencies on system
-        libraries.
+        (Ab)use dpkg-shlibdeps_ to find dependencies on system libraries.
 
         :param shared_object_files: The pathnames of the ``*.so`` file(s) contained
                                     in the package (a list of strings).
         :returns: A list of strings in the format of the entries on the
                   ``Depends:`` line of a binary package control file.
+
+        .. _dpkg-shlibdeps: https://www.debian.org/doc/debian-policy/ch-sharedlibs.html#s-dpkg-shlibdeps
         """
         logger.debug("Abusing `dpkg-shlibdeps' to find dependencies on shared libraries ..")
         # Create a fake source package, because `dpkg-shlibdeps' expects this...
@@ -849,11 +877,12 @@ class PackageToConvert(object):
 
     def determine_package_architecture(self, has_shared_object_files):
         """
-        Determine the architecture that a package should be tagged with: If a
-        package contains ``*.so`` files we're dealing with a compiled Python
-        module. To determine the applicable architecture, we simply take the
-        architecture of the current system and (for now) ignore the existence of
-        cross-compilation.
+        Determine binary architecture that Debian package should be tagged with.
+
+        If a package contains ``*.so`` files we're dealing with a compiled
+        Python module. To determine the applicable architecture, we simply take
+        the architecture of the current system and (for now) ignore the
+        existence of cross-compilation.
 
         :param has_shared_objects: ``True`` if the package contains ``*.so`` files.
         :returns: The architecture string, one of 'all', 'i386' or 'amd64'.
@@ -873,6 +902,8 @@ class PackageToConvert(object):
 
     def find_egg_info_file(self, pattern=''):
         """
+        Find pip metadata files in unpacked source distributions.
+
         When pip unpacks a source distribution archive it creates a directory
         ``pip-egg-info`` which contains the package metadata in a declarative
         and easy to parse format. This method finds such metadata files.
@@ -911,8 +942,11 @@ class PackageRepository(object):
     @cached_property
     def archives(self):
         """
-        A sorted list of package archives, same as the return value of
-        :py:func:`deb_pkg_tools.package.find_package_archives()`.
+        Find archive(s) in package repository / directory.
+
+        :returns: A sorted list of package archives, same as the return value
+                  of :py:func:`deb_pkg_tools.package.find_package_archives()`.
+
         An example:
 
         >>> from py2deb import PackageRepository
@@ -948,7 +982,9 @@ class PackageRepository(object):
 
     def find_package(self, package, version, architecture):
         """
-        Find a package in the repository. Here's an example:
+        Find a package in the repository.
+
+        Here's an example:
 
         >>> from py2deb import PackageRepository
         >>> repo = PackageRepository('/tmp')
@@ -969,7 +1005,9 @@ class PackageRepository(object):
 class TemporaryDirectory(object):
 
     """
-    Easy temporary directory creation & cleanup using the :keyword:`with` statement:
+    Easy temporary directory creation & cleanup using the :keyword:`with` statement.
+
+    Here's an example of how to use this:
 
     .. code-block:: python
 
@@ -980,8 +1018,7 @@ class TemporaryDirectory(object):
 
     def __init__(self, **options):
         """
-        Initialize a context manager that manages the creation & cleanup of a
-        temporary directory.
+        Initialize context manager that manages creation & cleanup of temporary directory.
 
         :param options: Any keyword arguments are passed on to
                         :py:func:`tempfile.mkdtemp()`.
@@ -989,11 +1026,17 @@ class TemporaryDirectory(object):
         self.options = options
 
     def __enter__(self):
+        """
+        Create the temporary directory.
+        """
         self.temporary_directory = tempfile.mkdtemp(**self.options)
         logger.debug("Created temporary directory: %s", self.temporary_directory)
         return self.temporary_directory
 
     def __exit__(self, exc_type, exc_value, traceback):
+        """
+        Destroy the temporary directory.
+        """
         logger.debug("Cleaning up temporary directory: %s", self.temporary_directory)
         shutil.rmtree(self.temporary_directory)
         del self.temporary_directory
@@ -1001,9 +1044,10 @@ class TemporaryDirectory(object):
 
 def find_python_version():
     """
-    Find the version of Python we're running. This specifically returns a name
-    matching the format of the names of the Debian packages providing the
-    various available Python versions.
+    Find the version of Python we're running.
+
+    This specifically returns a name matching the format of the names of the
+    Debian packages providing the various available Python versions.
 
     :returns: A string like ``python2.6`` or ``python2.7``.
     """
@@ -1014,9 +1058,7 @@ def find_python_version():
 
 def normalize_package_name(python_package_name):
     """
-    Normalize the name of a Python package so that it can be used as the name
-    of a Debian package (e.g. all lowercase, dashes instead of underscores,
-    etc.).
+    Normalize Python package name to be used as Debian package name.
 
     >>> from py2deb import normalize_package_name
     >>> normalize_package_name('MySQL-python')
@@ -1031,8 +1073,10 @@ def normalize_package_name(python_package_name):
 
 def compact_repeating_words(words):
     """
-    Given a list of words, remove adjacent repeating words to avoid awkward
-    repetitions in the package name conversion algorithm.
+    Remove adjacent repeating words.
+
+    This is used to avoid awkward word repetitions in the package name
+    conversion algorithm. Here's an example of what I mean:
 
     >>> from py2deb import compact_repeating_words
     >>> name_prefix = 'python'

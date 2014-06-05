@@ -169,9 +169,10 @@ def main():
 
 def usage():
     """
-    Print a usage message to standard output. Uses the ``less`` pager
-    because the usage message is quite big and having the user start
-    reading it from the bottom is not exactly user friendly...
+    Print a usage message to standard output.
+
+    Uses the ``less`` pager because the usage message is quite big and having
+    the user start reading it from the bottom is not exactly user friendly...
     """
     lines = __doc__.strip().splitlines()
     for i, line in enumerate(lines):
