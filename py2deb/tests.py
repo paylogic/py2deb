@@ -124,6 +124,31 @@ class PackageConverterTestCase(unittest.TestCase):
             assert archive_entry.group == 'root'
             assert archive_entry.permissions == '-rw-r--r--'
 
+    def test_custom_conversion_command(self):
+        """
+        Convert a simple Python package that requires a custom conversion command.
+
+        Converts Fabric and sanity checks the result. For details please refer
+        to :py:func:`py2deb.converter.PackageConverter.set_conversion_command()`.
+        """
+        with TemporaryDirectory() as directory:
+            # Run the conversion command.
+            converter = PackageConverter()
+            converter.set_repository(directory)
+            converter.set_conversion_command('Fabric', 'rm -Rf paramiko')
+            converter.convert(['Fabric==0.9.0'])
+            # Find the generated Debian package archive.
+            archives = glob.glob('%s/*.deb' % directory)
+            logger.debug("Found generated archive(s): %s", archives)
+            pathname = find_package_archive(archives, 'python-fabric')
+            # Use deb-pkg-tools to inspect the generated package.
+            metadata, contents = inspect_package(pathname)
+            # Check for the two *.py files that should be installed by the package.
+            for filename, entry in contents.items():
+                if filename.startswith('/usr/lib') and not entry.permissions.startswith('d'):
+                    assert 'fabric' in filename.lower()
+                    assert 'paramiko' not in filename.lower()
+
     def test_conversion_of_package_with_dependencies(self):
         """
         Convert a non trivial Python package with several dependencies.
