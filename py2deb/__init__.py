@@ -662,6 +662,8 @@ class PackageToConvert(object):
                     else:
                         msg = "Conversion specifier not supported! (%r used by Python package %s)"
                         raise Exception(msg % (constraint, self.python_name))
+            else:
+                dependencies.append(debian_package_name)
         dependencies = sorted(dependencies)
         logger.debug("Debian dependencies of %s (%s): %r", self.debian_name, self.debian_version, dependencies)
         return dependencies
