@@ -33,8 +33,7 @@ default:
 	@echo
 
 install:
-	test -d "$(VIRTUAL_ENV)/bin/python" || virtualenv "$(VIRTUAL_ENV)"
-	test -x "$(VIRTUAL_ENV)/bin/pip" || ($(ACTIVATE) && easy_install pip)
+	test -x "$(VIRTUAL_ENV)/bin/python" || virtualenv "$(VIRTUAL_ENV)"
 	test -x "$(VIRTUAL_ENV)/bin/pip-accel" || ($(ACTIVATE) && pip install pip-accel)
 	$(ACTIVATE) && pip-accel install --requirement=requirements.txt
 	$(ACTIVATE) && pip uninstall --yes $(PROJECT_NAME) || true
@@ -56,7 +55,8 @@ check:
 	@$(ACTIVATE) && pep257 --ignore=D200 py2deb
 
 test: check install
-	$(ACTIVATE) && python setup.py test
+	@test -x "$(VIRTUAL_ENV)/bin/py.test" || ($(ACTIVATE) && pip-accel install pytest)
+	$(ACTIVATE) && py.test --exitfirst py2deb/tests.py
 
 coverage: install
 	@test -x "$(VIRTUAL_ENV)/bin/coverage" || ($(ACTIVATE) && pip-accel install coverage)
