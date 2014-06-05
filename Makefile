@@ -52,7 +52,7 @@ reset: clean
 check:
 	@test -x "$(VIRTUAL_ENV)/bin/pep8" || ($(ACTIVATE) && pip-accel install pep8)
 	@test -x "$(VIRTUAL_ENV)/bin/pep257" || ($(ACTIVATE) && pip-accel install pep257)
-	@$(ACTIVATE) && pep8 py2deb
+	@$(ACTIVATE) && pep8 --max-line-length=120 py2deb
 	@$(ACTIVATE) && pep257 --ignore=D200 py2deb
 
 test: check install
