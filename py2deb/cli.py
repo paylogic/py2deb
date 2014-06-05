@@ -105,7 +105,7 @@ from deb_pkg_tools.control import patch_control_file
 from executor import execute
 
 # Modules included in our package.
-from py2deb import PackageConverter
+from py2deb.converter import PackageConverter
 
 # Semi-standard module versioning.
 __version__ = '0.1'

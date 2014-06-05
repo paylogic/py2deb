@@ -5,9 +5,6 @@
 # URL: https://py2deb.readthedocs.org
 
 """
-Test suite
-==========
-
 The :py:mod:`py2deb.tests` module contains the automated tests for `py2deb`.
 
 The makefile in the py2deb git repository uses pytest_ to run the test suite
@@ -34,7 +31,7 @@ from deb_pkg_tools.package import inspect_package, parse_filename
 from executor import execute
 
 # Modules included in our package.
-from py2deb import TemporaryDirectory
+from py2deb.utils import TemporaryDirectory
 
 # Initialize a logger.
 logger = logging.getLogger(__name__)
@@ -219,8 +216,8 @@ def find_package_archive(available_archives, package_name):
     :param package_name: The name of the package whose archive file we're
                          interested in (a string).
     :returns: The pathname of the package archive (a string).
-    :raises: :py:exc:`AssertionError` if zero or more than one package archive
-             is found.
+    :raises: :py:exc:`exceptions.AssertionError` if zero or more than one
+             package archive is found.
     """
     matches = []
     for pathname in available_archives:
@@ -240,8 +237,8 @@ def find_file(contents, pattern):
     :param contents: The dictionary of package archive entries.
     :param pattern: The filename pattern to match (:py:mod:`fnmatch` syntax).
     :returns: The metadata of the matched file.
-    :raises: :py:exc:`AssertionError` if zero or more than one archive entry
-             is found.
+    :raises: :py:exc:`exceptions.AssertionError` if zero or more than one
+             archive entry is found.
     """
     matches = []
     for filename, metadata in contents.iteritems():

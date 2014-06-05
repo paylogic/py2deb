@@ -17,6 +17,8 @@ relationships.
 The `py2deb` package is currently tested on Python 2.6, 2.7 and 3.4. For usage
 instructions please refer to the documentation `hosted on Read The Docs`_.
 
+.. contents:: :local:
+
 Installation
 ------------
 

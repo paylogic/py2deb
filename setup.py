@@ -6,21 +6,17 @@
 # Last Change: June 5, 2014
 # URL: https://py2deb.readthedocs.org
 
-import os, re
+import os, sys
 from setuptools import setup, find_packages
 
 # Find the directory where the source distribution was unpacked.
 source_directory = os.path.dirname(os.path.abspath(__file__))
 
+# Add the source distribution directory to Python's module search path.
+sys.path.append(source_directory)
+
 # Find the current version.
-module = os.path.join(source_directory, 'py2deb', '__init__.py')
-for line in open(module, 'r'):
-    match = re.match(r'^__version__\s*=\s*["\']([^"\']+)["\']$', line)
-    if match:
-        version_string = match.group(1)
-        break
-else:
-    raise Exception("Failed to extract version from py2deb/__init__.py!")
+from py2deb import __version__ as version_string
 
 # Fill in the long description (for the benefit of PyPi)
 # with the contents of README.rst (rendered by GitHub).
