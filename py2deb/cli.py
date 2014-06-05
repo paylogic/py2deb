@@ -13,6 +13,15 @@ same arguments accepted by the `pip install' command, that means you
 can name the package(s) to convert on the command line but you can
 also use `requirement files' if you prefer.
 
+Sometimes you will need to disambiguate between the options for py2deb
+and the options for pip, for example the short option `-r' means
+`--repository' to py2deb and `--requirement' to pip. In such cases you
+can use the following syntax:
+
+  $ py2deb -r /tmp -- -r requirements.txt
+
+So the `--' marker separates the py2deb options from the pip options.
+
 Supported options:
 
   -c, --config=FILENAME
