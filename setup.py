@@ -2,7 +2,7 @@
 
 # Setup script for the `py2deb' package.
 #
-# Author: Peter Odding <peter@peterodding.com>
+# Author: Peter Odding <peter.odding@paylogic.com>
 # Last Change: June 5, 2014
 # URL: https://py2deb.readthedocs.org
 
@@ -35,8 +35,8 @@ setup(name='py2deb',
       description='Python to Debian package converter',
       long_description=readme_text,
       url='https://py2deb.readthedocs.org',
-      author='Peter Odding',
-      author_email='peter@peterodding.com',
+      author='Peter Odding & Arjan Verwer',
+      author_email='peter.odding@paylogic.com',
       packages=find_packages(),
       test_suite='py2deb.tests',
       entry_points={'console_scripts': ['py2deb = py2deb.cli:main']},

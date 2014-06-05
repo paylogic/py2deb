@@ -1,6 +1,8 @@
 # py2deb: Python to Debian package converter.
 #
-# Author: Peter Odding <peter@peterodding.com>
+# Authors:
+#  - Arjan Verwer
+#  - Peter Odding <peter.odding@paylogic.com>
 # Last Change: June 5, 2014
 # URL: https://py2deb.readthedocs.org
 

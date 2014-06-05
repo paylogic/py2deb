@@ -1,6 +1,6 @@
 # Command line interface for the `py2deb' program.
 #
-# Author: Peter Odding <peter@peterodding.com>
+# Author: Peter Odding <peter.odding@paylogic.com>
 # Last Change: June 5, 2014
 # URL: https://py2deb.readthedocs.org
 
