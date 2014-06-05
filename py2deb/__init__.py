@@ -732,16 +732,18 @@ class PackageToConvert(object):
                                                          priority='optional',
                                                          section='python'))
 
-            # Merge any control file fields defined in py2deb.cfg (inside the
+            # Merge any control file fields defined in stdeb.cfg (inside the
             # Python package's source distribution) into the Debian package's
             # control file fields?
-            py2deb_cfg = os.path.join(self.requirement.source_directory, 'py2deb.cfg')
+            py2deb_cfg = os.path.join(self.requirement.source_directory, 'stdeb.cfg')
             parser = configparser.RawConfigParser()
             parser.read(py2deb_cfg)
-            if 'py2deb' in parser.sections():
-                overrides = dict(parser.items('py2deb'))
-                logger.debug("Found %i control file field override(s) in %s: %r", len(overrides), py2deb_cfg, overrides)
-                control_fields = merge_control_fields(control_fields, overrides)
+            for section_name in ('DEFAULT', self.python_name):
+                if parser.has_section(section_name):
+                    overrides = dict(parser.items(section_name))
+                    logger.debug("Found %i control file field override(s) in section %s of %s: %r",
+                                 len(overrides), section_name, py2deb_cfg, overrides)
+                    control_fields = merge_control_fields(control_fields, overrides)
 
             # Create the DEBIAN directory.
             debian_directory = os.path.join(build_directory, 'DEBIAN')
