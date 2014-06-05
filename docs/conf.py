@@ -12,9 +12,10 @@ sys.path.insert(0, os.path.abspath('..'))
 
 # Sphinx extension module names.
 extensions = [
-  'sphinx.ext.doctest',
   'sphinx.ext.autodoc',
+  'sphinx.ext.doctest',
   'sphinx.ext.intersphinx',
+  'sphinx.ext.viewcode',
 ]
 
 # Paths that contain templates, relative to this directory.
@@ -76,7 +77,7 @@ html_theme = 'default'
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
-html_static_path = ['static']
+html_static_path = []
 
 # Output file base name for HTML help builder.
 htmlhelp_basename = 'py2debdoc'
