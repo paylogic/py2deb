@@ -113,6 +113,7 @@ __version__ = '0.1'
 # Initialize a logger.
 logger = logging.getLogger(__name__)
 
+
 def main():
     """
     Command line interface for the ``py2deb`` program.
@@ -176,6 +177,7 @@ def main():
         logger.exception("Caught an unhandled exception!")
         sys.exit(1)
 
+
 def usage():
     """
     Print a usage message to standard output.
@@ -188,5 +190,6 @@ def usage():
         if line.startswith(('Usage:', '  -')):
             lines[i] = coloredlogs.ansi_text(line, color='green')
     execute('less', '-R', input='\n'.join(lines))
+
 
 # vim: ts=4 sw=4
