@@ -35,11 +35,18 @@ There are some system dependencies which you have to install as well:
 Usage
 -----
 
-The ``py2deb`` command has its own command line options but also accepts the
-command line options supported by the ``pip install`` command. Sometimes you
-will need to disambiguate between the two, for example the short option ``-r``
-means ``--repository`` to `py2deb` and ``--requirement`` to `pip`. In such
-cases you can use the following syntax:
+**Usage:** `py2deb [OPTIONS] ...`
+
+Convert Python packages to Debian packages according to the given command line
+options (see below). The positional arguments are the same arguments accepted
+by the ``pip install`` command, that means you can name the package(s) to
+convert on the command line but you can also use `requirement files`_ if you
+prefer.
+
+Sometimes you will need to disambiguate between the options for `py2deb` and
+the options for `pip`, for example the short option ``-r`` means
+``--repository`` to `py2deb` and ``--requirement`` to `pip`. In such cases you
+can use the following syntax:
 
 .. code-block:: sh
 
@@ -47,80 +54,71 @@ cases you can use the following syntax:
 
 So the ``--`` marker separates the `py2deb` options from the `pip` options.
 
-  **Usage:** `py2deb [OPTIONS] ...`
+**Supported options:**
 
-  Convert Python packages to Debian packages according to the given command
-  line options (see below). The positional arguments are the same arguments
-  accepted by the ``pip install`` command, that means you can name the
-  package(s) to convert on the command line but you can also use `requirement
-  files`_ if you prefer.
+  :option:`-c, --config=FILENAME`
 
-  **Supported options:**
+    Load a configuration file. Because the command line arguments are processed
+    in the given order, you have the choice and responsibility to decide if
+    command line options override configuration file options or vice versa.
+    Refer to the documentation for details on the configuration file format.
 
-    *-c, --config=FILENAME*
+  :option:`-r, --repository=DIRECTORY`
 
-      Load a configuration file. Because the command line arguments are
-      processed in the given order, you have the choice and responsibility to
-      decide if command line options override configuration file options or
-      vice versa. Refer to the documentation for details on the configuration
-      file format.
+    Change the directory where ``*.deb`` archives are stored. Defaults to the
+    system wide temporary directory (which is usually ``/tmp``). If this
+    directory doesn't exist `py2deb` refuses to run.
 
-    *-r, --repository=DIRECTORY*
+  :option:`--name-prefix=PREFIX`
 
-      Change the directory where ``*.deb`` archives are stored. Defaults to the
-      system wide temporary directory (which is usually ``/tmp``). If this
-      directory doesn't exist `py2deb` refuses to run.
+    Set the name prefix used during the name conversion from Python to Debian
+    packages. Defaults to ``python``. The name prefix and package names are
+    always delimited by a dash.
 
-    *--name-prefix=PREFIX*
+  :option:`--no-name-prefix=PYTHON_PACKAGE_NAME`
 
-      Set the name prefix used during the name conversion from Python to Debian
-      packages. Defaults to ``python``. The name prefix and package names are
-      always delimited by a dash.
+    Exclude a Python package from having the name prefix applied during the
+    package name conversion. This is useful to avoid awkward repetitions.
 
-    *--no-name-prefix=PYTHON_PACKAGE_NAME*
+  :option:`--rename=PYTHON_PACKAGE_NAME,DEBIAN_PACKAGE_NAME`
 
-      Exclude a Python package from having the name prefix applied during the
-      package name conversion. This is useful to avoid awkward repetitions.
+    Override the package name conversion algorithm for the given pair of
+    package names. Useful if you don't agree with the algorithm :-)
 
-    *--rename=PYTHON_PACKAGE_NAME,DEBIAN_PACKAGE_NAME*
+  :option:`--install-prefix=DIRECTORY`
 
-      Override the package name conversion algorithm for the given pair of
-      package names. Useful if you don't agree with the algorithm :-)
+    Override the default system wide installation prefix. By setting this to
+    anything other than ``/usr`` or ``/usr/local`` you change the way `py2deb`
+    works. It will build packages with a file system layout similar to a Python
+    virtual environment, except there will not be a Python executable: The
+    packages are meant to be loaded by modifying Python's module search path.
+    Refer to the documentation for details.
 
-    *--install-prefix=DIRECTORY*
+  :option:`--install-alternative=LINK,PATH`
 
-      Override the default system wide installation prefix. By setting this to
-      anything other than ``/usr`` or ``/usr/local`` you change the way
-      `py2deb` works. It will build packages with a file system layout similar
-      to a Python virtual environment, except there will not be a Python
-      executable: The packages are meant to be loaded by modifying Python's
-      module search path. Refer to the documentation for details.
+    Use Debian's ``update-alternatives`` system to add an executable that's
+    installed in a custom installation prefix (see above) to the system wide
+    executable search path. Refer to the documentation for details.
 
-    *--install-alternative=LINK,PATH*
+  :option:`--report-dependencies=FILENAME`
 
-      Use Debian's ``update-alternatives`` system to add an executable that's
-      installed in a custom installation prefix (see above) to the system wide
-      executable search path. Refer to the documentation for details.
+    Add the Debian relationships needed to depend on the converted package(s)
+    to the given control file. If the control file already contains
+    relationships the additional relationships will be added to the control
+    file; they won't overwrite existing relationships.
 
-    *--report-dependencies=FILENAME*
+  :option:`-y, --yes`
 
-      Add the Debian relationships needed to depend on the converted package(s)
-      to the given control file. If the control file already contains
-      relationships the additional relationships will be added to the control
-      file; they won't overwrite existing relationships.
+    Instruct pip-accel_ to automatically install build time dependencies where
+    possible. Refer to the pip-accel documentation for details.
 
-    *-y, --yes*
+  :option:`-v, --verbose`
 
-      Instruct pip-accel_ to automatically install build time dependencies
-      where possible. Refer to the pip-accel documentation for details.
+    Make more noise :-).
 
-    *-v, --verbose*
+  :option:`-h, --help`
 
-      Make more noise :-).
-
-    *-h, --help*
-
-      Show this message and exit.
+    Show this message and exit.
 
 Contact
 -------
