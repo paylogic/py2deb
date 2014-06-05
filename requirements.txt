@@ -1,10 +1,6 @@
-# Direct dependencies of py2deb.
-coloredlogs >= 0.5
-deb-pkg-tools >= 1.18.2
-executor >= 1.2
-humanfriendly >= 1.8.1
-pip-accel >= 0.12.5
-python-debian >= 0.1.21-nmu2
-
-# Transitive undocumented dependency of `python-debian'.
-chardet
+cached-property >= 0.1.5
+deb-pkg-tools >= 1.20.4
+docutils >= 0.11
+html2text >= 2014.4.5
+pkginfo >= 1.1
+six >= 1.6.1

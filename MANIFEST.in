@@ -1,5 +1,3 @@
 include *.rst
 include *.txt
-include stdeb.cfg
-recursive-include py2deb *.ini
-recursive-include py2deb *.sh
+recursive-include py2deb/scripts *.sh

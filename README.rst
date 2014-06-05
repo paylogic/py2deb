@@ -1,63 +1,139 @@
-The Python to Debian package converter
-======================================
+py2deb: Python to Debian package converter
+==========================================
 
-The Python to Debian package converter, also known as Py2Deb, is exactly what the name implies:
-A program that converts Python packages to Debian packages.
-It is the result of an internship assignment at Paylogic.
+The Python package `py2deb` converts Python source distributions to Debian
+packages. It uses pip-accel_ to download, unpack and compile Python packages.
+Because of this `py2deb` is compatible with the command line interface of the
+``pip install`` command. For example you can specify packages to convert as
+command line arguments but you can also use `requirement files`_ if you want.
 
-Why was it build?
------------------
-Paylogic uses Python and deploying/updating the software infrastructure relied on the availability of third parties.
-In order to be able to deploy without relying on the availability of third parties, there was a need to find an alternative.
-There were several possibilities, but in the end the choice was made to use the Debian packaging system.
+During the conversion process dependencies are automatically taken into account
+and converted as well so you don't actually have to use requirement files
+including transitive dependencies. In fact you might prefer not explicitly
+listing your transitive dependencies in requirement files because `py2deb` will
+translate the version constraints of Python packages into Debian package
+relationships.
 
-A trivial repository was made for internal use, but packages still needed to be converted.
-Doing it manually was too much work, so we looked into tools to do it for us.
-The tool we found, `stdeb <https://github.com/astraw/stdeb>`_, did most of the steps for converting a package.
-However, for internal use, we found several limitations:
+The `py2deb` package is currently tested on Python 2.6, 2.7 and 3.4. For usage
+instructions please refer to the documentation `hosted on Read The Docs`_.
 
-- (Automatic) installation of build-dependencies
-- Adding prefixes to the package names (To prevent conflicts with existing packages in the official repositories)
-- Building/converting in batches
-- Being able to choose dependencies
-
-By combining our own requirements with pip-accel and stdeb, Py2Deb was born.
-
-How to install it?
-------------------
-
-Download the source and run (as root or in a virtual environment)::
-
-  python setup.py install
-
-How does it work?
------------------
-
-The py2deb program is a wrapper for pip / pip-accel. For example, if you would
-run ``pip-accel coloredlogs -r other_packages.txt`` to install several
-packages, you can do ``py2deb coloredlogs -r other_packages.txt`` to convert
-those same packages to Debian packages.
-
-For the steps it takes to generate Debian packages you can read the source code
-and/or look at ``workflow/workflow.png``
-
-Nice to know
+Installation
 ------------
 
-stdeb
-  The PyPI version of stdeb (0.6.0) relies on ``py_support``, which is deprecated. The source from their github (0.6.0+git) relies on ``dh_python2``.
-  If you use ``Ubuntu 10.04 LTS`` you will not have access to ``dh_python2`` because ``dh_python2`` is included in ``python-all (2.6.5-1)``, while
-  ``Ubuntu 10.04 LTS`` uses ``python-all (2.6.5-0)``. If your system has ``dh_python2``, it is recommended to get the source of `stdeb <https://github.com/astraw/stdeb>`_
-  and install that instead.
-MySQL-python
-  This package depends on ``libmysqlclient-dev``, not only while building, but also when pip extracts the source.
-  So if you need to convert this package make sure you have ``libmysqlclient-dev`` installed!
-fabric/paramiko
-  Fabric bundles paramiko. But paramiko is a package on itself too. Using pip you will not notice any problems if you install both,
-  but if you converted both packages to debian packages and try to install those, both packages will try to install paramiko.
-  This results in an installation failing, because the files or paramiko are already there. The default config of Py2Deb solves this
-  by removing the paramiko folder from fabric and letting it depend on paramiko.
-setuptools/distribute
-  If a python package depends on setuptools, pip will download distribute. When converting, the dependency stays on setuptools,
-  This package might not exist (depending on your prefix) and can result in a broken dependency.
-  The default configuration of Py2Deb solves this by replacing the dependencies with the ubuntu package ``python-setuptools``.
+The `py2deb` package is available on PyPI_, so installation is very simple:
+
+.. code-block:: sh
+
+   $ pip install py2deb
+
+There are some system dependencies which you have to install as well:
+
+.. code-block:: sh
+
+   $ sudo apt-get install dpkg-dev fakeroot lintian
+
+Usage
+-----
+
+The ``py2deb`` command has its own command line options but also accepts the
+command line options supported by the ``pip install`` command. Sometimes you
+will need to disambiguate between the two, for example the short option ``-r``
+means ``--repository`` to `py2deb` and ``--requirement`` to `pip`. In such
+cases you can use the following syntax:
+
+.. code-block:: sh
+
+   $ py2deb -r /tmp -- -r requirements.txt
+
+So the ``--`` marker separates the `py2deb` options from the `pip` options.
+
+  **Usage:** `py2deb [OPTIONS] ...`
+
+  Convert Python packages to Debian packages according to the given command
+  line options (see below). The positional arguments are the same arguments
+  accepted by the ``pip install`` command, that means you can name the
+  package(s) to convert on the command line but you can also use `requirement
+  files`_ if you prefer.
+
+  **Supported options:**
+
+    *-c, --config=FILENAME*
+
+      Load a configuration file. Because the command line arguments are
+      processed in the given order, you have the choice and responsibility to
+      decide if command line options override configuration file options or
+      vice versa. Refer to the documentation for details on the configuration
+      file format.
+
+    *-r, --repository=DIRECTORY*
+
+      Change the directory where ``*.deb`` archives are stored. Defaults to the
+      system wide temporary directory (which is usually ``/tmp``). If this
+      directory doesn't exist `py2deb` refuses to run.
+
+    *--name-prefix=PREFIX*
+
+      Set the name prefix used during the name conversion from Python to Debian
+      packages. Defaults to ``python``. The name prefix and package names are
+      always delimited by a dash.
+
+    *--no-name-prefix=PYTHON_PACKAGE_NAME*
+
+      Exclude a Python package from having the name prefix applied during the
+      package name conversion. This is useful to avoid awkward repetitions.
+
+    *--rename=PYTHON_PACKAGE_NAME,DEBIAN_PACKAGE_NAME*
+
+      Override the package name conversion algorithm for the given pair of
+      package names. Useful if you don't agree with the algorithm :-)
+
+    *--install-prefix=DIRECTORY*
+
+      Override the default system wide installation prefix. By setting this to
+      anything other than ``/usr`` or ``/usr/local`` you change the way
+      `py2deb` works. It will build packages with a file system layout similar
+      to a Python virtual environment, except there will not be a Python
+      executable: The packages are meant to be loaded by modifying Python's
+      module search path. Refer to the documentation for details.
+
+    *--install-alternative=LINK,PATH*
+
+      Use Debian's ``update-alternatives`` system to add an executable that's
+      installed in a custom installation prefix (see above) to the system wide
+      executable search path. Refer to the documentation for details.
+
+    *-y, --yes*
+
+      Instruct pip-accel_ to automatically install build time dependencies
+      where possible. Refer to the pip-accel documentation for details.
+
+    *-v, --verbose*
+
+      Make more noise :-).
+
+    *-h, --help*
+
+      Show this message and exit.
+
+Contact
+-------
+
+If you have questions, bug reports, suggestions, etc. please create an issue on
+the `GitHub project page`_. The latest version of `py2deb` will always be
+available on GitHub. The internal API documentation is `hosted on Read The
+Docs`_.
+
+License
+-------
+
+This software is licensed under the `MIT license`_.
+
+© 2014 Peter Odding, Arjan Verwer and Paylogic International.
+
+.. External references:
+.. _GitHub project page: https://github.com/paylogic/py2deb
+.. _hosted on Read The Docs: https://py2deb.readthedocs.org
+.. _MIT license: http://en.wikipedia.org/wiki/MIT_License
+.. _pip-accel: https://github.com/paylogic/pip-accel
+.. _PyPI: https://pypi.python.org/pypi/py2deb
+.. _requirement files: http://www.pip-installer.org/en/latest/cookbook.html#requirements-files
