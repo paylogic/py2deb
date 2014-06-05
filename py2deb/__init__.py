@@ -331,7 +331,8 @@ class PackageConverter(object):
                                 package.python_name, package.python_version,
                                 package.existing_archive.filename)
                 else:
-                    package.convert()
+                    archive = package.convert()
+                    shutil.move(archive, self.repository.directory)
             # Tell the caller how to depend on the converted packages.
             dependencies_to_report = []
             for package in primary_packages:
