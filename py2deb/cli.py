@@ -62,6 +62,13 @@ Supported options:
     the system wide executable search path. Refer to the documentation
     for details.
 
+  --report-dependencies=FILENAME
+
+    Add the Debian relationships needed to depend on the converted
+    package(s) to the given control file. If the control file already
+    contains relationships the additional relationships will be added
+    to the control file; they won't overwrite existing relationships.
+
   -y, --yes
 
     Instruct pip-accel to automatically install build time
@@ -85,6 +92,7 @@ import sys
 
 # External dependencies.
 import coloredlogs
+from deb_pkg_tools.control import patch_control_file
 from executor import execute
 
 # Modules included in our package.
@@ -104,12 +112,13 @@ def main():
     coloredlogs.install()
     # Initialize a package converter.
     converter = PackageConverter()
+    control_file_to_update = None
     # Parse and validate the command line options.
     try:
         options, arguments = getopt.getopt(sys.argv[1:], 'c:r:yvh', [
             'config=', 'repository=', 'name-prefix=', 'no-name-prefix=',
-            'rename=', 'install-prefix=', 'install-alternative=', 'yes',
-            'verbose', 'help'
+            'rename=', 'install-prefix=', 'install-alternative=',
+            'report-dependencies=', 'yes', 'verbose', 'help'
         ])
         for option, value in options:
             if option in ('-c', '--config'):
@@ -128,6 +137,11 @@ def main():
             elif option == '--install-alternative':
                 link, _, path = value.partition(',')
                 converter.install_alternative(link, path)
+            elif option == '--report-dependencies':
+                control_file_to_update = value
+                if not os.path.isfile(control_file_to_update):
+                    msg = "The given control file doesn't exist! (%s)"
+                    raise Exception(msg % control_file_to_update)
             elif option in ('-y', '--yes'):
                 converter.set_auto_install(True)
             elif option in ('-v', '--verbose'):
@@ -144,7 +158,9 @@ def main():
     # Convert the requested package(s).
     try:
         if arguments:
-            converter.convert(arguments)
+            relationships = converter.convert(arguments)
+            if relationships and control_file_to_update:
+                patch_control_file(control_file_to_update, dict(depends=relationships))
         else:
             usage()
     except Exception as e:
