@@ -33,7 +33,7 @@ default:
 	@echo
 
 install:
-	test -d "$(VIRTUAL_ENV)/bin/python" || virtualenv --system-site-packages "$(VIRTUAL_ENV)"
+	test -d "$(VIRTUAL_ENV)/bin/python" || virtualenv "$(VIRTUAL_ENV)"
 	test -x "$(VIRTUAL_ENV)/bin/pip" || ($(ACTIVATE) && easy_install pip)
 	test -x "$(VIRTUAL_ENV)/bin/pip-accel" || ($(ACTIVATE) && pip install pip-accel)
 	$(ACTIVATE) && pip-accel install --requirement=requirements.txt
@@ -49,8 +49,13 @@ reset: clean
 	rm -Rf "$(VIRTUAL_ENV)"
 	make --no-print-directory install
 
+check:
+	@test -x "$(VIRTUAL_ENV)/bin/pep8" || ($(ACTIVATE) && pip-accel install pep8)
+	@test -x "$(VIRTUAL_ENV)/bin/pep257" || ($(ACTIVATE) && pip-accel install pep257)
+	@$(ACTIVATE) && pep8 py2deb
+	@$(ACTIVATE) && pep257 --ignore=D200 py2deb
 
-test: install
+test: check install
 	$(ACTIVATE) && python setup.py test
 
 coverage: install
@@ -62,7 +67,7 @@ docs: install
 	@test -x "$(VIRTUAL_ENV)/bin/sphinx-build" || ($(ACTIVATE) && pip-accel install sphinx)
 	$(ACTIVATE) && cd docs && sphinx-build -b html -d build/doctrees . build/html
 
-publish:
+publish: check
 	git push origin && git push --tags origin
 	make clean && python setup.py sdist upload
 
