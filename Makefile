@@ -6,7 +6,16 @@
 
 PROJECT_NAME = py2deb
 WORKON_HOME ?= $(HOME)/.virtualenvs
-VIRTUAL_ENV ?= $(WORKON_HOME)/$(PROJECT_NAME)
+
+# Most people prefer $(CURDIR)/.env but I really don't, so if ~/.virtualenvs
+# exists (i.e. an explicit choice was made by the user, that is to say me :-)
+# we use that, otherwise we fall back to $(CURDIR)/.env.
+ifeq ($(shell test -d $(WORKON_HOME) && echo yes || echo no),yes)
+	VIRTUAL_ENV = $(WORKON_HOME)/$(PROJECT_NAME)
+else
+	VIRTUAL_ENV = $(CURDIR)/.env
+endif
+
 ACTIVATE = . "$(VIRTUAL_ENV)/bin/activate"
 
 default:
@@ -24,7 +33,7 @@ default:
 	@echo
 
 install:
-	test -d "$(VIRTUAL_ENV)" || virtualenv --system-site-packages "$(VIRTUAL_ENV)"
+	test -d "$(VIRTUAL_ENV)/bin/python" || virtualenv --system-site-packages "$(VIRTUAL_ENV)"
 	test -x "$(VIRTUAL_ENV)/bin/pip" || $(ACTIVATE) && easy_install pip
 	test -x "$(VIRTUAL_ENV)/bin/pip-accel" || $(ACTIVATE) && pip install pip-accel
 	$(ACTIVATE) && pip-accel install --requirement=requirements.txt
