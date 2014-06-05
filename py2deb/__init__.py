@@ -517,7 +517,7 @@ class PackageToConvert(object):
            Markdown_, but Markdown is a lot closer to plain text than
            reStructuredText is :-)
 
-        3. The output of html2text is massaged slightly to improve its
+        3. The output of html2text is modified slightly to improve its
            appearance.
 
         4. The resulting text is converted to the format expected to be used in
@@ -587,7 +587,7 @@ class PackageToConvert(object):
         when it unpacked the source distribution archive. Results in a
         pkginfo.UnpackedSDist_ object.
 
-        .. _pkginfo.UnpackedSDist: http://pythonhosted.org//pkginfo/distributions.html#introspecting-unpacked-source-distributions
+        .. _pkginfo.UnpackedSDist: http://pythonhosted.org/pkginfo/distributions.html
         """
         return UnpackedSDist(self.find_egg_info_file())
 
@@ -871,7 +871,7 @@ class PackageToConvert(object):
                 logger.warning(msg, expected_prefix, output)
                 return []
             output = output[len(expected_prefix):]
-            dependencies = sorted(d.strip() for d in output.split(','))
+            dependencies = sorted(dependency.strip() for dependency in output.split(','))
             logger.debug("Dependencies reported by dpkg-shlibdeps: %s", dependencies)
             return dependencies
 
@@ -997,9 +997,9 @@ class PackageRepository(object):
         :returns: A :py:class:`deb_pkg_tools.package.PackageFile` object
                   or ``None``.
         """
-        for a in self.archives:
-            if a.name == package and a.version == version and a.architecture == architecture:
-                return a
+        for archive in self.archives:
+            if (archive.name == package and archive.version == version and archive.architecture == architecture):
+                return archive
 
 
 class TemporaryDirectory(object):
