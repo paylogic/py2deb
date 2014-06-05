@@ -43,6 +43,7 @@ logger = logging.getLogger(__name__)
 # variable $PATH).
 KNOWN_INSTALL_PREFIXES = ('/usr', '/usr/local')
 
+
 class PackageConverter(object):
 
     """
@@ -415,6 +416,7 @@ class PackageConverter(object):
             msg = "The current architecture is not supported by py2deb! (architecture reported by uname -m: %s)"
             raise Exception(msg % architecture)
 
+
 class PackageToConvert(object):
 
     """
@@ -621,7 +623,8 @@ class PackageToConvert(object):
                     if constraint == '==':
                         dependencies.append('%s (= %s)' % (debian_package_name, version))
                     elif constraint == '!=':
-                        dependencies.append('%s (<< %s) | %s (>> %s)' % (debian_package_name, version, debian_package_name, version))
+                        values = (debian_package_name, version, debian_package_name, version)
+                        dependencies.append('%s (<< %s) | %s (>> %s)' % values)
                     elif constraint == '<':
                         dependencies.append('%s (<< %s)' % (debian_package_name, version))
                     elif constraint == '>':
@@ -643,7 +646,8 @@ class PackageToConvert(object):
         archive is found.
         """
         return (self.converter.repository.find_package(self.debian_name, self.debian_version, 'all') or
-                self.converter.repository.find_package(self.debian_name, self.debian_version, self.converter.debian_architecture))
+                self.converter.repository.find_package(self.debian_name, self.debian_version,
+                                                       self.converter.debian_architecture))
 
     def convert(self):
         """
@@ -670,7 +674,9 @@ class PackageToConvert(object):
                     lib_directory = os.path.join(build_install_prefix, 'lib')
                 else:
                     dist_packages = glob.glob(os.path.join(build_install_prefix, 'lib/python*/dist-packages'))
-                    assert len(dist_packages) == 1, "Expected to find a single 'dist-packages' directory inside converted package!"
+                    if len(dist_packages) != 1:
+                        msg = "Expected to find a single 'dist-packages' directory inside converted package!"
+                        raise Exception(msg)
                     lib_directory = dist_packages[0]
                 execute(command, directory=lib_directory, logger=logger)
 
@@ -687,11 +693,12 @@ class PackageToConvert(object):
                 dependencies += self.find_system_dependencies(shared_object_files)
 
             # Make up some control file fields ... :-)
+            architecture = self.determine_package_architecture(shared_object_files)
             control_fields = unparse_control_fields(dict(package=self.debian_name,
                                                          version=self.debian_version,
                                                          maintainer=self.debian_maintainer,
                                                          description=self.debian_description,
-                                                         architecture=self.determine_package_architecture(shared_object_files),
+                                                         architecture=architecture,
                                                          depends=dependencies,
                                                          priority='optional',
                                                          section='python'))
@@ -763,7 +770,9 @@ class PackageToConvert(object):
                   1. A :py:class:`tarfile.TarInfo` object;
                   2. A file-like object.
         """
-        for member, handle in get_binary_dist(self.requirement.name, self.requirement.version, self.requirement.source_directory):
+        for member, handle in get_binary_dist(self.requirement.name,
+                                              self.requirement.version,
+                                              self.requirement.source_directory):
             if self.has_custom_install_prefix:
                 # Strip the complete /usr/lib/pythonX.Y/site-packages/ prefix
                 # so we can replace it with the custom installation prefix
@@ -829,7 +838,9 @@ class PackageToConvert(object):
             output = execute(*command, directory=fake_source_directory, capture=True, logger=logger)
             expected_prefix = 'shlibs:Depends='
             if not output.startswith(expected_prefix):
-                logger.warning("The output of dpkg-shlibdeps doesn't match the expected format! (expected prefix: %r, output: %r)", expected_prefix, output)
+                msg = ("The output of dpkg-shlibdeps doesn't match the"
+                       " expected format! (expected prefix: %r, output: %r)")
+                logger.warning(msg, expected_prefix, output)
                 return []
             output = output[len(expected_prefix):]
             dependencies = sorted(d.strip() for d in output.split(','))
@@ -856,7 +867,8 @@ class PackageToConvert(object):
                 logger.debug("We're running on a 32 bit host -> assuming package is also 32 bit.")
                 return 'i386'
         else:
-            logger.debug("The package's binary distribution doesn't contain any shared object files -> we must be dealing with a portable package.")
+            logger.debug("The package's binary distribution doesn't contain any shared"
+                         " object files -> we must be dealing with a portable package.")
             return 'all'
 
     def find_egg_info_file(self, pattern=''):
@@ -879,6 +891,7 @@ class PackageToConvert(object):
             return matches[0]
         else:
             logger.debug("No matching %r files found.", pattern)
+
 
 class PackageRepository(object):
 
@@ -905,18 +918,30 @@ class PackageRepository(object):
         >>> from py2deb import PackageRepository
         >>> repo = PackageRepository('/tmp')
         >>> repo.archives
-        [PackageFile(name='py2deb', version='0.1', architecture='all', filename='/tmp/py2deb_0.1_all.deb'),
-         PackageFile(name='py2deb-cached-property', version='0.1.5', architecture='all', filename='/tmp/py2deb-cached-property_0.1.5_all.deb'),
-         PackageFile(name='py2deb-chardet', version='2.2.1', architecture='all', filename='/tmp/py2deb-chardet_2.2.1_all.deb'),
-         PackageFile(name='py2deb-coloredlogs', version='0.5', architecture='all', filename='/tmp/py2deb-coloredlogs_0.5_all.deb'),
-         PackageFile(name='py2deb-deb-pkg-tools', version='1.20.4', architecture='all', filename='/tmp/py2deb-deb-pkg-tools_1.20.4_all.deb'),
-         PackageFile(name='py2deb-docutils', version='0.11', architecture='all', filename='/tmp/py2deb-docutils_0.11_all.deb'),
-         PackageFile(name='py2deb-executor', version='1.2', architecture='all', filename='/tmp/py2deb-executor_1.2_all.deb'),
-         PackageFile(name='py2deb-html2text', version='2014.4.5', architecture='all', filename='/tmp/py2deb-html2text_2014.4.5_all.deb'),
-         PackageFile(name='py2deb-humanfriendly', version='1.8.2', architecture='all', filename='/tmp/py2deb-humanfriendly_1.8.2_all.deb'),
-         PackageFile(name='py2deb-pkginfo', version='1.1', architecture='all', filename='/tmp/py2deb-pkginfo_1.1_all.deb'),
-         PackageFile(name='py2deb-python-debian', version='0.1.21-nmu2', architecture='all', filename='/tmp/py2deb-python-debian_0.1.21-nmu2_all.deb'),
-         PackageFile(name='py2deb-six', version='1.6.1', architecture='all', filename='/tmp/py2deb-six_1.6.1_all.deb')]
+        [PackageFile(name='py2deb', version='0.1', architecture='all',
+                     filename='/tmp/py2deb_0.1_all.deb'),
+         PackageFile(name='py2deb-cached-property', version='0.1.5', architecture='all',
+                     filename='/tmp/py2deb-cached-property_0.1.5_all.deb'),
+         PackageFile(name='py2deb-chardet', version='2.2.1', architecture='all',
+                     filename='/tmp/py2deb-chardet_2.2.1_all.deb'),
+         PackageFile(name='py2deb-coloredlogs', version='0.5', architecture='all',
+                     filename='/tmp/py2deb-coloredlogs_0.5_all.deb'),
+         PackageFile(name='py2deb-deb-pkg-tools', version='1.20.4', architecture='all',
+                     filename='/tmp/py2deb-deb-pkg-tools_1.20.4_all.deb'),
+         PackageFile(name='py2deb-docutils', version='0.11', architecture='all',
+                     filename='/tmp/py2deb-docutils_0.11_all.deb'),
+         PackageFile(name='py2deb-executor', version='1.2', architecture='all',
+                     filename='/tmp/py2deb-executor_1.2_all.deb'),
+         PackageFile(name='py2deb-html2text', version='2014.4.5', architecture='all',
+                     filename='/tmp/py2deb-html2text_2014.4.5_all.deb'),
+         PackageFile(name='py2deb-humanfriendly', version='1.8.2', architecture='all',
+                     filename='/tmp/py2deb-humanfriendly_1.8.2_all.deb'),
+         PackageFile(name='py2deb-pkginfo', version='1.1', architecture='all',
+                     filename='/tmp/py2deb-pkginfo_1.1_all.deb'),
+         PackageFile(name='py2deb-python-debian', version='0.1.21-nmu2', architecture='all',
+                     filename='/tmp/py2deb-python-debian_0.1.21-nmu2_all.deb'),
+         PackageFile(name='py2deb-six', version='1.6.1', architecture='all',
+                     filename='/tmp/py2deb-six_1.6.1_all.deb')]
 
         """
         return find_package_archives(self.directory)
@@ -939,6 +964,7 @@ class PackageRepository(object):
         for a in self.archives:
             if a.name == package and a.version == version and a.architecture == architecture:
                 return a
+
 
 class TemporaryDirectory(object):
 
@@ -972,6 +998,7 @@ class TemporaryDirectory(object):
         shutil.rmtree(self.temporary_directory)
         del self.temporary_directory
 
+
 def find_python_version():
     """
     Find the version of Python we're running. This specifically returns a name
@@ -983,6 +1010,7 @@ def find_python_version():
     python_version = 'python%d.%d' % (sys.version_info[0], sys.version_info[1])
     logger.debug("Detected Python version: %s", python_version)
     return python_version
+
 
 def normalize_package_name(python_package_name):
     """
@@ -999,6 +1027,7 @@ def normalize_package_name(python_package_name):
     :returns: The normalized name (a string).
     """
     return re.sub('[^a-z0-9]+', '-', python_package_name.lower()).strip('-')
+
 
 def compact_repeating_words(words):
     """
