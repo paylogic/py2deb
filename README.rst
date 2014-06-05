@@ -102,6 +102,13 @@ So the ``--`` marker separates the `py2deb` options from the `pip` options.
       installed in a custom installation prefix (see above) to the system wide
       executable search path. Refer to the documentation for details.
 
+    *--report-dependencies=FILENAME*
+
+      Add the Debian relationships needed to depend on the converted package(s)
+      to the given control file. If the control file already contains
+      relationships the additional relationships will be added to the control
+      file; they won't overwrite existing relationships.
+
     *-y, --yes*
 
       Instruct pip-accel_ to automatically install build time dependencies
