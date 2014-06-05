@@ -1,7 +1,7 @@
 # Automated tests for the `py2deb' package.
 #
 # Author: Peter Odding <peter.odding@paylogic.com>
-# Last Change: June 5, 2014
+# Last Change: June 6, 2014
 # URL: https://py2deb.readthedocs.org
 
 """
@@ -33,6 +33,7 @@ from executor import execute
 
 # Modules included in our package.
 from py2deb.cli import main
+from py2deb.converter import PackageConverter
 from py2deb.utils import TemporaryDirectory
 
 # Initialize a logger.
@@ -56,6 +57,21 @@ class PackageConverterTestCase(unittest.TestCase):
         """
         coloredlogs.install()
         coloredlogs.increase_verbosity()
+
+    def test_argument_validation(self):
+        """
+        Test argument validation done by setters of :py:class:py2deb.converter.PackageConverter`.
+        """
+        converter = PackageConverter()
+        self.assertRaises(ValueError, converter.set_repository, '/foo/bar/baz')
+        self.assertRaises(ValueError, converter.set_name_prefix, '')
+        self.assertRaises(ValueError, converter.rename_package, 'old-name', '')
+        self.assertRaises(ValueError, converter.rename_package, '', 'new-name')
+        self.assertRaises(ValueError, converter.set_install_prefix, '')
+        self.assertRaises(ValueError, converter.install_alternative, 'link', '')
+        self.assertRaises(ValueError, converter.install_alternative, '', 'path')
+        self.assertRaises(ValueError, converter.set_conversion_command, 'package-name', '')
+        self.assertRaises(ValueError, converter.set_conversion_command, '', 'command')
 
     def test_conversion_of_simple_package(self):
         """
