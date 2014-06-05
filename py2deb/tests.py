@@ -195,6 +195,8 @@ class PackageConverterTestCase(unittest.TestCase):
                    # Strange but valid use case (renaming a dependency):
                    # pip-accel-coloredlogs -> pip-accel-coloredlogs-renamed
                    '--rename=coloredlogs,pip-accel-coloredlogs-renamed',
+                   # Also test the update-alternatives integration.
+                   '--install-alternative=/usr/bin/pip-accel,/usr/lib/pip-accel/bin/pip-accel',
                    'pip-accel==0.12')
             # Find the generated Debian package archives.
             archives = glob.glob('%s/*.deb' % directory)
