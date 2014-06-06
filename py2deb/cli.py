@@ -1,7 +1,7 @@
 # Command line interface for the `py2deb' program.
 #
 # Author: Peter Odding <peter.odding@paylogic.com>
-# Last Change: June 5, 2014
+# Last Change: June 6, 2014
 # URL: https://py2deb.readthedocs.org
 
 """
@@ -162,6 +162,8 @@ def main():
             else:
                 assert False, "Unhandled option!"
     except Exception as e:
+        # Since we control the exception messages emitted above, there's no
+        # point in showing an exception traceback here, hence logger.error().
         logger.error(e)
         logger.info("Hint: Use `py2deb --help' for instructions.")
         sys.exit(1)
@@ -173,7 +175,7 @@ def main():
                 patch_control_file(control_file_to_update, dict(depends=relationships))
         else:
             usage()
-    except Exception as e:
+    except Exception:
         logger.exception("Caught an unhandled exception!")
         sys.exit(1)
 
@@ -189,6 +191,7 @@ def usage():
     for i, line in enumerate(lines):
         if line.startswith(('Usage:', '  -')):
             lines[i] = coloredlogs.ansi_text(line, color='green')
+    # FYI: We don't use $PAGER here because we don't know if $PAGER supports -R.
     execute('less', '-R', input='\n'.join(lines))
 
 
