@@ -1,12 +1,15 @@
-# -*- coding: utf-8 -*-
-#
-# documentation build configuration file for the 'py2deb' package. This
-# file is execfile()d with the current directory set to its containing dir.
+"""
+Documentation build configuration file for the `py2deb` package.
+
+This Python script contains the Sphinx configuration for building the
+documentation of the `py2deb` project. This file is execfile()d with the
+current directory set to its containing dir.
+"""
 
 import sys, os
 
 # Add the 'py2deb' source distribution's root directory to the module path.
-sys.path.insert(0, os.path.abspath('..'))
+sys.path.insert(0, os.path.abspath(os.pardir))
 
 # -- General configuration -----------------------------------------------------
 
