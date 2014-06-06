@@ -3,7 +3,7 @@
 # Authors:
 #  - Arjan Verwer
 #  - Peter Odding <peter.odding@paylogic.com>
-# Last Change: June 5, 2014
+# Last Change: June 6, 2014
 # URL: https://py2deb.readthedocs.org
 
 """
@@ -167,13 +167,15 @@ def normalize_package_name(python_package_name):
     """
     Normalize Python package name to be used as Debian package name.
 
-    >>> from py2deb import normalize_package_name
-    >>> normalize_package_name('MySQL-python')
-    'mysql-python'
-
     :param python_package_name: The name of a Python package
                                 as found on PyPI (a string).
     :returns: The normalized name (a string).
+
+    >>> from py2deb import normalize_package_name
+    >>> normalize_package_name('MySQL-python')
+    'mysql-python'
+    >>> normalize_package_name('simple_json')
+    'simple-json'
     """
     return re.sub('[^a-z0-9]+', '-', python_package_name.lower()).strip('-')
 
@@ -181,6 +183,11 @@ def normalize_package_name(python_package_name):
 def compact_repeating_words(words):
     """
     Remove adjacent repeating words.
+
+    :param words: A list of words (strings), assumed to already be normalized
+                  (lowercased).
+    :returns: The list of words with adjacent repeating words replaced by a
+              single word.
 
     This is used to avoid awkward word repetitions in the package name
     conversion algorithm. Here's an example of what I mean:
@@ -194,11 +201,6 @@ def compact_repeating_words(words):
     >>> compacted_words = compact_repeating_words(combined_words)
     >>> print compacted_words
     ['python', 'mcrypt']
-
-    :param words: A list of words (strings), assumed to already be normalized
-                  (lowercased).
-    :returns: The list of words with adjacent repeating words replaced by a
-              single word.
     """
     i = 0
     while i < len(words):

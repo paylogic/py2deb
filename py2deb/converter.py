@@ -3,14 +3,18 @@
 # Authors:
 #  - Arjan Verwer
 #  - Peter Odding <peter.odding@paylogic.com>
-# Last Change: June 5, 2014
+# Last Change: June 6, 2014
 # URL: https://py2deb.readthedocs.org
 
 """
 The :py:mod:`py2deb.converter` module contains the high level conversion logic.
 
 This module defines the :py:class:`PackageConverter` class which provides the
-intended way for external Python code to interface with `py2deb`.
+intended way for external Python code to interface with `py2deb`. The
+separation between the :py:class:`py2deb.converter.PackageConverter` and
+:py:class:`py2deb.package.PackageToConvert` classes is somewhat crude (because
+neither class can work without the other) but the idea is to separate the high
+level conversion logic from the low level conversion logic.
 """
 
 # Standard library modules.
