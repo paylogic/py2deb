@@ -261,7 +261,12 @@ class PackageConverterTestCase(unittest.TestCase):
 
 def py2deb(*arguments):
     """
-    Test everything including command line parsing & validation by running py2deb's main function.
+    Test everything including command line parsing by running py2deb's main function.
+
+    We want the test suite to cover as much of `py2deb` as possible, so
+    including the command line interface, however we don't want to run `py2deb`
+    as a subprocess because that would break test coverage measurements. This
+    explains the purpose of the :py:func:`py2deb()` function.
 
     :param arguments: The command line arguments to pass to `py2deb` (one or more strings).
     """
