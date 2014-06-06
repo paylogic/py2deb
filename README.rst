@@ -58,36 +58,36 @@ So the ``--`` marker separates the `py2deb` options from the `pip` options.
 
 **Supported options:**
 
-  :option:`-c, --config=FILENAME`
+  ``-c``, ``--config=FILENAME``
 
     Load a configuration file. Because the command line arguments are processed
     in the given order, you have the choice and responsibility to decide if
     command line options override configuration file options or vice versa.
     Refer to the documentation for details on the configuration file format.
 
-  :option:`-r, --repository=DIRECTORY`
+  ``-r``, ``--repository=DIRECTORY``
 
     Change the directory where ``*.deb`` archives are stored. Defaults to the
     system wide temporary directory (which is usually ``/tmp``). If this
     directory doesn't exist `py2deb` refuses to run.
 
-  :option:`--name-prefix=PREFIX`
+  ``--name-prefix=PREFIX``
 
     Set the name prefix used during the name conversion from Python to Debian
     packages. Defaults to ``python``. The name prefix and package names are
     always delimited by a dash.
 
-  :option:`--no-name-prefix=PYTHON_PACKAGE_NAME`
+  ``--no-name-prefix=PYTHON_PACKAGE_NAME``
 
     Exclude a Python package from having the name prefix applied during the
     package name conversion. This is useful to avoid awkward repetitions.
 
-  :option:`--rename=PYTHON_PACKAGE_NAME,DEBIAN_PACKAGE_NAME`
+  ``--rename=PYTHON_PACKAGE_NAME,DEBIAN_PACKAGE_NAME``
 
     Override the package name conversion algorithm for the given pair of
     package names. Useful if you don't agree with the algorithm :-)
 
-  :option:`--install-prefix=DIRECTORY`
+  ``--install-prefix=DIRECTORY``
 
     Override the default system wide installation prefix. By setting this to
     anything other than ``/usr`` or ``/usr/local`` you change the way `py2deb`
@@ -96,29 +96,29 @@ So the ``--`` marker separates the `py2deb` options from the `pip` options.
     packages are meant to be loaded by modifying Python's module search path.
     Refer to the documentation for details.
 
-  :option:`--install-alternative=LINK,PATH`
+  ``--install-alternative=LINK,PATH``
 
     Use Debian's ``update-alternatives`` system to add an executable that's
     installed in a custom installation prefix (see above) to the system wide
     executable search path. Refer to the documentation for details.
 
-  :option:`--report-dependencies=FILENAME`
+  ``--report-dependencies=FILENAME``
 
     Add the Debian relationships needed to depend on the converted package(s)
     to the given control file. If the control file already contains
     relationships the additional relationships will be added to the control
     file; they won't overwrite existing relationships.
 
-  :option:`-y, --yes`
+  ``-y``, ``--yes``
 
     Instruct pip-accel_ to automatically install build time dependencies where
     possible. Refer to the pip-accel documentation for details.
 
-  :option:`-v, --verbose`
+  ``-v``, ``--verbose``
 
     Make more noise :-).
 
-  :option:`-h, --help`
+  ``-h``, ``--help``
 
     Show this message and exit.
 
@@ -141,5 +141,6 @@ This software is licensed under the `MIT license`_.
 .. _GitHub project page: https://github.com/paylogic/py2deb
 .. _hosted on Read The Docs: https://py2deb.readthedocs.org
 .. _MIT license: http://en.wikipedia.org/wiki/MIT_License
+.. _pip-accel: https://github.com/paylogic/pip-accel
 .. _PyPI: https://pypi.python.org/pypi/py2deb
 .. _requirement files: http://www.pip-installer.org/en/latest/cookbook.html#requirements-files
