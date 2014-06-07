@@ -56,7 +56,7 @@ check:
 
 test: check install
 	@test -x "$(VIRTUAL_ENV)/bin/py.test" || ($(ACTIVATE) && pip-accel install pytest)
-	$(ACTIVATE) && py.test --exitfirst py2deb/tests.py
+	$(ACTIVATE) && py.test --capture=no --exitfirst py2deb/tests.py
 
 coverage: install
 	@test -x "$(VIRTUAL_ENV)/bin/coverage" || ($(ACTIVATE) && pip-accel install coverage)
