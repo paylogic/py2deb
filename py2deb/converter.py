@@ -394,9 +394,9 @@ class PackageConverter(object):
         debian_package_name = self.name_mapping.get(python_package_name.lower())
         if not debian_package_name:
             # No override. Make something up :-).
-            debian_package_name = '%s-%s' % (self.name_prefix, python_package_name)
-            debian_package_name = normalize_package_name(debian_package_name)
-            debian_package_name = '-'.join(compact_repeating_words(debian_package_name.split('-')))
+            with_name_prefix = '%s-%s' % (self.name_prefix, python_package_name)
+            normalized_words = normalize_package_name(with_name_prefix).split('-')
+            debian_package_name = '-'.join(compact_repeating_words(normalized_words))
         # Always normalize the package name (even if it was given to us by the caller).
         return normalize_package_name(debian_package_name)
 
