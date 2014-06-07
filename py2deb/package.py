@@ -77,6 +77,13 @@ class PackageToConvert(object):
         self.converter = converter
         self.requirement = requirement
 
+    def __str__(self):
+        version = [self.python_version]
+        extras = self.requirement.pip_requirement.extras
+        if extras:
+            version.append("extras: %s" % concatenate(sorted(extras)))
+        return "%s (%s)" % (self.python_name, ', '.join(version))
+
     @property
     def python_name(self):
         """
@@ -243,7 +250,7 @@ class PackageToConvert(object):
                         current_extra = line.strip('[]').lower()
                     elif line and (current_extra is None or current_extra in selected_extras):
                         requirements.append(Requirement.parse(line))
-        logger.debug("Python requirements of %s (%s): %r", self.python_name, self.python_version, requirements)
+        logger.debug("Python requirements of %s: %r", self, requirements)
         return requirements
 
     @cached_property
@@ -279,7 +286,7 @@ class PackageToConvert(object):
             else:
                 dependencies.append(debian_package_name)
         dependencies = sorted(dependencies)
-        logger.debug("Debian dependencies of %s (%s): %r", self.debian_name, self.debian_version, dependencies)
+        logger.debug("Debian dependencies of %s: %r", self, dependencies)
         return dependencies
 
     @cached_property
