@@ -320,7 +320,8 @@ class PackageConverter(object):
                                 package.existing_archive.filename)
                 else:
                     archive = package.convert()
-                    shutil.move(archive, self.repository.directory)
+                    if not os.path.samefile(os.path.dirname(archive), self.repository.directory):
+                        shutil.move(archive, self.repository.directory)
             # Tell the caller how to depend on the converted packages.
             dependencies_to_report = []
             for package in primary_packages:
