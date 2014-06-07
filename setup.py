@@ -1,7 +1,9 @@
 #!/usr/bin/env python
 
-# Setup script for the `py2deb' package.
-#
+"""
+Setup script for the `py2deb` package.
+"""
+
 # Author: Peter Odding <peter.odding@paylogic.com>
 # Last Change: June 7, 2014
 # URL: https://py2deb.readthedocs.org

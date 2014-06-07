@@ -6,7 +6,8 @@ documentation of the `py2deb` project. This file is execfile()d with the
 current directory set to its containing dir.
 """
 
-import sys, os
+import os
+import sys
 
 # Add the 'py2deb' source distribution's root directory to the module path.
 sys.path.insert(0, os.path.abspath(os.pardir))
@@ -15,10 +16,10 @@ sys.path.insert(0, os.path.abspath(os.pardir))
 
 # Sphinx extension module names.
 extensions = [
-  'sphinx.ext.autodoc',
-  'sphinx.ext.doctest',
-  'sphinx.ext.intersphinx',
-  'sphinx.ext.viewcode',
+    'sphinx.ext.autodoc',
+    'sphinx.ext.doctest',
+    'sphinx.ext.intersphinx',
+    'sphinx.ext.viewcode',
 ]
 
 # Paths that contain templates, relative to this directory.
@@ -85,7 +86,12 @@ html_static_path = []
 # Output file base name for HTML help builder.
 htmlhelp_basename = 'py2debdoc'
 
+
 def setup(app):
-    # Based on http://stackoverflow.com/a/5599712/788200.
+    """
+    Configure the autodoc extension not to skip ``__init__()`` members.
+
+    Based on http://stackoverflow.com/a/5599712/788200.
+    """
     app.connect('autodoc-skip-member', (lambda app, what, name, obj, skip, options:
                                         False if name == '__init__' else skip))
