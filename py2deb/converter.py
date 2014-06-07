@@ -373,12 +373,13 @@ class PackageConverter(object):
         msg = "Failed to download source distribution archive(s)! (tried %i times)"
         raise DistributionNotFound(msg % self.max_download_attempts)
 
-    def transform_name(self, python_package_name):
+    def transform_name(self, python_package_name, *extras):
         """
         Transform Python package name to Debian package name.
 
         :param python_package_name: The name of a Python package
                                     as found on PyPI (a string).
+        :param extras: Any extras requested to be included (a tuple of strings).
         :returns: The transformed name (a string).
 
         Examples:
@@ -390,6 +391,10 @@ class PackageConverter(object):
         >>> converter.set_name_prefix('my-custom-prefix')
         >>> converter.transform_name('example')
         'my-custom-prefix-example'
+        >>> converter.set_name_prefix('some-web-app')
+        >>> converter.transform_name('raven', 'flask')
+        'some-web-app-raven-flask'
+
         """
         # Check for an override by the caller.
         debian_package_name = self.name_mapping.get(python_package_name.lower())
@@ -398,6 +403,12 @@ class PackageConverter(object):
             with_name_prefix = '%s-%s' % (self.name_prefix, python_package_name)
             normalized_words = normalize_package_name(with_name_prefix).split('-')
             debian_package_name = '-'.join(compact_repeating_words(normalized_words))
+        # If a requirement includes extras this changes the dependencies of the
+        # package. Because Debian doesn't have this concept we encode the names
+        # of the extras in the name of the package.
+        if extras:
+            sorted_extras = sorted(extra.lower() for extra in extras)
+            debian_package_name = '%s-%s' % (debian_package_name, '-'.join(sorted_extras))
         # Always normalize the package name (even if it was given to us by the caller).
         return normalize_package_name(debian_package_name)
 

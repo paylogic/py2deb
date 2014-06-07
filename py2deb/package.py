@@ -78,6 +78,9 @@ class PackageToConvert(object):
         self.requirement = requirement
 
     def __str__(self):
+        """
+        The name, version and extras of the package encoded in a human readable string.
+        """
         version = [self.python_version]
         extras = self.requirement.pip_requirement.extras
         if extras:
@@ -96,7 +99,7 @@ class PackageToConvert(object):
         """
         The name of the converted Debian package (a string).
         """
-        return self.converter.transform_name(self.python_name)
+        return self.converter.transform_name(self.python_name, *self.requirement.pip_requirement.extras)
 
     @property
     def python_version(self):
@@ -266,7 +269,7 @@ class PackageToConvert(object):
         # http://www.python.org/dev/peps/pep-0440/#version-specifiers
         dependencies = []
         for requirement in self.python_requirements:
-            debian_package_name = self.converter.transform_name(requirement.project_name)
+            debian_package_name = self.converter.transform_name(requirement.project_name, *requirement.extras)
             if requirement.specs:
                 for constraint, version in requirement.specs:
                     if constraint == '==':
