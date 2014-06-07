@@ -131,10 +131,10 @@ def main():
     coloredlogs.install()
     # Initialize a package converter.
     converter = PackageConverter()
-    # Load configuration defaults from environment variables.
-    converter.load_environment_variables()
-    # Parse and validate the command line options.
     try:
+        # Load configuration defaults from environment variables.
+        converter.load_environment_variables()
+        # Parse and validate the command line options.
         options, arguments = getopt.getopt(sys.argv[1:], 'c:r:yvh', [
             'config=', 'repository=', 'name-prefix=', 'no-name-prefix=',
             'rename=', 'install-prefix=', 'install-alternative=',

@@ -73,6 +73,13 @@ class PackageConverterTestCase(unittest.TestCase):
         self.assertRaises(ValueError, converter.install_alternative, '', 'path')
         self.assertRaises(ValueError, converter.set_conversion_command, 'package-name', '')
         self.assertRaises(ValueError, converter.set_conversion_command, '', 'command')
+        self.assertRaises(SystemExit, py2deb, '--unsupported-option')
+        self.assertRaises(SystemExit, py2deb, '--report-dependencies', '/tmp/definitely-not-an-existing-control-file')
+        os.environ['PY2DEB_CONFIG'] = '/tmp/definitely-not-an-existing-configuration-file'
+        try:
+            self.assertRaises(SystemExit, py2deb)
+        finally:
+            del os.environ['PY2DEB_CONFIG']
 
     def test_boolean_conversion(self):
         """
