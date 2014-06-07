@@ -91,7 +91,9 @@ class PackageConverterTestCase(unittest.TestCase):
             with open(control_file, 'w') as handle:
                 handle.write('Depends: vim\n')
             # Run the conversion command.
-            py2deb('--repository=%s' % directory,
+            py2deb('--verbose',
+                   '--yes',
+                   '--repository=%s' % directory,
                    '--report-dependencies=%s' % control_file,
                    'coloredlogs==0.4.8')
             # Check that the control file was patched.
@@ -243,6 +245,7 @@ class PackageConverterTestCase(unittest.TestCase):
                     repository = {repository}
                     name-prefix = pip-accel
                     install-prefix = /usr/lib/pip-accel
+                    auto-install = false
 
                     [alternatives]
                     /usr/bin/pip-accel = /usr/lib/pip-accel/bin/pip-accel
