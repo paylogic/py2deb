@@ -3,11 +3,15 @@
 # Setup script for the `py2deb' package.
 #
 # Author: Peter Odding <peter.odding@paylogic.com>
-# Last Change: June 5, 2014
+# Last Change: June 7, 2014
 # URL: https://py2deb.readthedocs.org
 
-import os, sys
-from setuptools import setup, find_packages
+# Standard library modules.
+import os
+import sys
+
+# We use setuptools to support entry points, `python setup.py test', etc.
+import setuptools
 
 # Find the directory where the source distribution was unpacked.
 source_directory = os.path.dirname(os.path.abspath(__file__))
@@ -20,22 +24,24 @@ from py2deb import __version__ as version_string
 
 # Fill in the long description (for the benefit of PyPi)
 # with the contents of README.rst (rendered by GitHub).
-readme_file = os.path.join(source_directory, 'README.rst')
-readme_text = open(readme_file, 'r').read()
+with open(os.path.join(source_directory, 'README.rst')) as handle:
+    readme_text = handle.read()
 
 # Fill in the "install_requires" field based on requirements.txt.
-requirements = [l.strip() for l in open(os.path.join(source_directory, 'requirements.txt'), 'r') if not l.startswith('#')]
+with open(os.path.join(source_directory, 'requirements.txt')) as handle:
+    requirements = [line.strip() for line in handle if not line.startswith('#')]
 
-setup(name='py2deb',
-      version=version_string,
-      description='Python to Debian package converter',
-      long_description=readme_text,
-      url='https://py2deb.readthedocs.org',
-      author='Peter Odding & Arjan Verwer',
-      author_email='peter.odding@paylogic.com',
-      packages=find_packages(),
-      test_suite='py2deb.tests',
-      entry_points={'console_scripts': ['py2deb = py2deb.cli:main']},
-      install_requires=requirements)
+setuptools.setup(
+    name='py2deb',
+    version=version_string,
+    description='Python to Debian package converter',
+    long_description=readme_text,
+    url='https://py2deb.readthedocs.org',
+    author='Peter Odding & Arjan Verwer (Paylogic International)',
+    author_email='peter.odding@paylogic.com',
+    packages=setuptools.find_packages(),
+    test_suite='py2deb.tests',
+    entry_points={'console_scripts': ['py2deb = py2deb.cli:main']},
+    install_requires=requirements)
 
 # vim: ts=4 sw=4
