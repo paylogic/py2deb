@@ -235,13 +235,13 @@ class PackageToConvert(object):
         filename = self.find_egg_info_file('requires.txt')
         if filename:
             with open(filename) as handle:
-                for line in handle:
+                selected_extras = set(e.lower() for e in self.requirement.pip_requirement.extras)
+                current_extra = None
+                for lnum, line in enumerate(handle, start=1):
                     line = line.strip()
-                    # Stop at extra requirements (optional dependencies).
-                    # TODO Is it actually correct to just skip these?
                     if line.startswith('['):
-                        break
-                    elif line:
+                        current_extra = line.strip('[]').lower()
+                    elif line and (current_extra is None or current_extra in selected_extras):
                         requirements.append(Requirement.parse(line))
         logger.debug("Python requirements of %s (%s): %r", self.python_name, self.python_version, requirements)
         return requirements
