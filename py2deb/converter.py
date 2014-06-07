@@ -3,7 +3,7 @@
 # Authors:
 #  - Arjan Verwer
 #  - Peter Odding <peter.odding@paylogic.com>
-# Last Change: June 6, 2014
+# Last Change: June 7, 2014
 # URL: https://py2deb.readthedocs.org
 
 """
@@ -361,7 +361,7 @@ class PackageConverter(object):
         # Loop to retry downloading source packages a couple of times (so
         # we don't fail immediately when a package index server returns a
         # transient error).
-        for i in range(1, self.max_download_attempts):
+        for i in range(1, self.max_download_attempts + 1):
             try:
                 for requirement in unpack_source_dists(pip_install_arguments, build_directory):
                     yield PackageToConvert(self, requirement)
