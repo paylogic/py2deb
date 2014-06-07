@@ -349,7 +349,7 @@ class PackageConverter(object):
             # Tell the caller how to depend on the converted packages.
             dependencies_to_report = []
             for package in primary_packages:
-                dependency = '%s (=%s)' % (package.debian_name, package.debian_version)
+                dependency = '%s (= %s)' % (package.debian_name, package.debian_version)
                 dependencies_to_report.append(dependency)
             return sorted(dependencies_to_report)
 

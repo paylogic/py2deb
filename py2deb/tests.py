@@ -217,6 +217,24 @@ class PackageConverterTestCase(unittest.TestCase):
                 logger.debug("Checking Python dependency %s ..", python_dependency)
                 assert metadata['Depends'].matches(python_dependency) is not None
 
+    def test_conversion_of_extras(self):
+        """
+        Convert a package with extras.
+
+        Converts ``raven[flask]==3.6.0`` and sanity checks the result.
+        """
+        with TemporaryDirectory() as directory:
+            # Run the conversion command.
+            converter = PackageConverter()
+            converter.set_repository(directory)
+            dependencies = converter.convert(['raven[flask]==3.6.0'])
+            assert dependencies == ['python-raven-flask (= 3.6.0)']
+            # Find the generated Debian package archive.
+            archives = glob.glob('%s/*.deb' % directory)
+            logger.debug("Found generated archive(s): %s", archives)
+            # Check that a package with the extra in the filename was generated.
+            assert find_package_archive(archives, 'python-raven-flask')
+
     def test_conversion_of_isolated_packages(self):
         """
         Convert a group of packages with a custom name and installation prefix.
