@@ -31,7 +31,8 @@ from pip_accel import download_source_dists, initialize_directories, unpack_sour
 from six.moves import configparser
 
 # Modules included in our package.
-from py2deb.utils import compact_repeating_words, normalize_package_name, PackageRepository, TemporaryDirectory
+from py2deb.utils import (coerce_to_boolean, compact_repeating_words, normalize_package_name,
+                          PackageRepository, TemporaryDirectory)
 from py2deb.package import PackageToConvert
 
 # Initialize a logger.
@@ -120,10 +121,9 @@ class PackageConverter(object):
         """
         Enable or disable automatic installation of build time dependencies.
 
-        :param enabled: If this evaluates to ``True`` automatic installation is
-                        enabled, otherwise it's disabled.
+        :param enabled: Any value, evaluated using :py:func:`py2deb.utils.coerce_to_boolean()`.
         """
-        self.auto_install = bool(enabled)
+        self.auto_install = coerce_to_boolean(enabled)
 
     def install_alternative(self, link, path):
         r"""
@@ -206,12 +206,35 @@ class PackageConverter(object):
             raise ValueError("Please provide a nonempty shell command!")
         self.scripts[python_package_name.lower()] = command
 
-    def load_configuration(self, configuration_file):
+    def load_environment_variables(self):
+        """
+        Load configuration defaults from environment variables.
+
+        The following environment variables are currently supported:
+
+        - ``$PY2DEB_CONFIG``
+        - ``$PY2DEB_REPOSITORY``
+        - ``$PY2DEB_NAME_PREFIX``
+        - ``$PY2DEB_INSTALL_PREFIX``
+        - ``$PY2DEB_AUTO_INSTALL``
+        """
+        for variable, setter in (('PY2DEB_CONFIG', self.load_configuration_file),
+                                 ('PY2DEB_REPOSITORY', self.set_repository),
+                                 ('PY2DEB_NAME_PREFIX', self.set_name_prefix),
+                                 ('PY2DEB_INSTALL_PREFIX', self.set_install_prefix),
+                                 ('PY2DEB_AUTO_INSTALL', self.set_auto_install)):
+            value = os.environ.get(variable)
+            if value is not None:
+                setter(value)
+
+    def load_configuration_file(self, configuration_file):
         """
         Load configuration defaults from a configuration file.
 
         :param configuration_file: The pathname of a configuration file (a
                                    string).
+        :raises: :py:exc:`Exception` when the configuration file cannot be
+                 loaded.
 
         Below is an example of the available options, I assume that the mapping
         between the configuration options and the setters of
@@ -257,6 +280,7 @@ class PackageConverter(object):
         """
         # Load the configuration file.
         parser = configparser.RawConfigParser()
+        configuration_file = os.path.expanduser(configuration_file)
         files_loaded = parser.read(configuration_file)
         try:
             assert len(files_loaded) == 1
@@ -272,7 +296,7 @@ class PackageConverter(object):
         if parser.has_option('py2deb', 'install-prefix'):
             self.set_install_prefix(parser.get('py2deb', 'install-prefix'))
         if parser.has_option('py2deb', 'auto-install'):
-            self.set_auto_install(parser.getboolean('py2deb', 'auto-install'))
+            self.set_auto_install(parser.get('py2deb', 'auto-install'))
         # Apply the defined alternatives.
         if parser.has_section('alternatives'):
             for link, path in parser.items('alternatives'):

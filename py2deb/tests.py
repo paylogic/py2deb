@@ -35,7 +35,7 @@ from executor import execute
 # Modules included in our package.
 from py2deb.cli import main
 from py2deb.converter import PackageConverter
-from py2deb.utils import TemporaryDirectory
+from py2deb.utils import coerce_to_boolean, TemporaryDirectory
 
 # Initialize a logger.
 logger = logging.getLogger(__name__)
@@ -73,6 +73,16 @@ class PackageConverterTestCase(unittest.TestCase):
         self.assertRaises(ValueError, converter.install_alternative, '', 'path')
         self.assertRaises(ValueError, converter.set_conversion_command, 'package-name', '')
         self.assertRaises(ValueError, converter.set_conversion_command, '', 'command')
+
+    def test_boolean_conversion(self):
+        """
+        Test coercion of booleans encoded in strings.
+        """
+        for value in ['1', 'yes', 'true', 'on']:
+            self.assertTrue(coerce_to_boolean(value))
+        for value in ['0', 'no', 'false', 'off']:
+            self.assertFalse(coerce_to_boolean(value))
+        self.assertRaises(ValueError, coerce_to_boolean, 'not a boolean!')
 
     def test_conversion_of_simple_package(self):
         """

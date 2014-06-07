@@ -65,17 +65,23 @@ So the ``--`` marker separates the `py2deb` options from the `pip` options.
     command line options override configuration file options or vice versa.
     Refer to the documentation for details on the configuration file format.
 
+    Can also be set using the environment variable ``$PY2DEB_CONFIG``.
+
   ``-r``, ``--repository=DIRECTORY``
 
     Change the directory where ``*.deb`` archives are stored. Defaults to the
     system wide temporary directory (which is usually ``/tmp``). If this
     directory doesn't exist `py2deb` refuses to run.
 
+    Can also be set using the environment variable ``$PY2DEB_REPOSITORY``.
+
   ``--name-prefix=PREFIX``
 
     Set the name prefix used during the name conversion from Python to Debian
     packages. Defaults to ``python``. The name prefix and package names are
     always delimited by a dash.
+
+    Can also be set using the environment variable ``$PY2DEB_NAME_PREFIX``.
 
   ``--no-name-prefix=PYTHON_PACKAGE_NAME``
 
@@ -96,6 +102,8 @@ So the ``--`` marker separates the `py2deb` options from the `pip` options.
     packages are meant to be loaded by modifying Python's module search path.
     Refer to the documentation for details.
 
+    Can also be set using the environment variable ``$PY2DEB_INSTALL_PREFIX``.
+
   ``--install-alternative=LINK,PATH``
 
     Use Debian's ``update-alternatives`` system to add an executable that's
@@ -113,6 +121,8 @@ So the ``--`` marker separates the `py2deb` options from the `pip` options.
 
     Instruct pip-accel_ to automatically install build time dependencies where
     possible. Refer to the pip-accel documentation for details.
+
+    Can also be set using the environment variable ``$PY2DEB_AUTO_INSTALL``.
 
   ``-v``, ``--verbose``
 

@@ -1,7 +1,7 @@
 # Command line interface for the `py2deb' program.
 #
 # Author: Peter Odding <peter.odding@paylogic.com>
-# Last Change: June 6, 2014
+# Last Change: June 7, 2014
 # URL: https://py2deb.readthedocs.org
 
 """
@@ -31,17 +31,23 @@ Supported options:
     command line options override configuration file options or vice versa.
     Refer to the documentation for details on the configuration file format.
 
+    Can also be set using the environment variable $PY2DEB_CONFIG.
+
   -r, --repository=DIRECTORY
 
     Change the directory where *.deb archives are stored. Defaults to
     the system wide temporary directory (which is usually /tmp). If
     this directory doesn't exist py2deb refuses to run.
 
+    Can also be set using the environment variable $PY2DEB_REPOSITORY.
+
   --name-prefix=PREFIX
 
     Set the name prefix used during the name conversion from Python to
     Debian packages. Defaults to `python'. The name prefix and package
     names are always delimited by a dash.
+
+    Can also be set using the environment variable $PY2DEB_NAME_PREFIX.
 
   --no-name-prefix=PYTHON_PACKAGE_NAME
 
@@ -64,6 +70,8 @@ Supported options:
     modifying Python's module search path. Refer to the documentation
     for details.
 
+    Can also be set using the environment variable $PY2DEB_INSTALL_PREFIX.
+
   --install-alternative=LINK,PATH
 
     Use Debian's `update-alternatives' system to add an executable
@@ -80,9 +88,10 @@ Supported options:
 
   -y, --yes
 
-    Instruct pip-accel to automatically install build time
-    dependencies where possible. Refer to the pip-accel
-    documentation for details.
+    Instruct pip-accel to automatically install build time dependencies
+    where possible. Refer to the pip-accel documentation for details.
+
+    Can also be set using the environment variable $PY2DEB_AUTO_INSTALL.
 
   -v, --verbose
 
@@ -122,7 +131,8 @@ def main():
     coloredlogs.install()
     # Initialize a package converter.
     converter = PackageConverter()
-    control_file_to_update = None
+    # Load configuration defaults from environment variables.
+    converter.load_environment_variables()
     # Parse and validate the command line options.
     try:
         options, arguments = getopt.getopt(sys.argv[1:], 'c:r:yvh', [
@@ -130,9 +140,10 @@ def main():
             'rename=', 'install-prefix=', 'install-alternative=',
             'report-dependencies=', 'yes', 'verbose', 'help'
         ])
+        control_file_to_update = None
         for option, value in options:
             if option in ('-c', '--config'):
-                converter.load_configuration(os.path.expanduser(value))
+                converter.load_configuration_file(value)
             elif option in ('-r', '--repository'):
                 converter.set_repository(value)
             elif option == '--name-prefix':

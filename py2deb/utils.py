@@ -3,7 +3,7 @@
 # Authors:
 #  - Arjan Verwer
 #  - Peter Odding <peter.odding@paylogic.com>
-# Last Change: June 6, 2014
+# Last Change: June 7, 2014
 # URL: https://py2deb.readthedocs.org
 
 """
@@ -20,6 +20,7 @@ import tempfile
 # External dependencies.
 from cached_property import cached_property
 from deb_pkg_tools.package import find_package_archives
+from six import string_types
 
 # Semi-standard module versioning.
 __version__ = '0.16'
@@ -209,6 +210,34 @@ def compact_repeating_words(words):
         else:
             i += 1
     return words
+
+
+def coerce_to_boolean(value):
+    """
+    Coerce any value to a boolean.
+
+    :param value: Any Python value. If the value is a string:
+
+                  - The strings '1', 'yes', 'true' and 'on' are coerced to ``True``.
+                  - The strings '0', 'no', 'false' and 'off' are coerced to ``False``.
+                  - Other strings raise an exception.
+
+                  Other Python values are coerced using :py:func:`bool()`.
+    :returns: A proper boolean value.
+    :raises: :py:exc:`exceptions.ValueError` when the value is a string but
+             cannot be coerced with certainty.
+    """
+    if isinstance(value, string_types):
+        normalized = str(value).strip().lower()
+        if normalized in ('1', 'yes', 'true', 'on'):
+            return True
+        elif normalized in ('0', 'no', 'false', 'off'):
+            return False
+        else:
+            msg = "Failed to coerce string to boolean! (%r)"
+            raise ValueError(msg % value)
+    else:
+        return bool(value)
 
 
 # vim: ts=4 sw=4
