@@ -3,7 +3,7 @@
 # Authors:
 #  - Arjan Verwer
 #  - Peter Odding <peter.odding@paylogic.com>
-# Last Change: June 6, 2014
+# Last Change: June 7, 2014
 # URL: https://py2deb.readthedocs.org
 
 """
@@ -188,21 +188,12 @@ class PackageToConvert(object):
         # Tag the description with a reference to py2deb and the date/time when
         # the package was converted.
         tag = ' '.join(time.strftime('Packaged by py2deb on %B %e, %Y at %H:%M.').split())
-        if description:
-            description += '\n\n' + tag
-        else:
-            description = tag
+        description = description + '\n\n' + tag if description else tag
         # Replace empty lines in the description with a dot and indent all
         # lines to make the description compatible with the control file
         # format. It's a shame that the deb822 package won't do this...
-        lines = description.splitlines()
-        for i, line in enumerate(lines):
-            if line and not line.isspace():
-                lines[i] = ' ' + line
-            else:
-                lines[i] = ' .'
-        # Join the lines back together.
-        return '\n'.join(lines)
+        return '\n'.join('  ' + line if line and not line.isspace() else ' .'
+                         for line in description.splitlines())
 
     @cached_property
     def metadata(self):
