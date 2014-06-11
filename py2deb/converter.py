@@ -347,11 +347,7 @@ class PackageConverter(object):
                     if not os.path.samefile(os.path.dirname(archive), self.repository.directory):
                         shutil.move(archive, self.repository.directory)
             # Tell the caller how to depend on the converted packages.
-            dependencies_to_report = []
-            for package in primary_packages:
-                dependency = '%s (= %s)' % (package.debian_name, package.debian_version)
-                dependencies_to_report.append(dependency)
-            return sorted(dependencies_to_report)
+            return sorted('%s (= %s)' % (pkg.debian_name, pkg.debian_version) for pkg in primary_packages)
 
     def get_source_distributions(self, pip_install_arguments, build_directory):
         """
