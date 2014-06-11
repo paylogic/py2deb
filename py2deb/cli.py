@@ -205,6 +205,3 @@ def usage():
             lines[i] = coloredlogs.ansi_text(line, color='green')
     # FYI: We don't use $PAGER here because we don't know if $PAGER supports -R.
     execute('less', '-R', input='\n'.join(lines))
-
-
-# vim: ts=4 sw=4

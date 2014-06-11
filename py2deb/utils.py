@@ -3,7 +3,7 @@
 # Authors:
 #  - Arjan Verwer
 #  - Peter Odding <peter.odding@paylogic.com>
-# Last Change: June 7, 2014
+# Last Change: June 11, 2014
 # URL: https://py2deb.readthedocs.org
 
 """
@@ -238,6 +238,3 @@ def coerce_to_boolean(value):
             raise ValueError(msg % value)
     else:
         return bool(value)
-
-
-# vim: ts=4 sw=4

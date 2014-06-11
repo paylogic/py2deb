@@ -3,7 +3,7 @@
 # Authors:
 #  - Arjan Verwer
 #  - Peter Odding <peter.odding@paylogic.com>
-# Last Change: June 7, 2014
+# Last Change: June 11, 2014
 # URL: https://py2deb.readthedocs.org
 
 """
@@ -455,6 +455,3 @@ class PackageConverter(object):
         else:
             msg = "The current architecture is not supported by py2deb! (architecture reported by uname -m: %s)"
             raise Exception(msg % architecture)
-
-
-# vim: ts=4 sw=4

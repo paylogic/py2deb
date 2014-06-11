@@ -5,7 +5,7 @@ Setup script for the `py2deb` package.
 """
 
 # Author: Peter Odding <peter.odding@paylogic.com>
-# Last Change: June 7, 2014
+# Last Change: June 11, 2014
 # URL: https://py2deb.readthedocs.org
 
 # Standard library modules.
@@ -45,5 +45,3 @@ setuptools.setup(
     test_suite='py2deb.tests',
     entry_points={'console_scripts': ['py2deb = py2deb.cli:main']},
     install_requires=requirements)
-
-# vim: ts=4 sw=4

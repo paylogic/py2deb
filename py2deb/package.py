@@ -3,7 +3,7 @@
 # Authors:
 #  - Arjan Verwer
 #  - Peter Odding <peter.odding@paylogic.com>
-# Last Change: June 7, 2014
+# Last Change: June 11, 2014
 # URL: https://py2deb.readthedocs.org
 
 """
@@ -553,6 +553,3 @@ class PackageToConvert(object):
             return matches[0]
         else:
             logger.debug("No matching %r files found.", pattern)
-
-
-# vim: ts=4 sw=4
