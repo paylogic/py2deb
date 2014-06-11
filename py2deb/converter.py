@@ -382,7 +382,7 @@ class PackageConverter(object):
         # Loop to retry downloading source packages a couple of times (so
         # we don't fail immediately when a package index server returns a
         # transient error).
-        for i in range(1, self.max_download_attempts + 1):
+        for _ in range(self.max_download_attempts):
             try:
                 for requirement in unpack_source_dists(pip_install_arguments, build_directory):
                     yield PackageToConvert(self, requirement)
