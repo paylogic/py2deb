@@ -244,10 +244,10 @@ class PackageToConvert(object):
         requirements = []
         filename = self.find_egg_info_file('requires.txt')
         if filename:
+            selected_extras = set(extra.lower() for extra in self.requirement.pip_requirement.extras)
+            current_extra = None
             with open(filename) as handle:
-                selected_extras = set(e.lower() for e in self.requirement.pip_requirement.extras)
-                current_extra = None
-                for lnum, line in enumerate(handle, start=1):
+                for line in handle:
                     line = line.strip()
                     if line.startswith('['):
                         current_extra = line.strip('[]').lower()
