@@ -261,12 +261,16 @@ class PackageToConvert(object):
         """
         Find Debian dependencies of Python package.
 
+        Converts `Python version specifiers`_ to `Debian package
+        relationships`_.
+
         :returns: A list with Debian package relationships (strings) in the
                   format of the ``Depends:`` line of a Debian package
                   ``control`` file. Based on :py:data:`python_requirements`.
+
+        .. _Python version specifiers: http://www.python.org/dev/peps/pep-0440/#version-specifiers
+        .. _Debian package relationships: https://www.debian.org/doc/debian-policy/ch-relationships.html
         """
-        # Useful link:
-        # http://www.python.org/dev/peps/pep-0440/#version-specifiers
         dependencies = []
         for requirement in self.python_requirements:
             debian_package_name = self.converter.transform_name(requirement.project_name, *requirement.extras)
