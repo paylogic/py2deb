@@ -1,22 +1,23 @@
 # Command line interface for the `py2deb' program.
 #
 # Author: Peter Odding <peter.odding@paylogic.com>
-# Last Change: June 7, 2014
+# Last Change: June 11, 2014
 # URL: https://py2deb.readthedocs.org
 
 """
 Usage: py2deb [OPTIONS] ...
 
 Convert Python packages to Debian packages according to the given
-command line options (see below). The positional arguments are the
-same arguments accepted by the `pip install' command, that means you
-can name the package(s) to convert on the command line but you can
-also use `requirement files' if you prefer.
+command line options (see below). The command line arguments are the
+same as accepted by the `pip install' command because py2deb invokes
+pip during the conversion process. This means you can name the
+package(s) to convert on the command line but you can also use
+`requirement files' if you prefer.
 
-Sometimes you will need to disambiguate between the options for py2deb
-and the options for pip, for example the short option `-r' means
-`--repository' to py2deb and `--requirement' to pip. In such cases you
-can use the following syntax:
+If you want to pass command line options to pip (e.g. because you want
+to use a custom index URL or a requirements file) then you will need
+to tell py2deb where the options for py2deb stop and the options for
+pip begin. In such cases you can use the following syntax:
 
   $ py2deb -r /tmp -- -r requirements.txt
 
