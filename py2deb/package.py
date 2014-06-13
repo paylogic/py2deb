@@ -3,7 +3,7 @@
 # Authors:
 #  - Arjan Verwer
 #  - Peter Odding <peter.odding@paylogic.com>
-# Last Change: June 11, 2014
+# Last Change: June 13, 2014
 # URL: https://py2deb.readthedocs.org
 
 """
@@ -304,9 +304,9 @@ class PackageToConvert(object):
         :returns: The pathname of the found archive (a string) or ``None`` if
                   no existing archive is found.
         """
-        return (self.converter.repository.find_package(self.debian_name, self.debian_version, 'all') or
-                self.converter.repository.find_package(self.debian_name, self.debian_version,
-                                                       self.converter.debian_architecture))
+        return (self.converter.repository.get_package(self.debian_name, self.debian_version, 'all') or
+                self.converter.repository.get_package(self.debian_name, self.debian_version,
+                                                      self.converter.debian_architecture))
 
     def convert(self):
         """

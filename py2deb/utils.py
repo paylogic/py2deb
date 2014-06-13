@@ -3,7 +3,7 @@
 # Authors:
 #  - Arjan Verwer
 #  - Peter Odding <peter.odding@paylogic.com>
-# Last Change: June 11, 2014
+# Last Change: June 13, 2014
 # URL: https://py2deb.readthedocs.org
 
 """
@@ -88,7 +88,7 @@ class PackageRepository(object):
         """
         return find_package_archives(self.directory)
 
-    def find_package(self, package, version, architecture):
+    def get_package(self, package, version, architecture):
         """
         Find a package in the repository.
 
@@ -96,7 +96,7 @@ class PackageRepository(object):
 
         >>> from py2deb import PackageRepository
         >>> repo = PackageRepository('/tmp')
-        >>> repo.find_package('py2deb', '0.1', 'all')
+        >>> repo.get_package('py2deb', '0.1', 'all')
         PackageFile(name='py2deb', version='0.1', architecture='all', filename='/tmp/py2deb_0.1_all.deb')
 
         :param package: The name of the package (a string).
