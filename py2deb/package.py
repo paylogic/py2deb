@@ -43,7 +43,7 @@ from pkginfo import UnpackedSDist
 from six.moves import configparser, StringIO
 
 # Modules included in our package.
-from py2deb.utils import find_python_version, TemporaryDirectory
+from py2deb.utils import python_version, TemporaryDirectory
 
 # Initialize a logger.
 logger = logging.getLogger(__name__)
@@ -321,7 +321,7 @@ class PackageToConvert(object):
             build_install_prefix = os.path.join(build_directory, self.converter.install_prefix.lstrip('/'))
             install_binary_dist(members=self.transform_binary_dist(),
                                 prefix=build_install_prefix,
-                                python='/usr/bin/%s' % find_python_version(),
+                                python='/usr/bin/%s' % python_version(),
                                 enable_workarounds=False)
 
             # Execute a user defined command inside the directory where the Python modules are installed.
@@ -340,7 +340,7 @@ class PackageToConvert(object):
             # Determine the package's dependencies, starting with the currently
             # running version of Python and the Python requirements converted
             # to Debian packages.
-            dependencies = [find_python_version()] + self.debian_dependencies
+            dependencies = [python_version()] + self.debian_dependencies
 
             # Check if the converted package contains any compiled *.so files.
             shared_object_files = self.find_shared_object_files(build_directory)

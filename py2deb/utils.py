@@ -150,7 +150,7 @@ class TemporaryDirectory(object):
         del self.temporary_directory
 
 
-def find_python_version():
+def python_version():
     """
     Find the version of Python we're running.
 
