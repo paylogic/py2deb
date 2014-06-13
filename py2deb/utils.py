@@ -203,13 +203,11 @@ def compact_repeating_words(words):
     >>> print compacted_words
     ['python', 'mcrypt']
     """
-    i = 0
-    while i < len(words):
-        if i + 1 < len(words) and words[i] == words[i + 1]:
-            words.pop(i)
-        else:
-            i += 1
-    return words
+    last_word = None
+    for word in words:
+        if word != last_word:
+            yield word
+        last_word = word
 
 
 def coerce_to_boolean(value):
