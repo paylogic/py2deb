@@ -185,9 +185,9 @@ def compact_repeating_words(words):
     """
     Remove adjacent repeating words.
 
-    :param words: A list of words (strings), assumed to already be normalized
-                  (lowercased).
-    :returns: The list of words with adjacent repeating words replaced by a
+    :param words: An iterable of words (strings), assumed to already be
+                  normalized (lowercased).
+    :returns: An iterable of words with adjacent repeating words replaced by a
               single word.
 
     This is used to avoid awkward word repetitions in the package name
@@ -197,10 +197,10 @@ def compact_repeating_words(words):
     >>> name_prefix = 'python'
     >>> package_name = 'python-mcrypt'
     >>> combined_words = [name_prefix] + package_name.split('-')
-    >>> print combined_words
+    >>> print(list(combined_words))
     ['python', 'python', 'mcrypt']
     >>> compacted_words = compact_repeating_words(combined_words)
-    >>> print compacted_words
+    >>> print(list(compacted_words))
     ['python', 'mcrypt']
     """
     last_word = None
