@@ -1,7 +1,7 @@
 # Automated tests for the `py2deb' package.
 #
 # Author: Peter Odding <peter.odding@paylogic.com>
-# Last Change: June 15, 2014
+# Last Change: June 16, 2014
 # URL: https://py2deb.readthedocs.org
 
 """
@@ -61,7 +61,7 @@ class PackageConverterTestCase(unittest.TestCase):
 
     def test_argument_validation(self):
         """
-        Test argument validation done by setters of :py:class:py2deb.converter.PackageConverter`.
+        Test argument validation done by setters of :py:class:`py2deb.converter.PackageConverter`.
         """
         converter = PackageConverter()
         self.assertRaises(ValueError, converter.set_repository, '/foo/bar/baz')
