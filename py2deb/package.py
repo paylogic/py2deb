@@ -3,7 +3,7 @@
 # Authors:
 #  - Arjan Verwer
 #  - Peter Odding <peter.odding@paylogic.com>
-# Last Change: June 15, 2014
+# Last Change: June 16, 2014
 # URL: https://py2deb.readthedocs.org
 
 """
@@ -11,10 +11,10 @@ The :py:mod:`py2deb.package` module contains the low level conversion logic.
 
 This module defines the :py:class:`PackageToConvert` class which implements the
 low level logic of converting a single Python package to a Debian package. The
-separation between the :py:class:`py2deb.converter.PackageConverter` and
-:py:class:`py2deb.package.PackageToConvert` classes is somewhat crude (because
-neither class can work without the other) but the idea is to separate the high
-level conversion logic from the low level conversion logic.
+separation between the :py:class:`.PackageConverter` and :py:class:`PackageToConvert`
+classes is somewhat crude (because neither class can work without the other)
+but the idea is to separate the high level conversion logic from the low level
+conversion logic.
 """
 
 # Standard library modules.
@@ -61,19 +61,18 @@ class PackageToConvert(object):
     Abstraction for Python packages to be converted to Debian packages.
 
     Contains a :py:class:`pip_accel.req.Requirement` object, has a back
-    reference to the :py:class:`py2deb.converter.PackageConverter` and provides
-    all of the Debian package metadata implied by the Python package metadata.
+    reference to the :py:class:`.PackageConverter` and provides all of the
+    Debian package metadata implied by the Python package metadata.
     """
 
     def __init__(self, converter, requirement):
         """
         Initialize a package to convert.
 
-        :param converter: The :py:class:`py2deb.converter.PackageConverter`
-                          that holds the user options and knows how to
-                          transform package names.
+        :param converter: The :py:class:`.PackageConverter` that holds the user
+                          options and knows how to transform package names.
         :param requirement: A :py:class:`pip_accel.req.Requirement` object
-                            (created by :py:func:`py2deb.converter.PackageConverter.get_source_distributions()`).
+                            (created by :py:func:`.PackageConverter.get_source_distributions()`).
         """
         self.converter = converter
         self.requirement = requirement

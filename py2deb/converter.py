@@ -3,18 +3,18 @@
 # Authors:
 #  - Arjan Verwer
 #  - Peter Odding <peter.odding@paylogic.com>
-# Last Change: June 11, 2014
+# Last Change: June 16, 2014
 # URL: https://py2deb.readthedocs.org
 
 """
 The :py:mod:`py2deb.converter` module contains the high level conversion logic.
 
 This module defines the :py:class:`PackageConverter` class which provides the
-intended way for external Python code to interface with `py2deb`. The
-separation between the :py:class:`py2deb.converter.PackageConverter` and
-:py:class:`py2deb.package.PackageToConvert` classes is somewhat crude (because
-neither class can work without the other) but the idea is to separate the high
-level conversion logic from the low level conversion logic.
+intended way for external Python code to interface with `py2deb`. The separation
+between the :py:class:`PackageConverter` and :py:class:`.PackageToConvert`
+classes is somewhat crude (because neither class can work without the other)
+but the idea is to separate the high level conversion logic from the low level
+conversion logic.
 """
 
 # Standard library modules.
@@ -121,7 +121,7 @@ class PackageConverter(object):
         """
         Enable or disable automatic installation of build time dependencies.
 
-        :param enabled: Any value, evaluated using :py:func:`py2deb.utils.coerce_to_boolean()`.
+        :param enabled: Any value, evaluated using :py:func:`.coerce_to_boolean()`.
         """
         self.auto_install = coerce_to_boolean(enabled)
 
@@ -359,8 +359,7 @@ class PackageConverter(object):
         :param pip_install_arguments: The command line arguments to the ``pip
                                       install`` command.
         :param build_directory: The pathname of a build directory (a string).
-        :returns: A generator of :py:class:`py2deb.package.PackageToConvert`
-                  objects.
+        :returns: A generator of :py:class:`.PackageToConvert` objects.
         :raises: When downloading fails even after several retries this
                  function raises :py:exc:`pip.exceptions.DistributionNotFound`.
                  This function can also raise other exceptions raised by pip
