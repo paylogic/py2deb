@@ -132,6 +132,34 @@ So the ``--`` marker separates the `py2deb` options from the `pip` options.
 
     Show this message and exit.
 
+Comparison to stdeb
+-------------------
+
+The current version of `py2deb` is based on pip-accel_ and deb-pkg-tools_ but
+early versions of `py2deb` were based on stdeb_. The `stdeb` and `py2deb`
+projects are both Python to Debian package converters, but there are some
+notable differences:
+
+- `py2deb` recursively converts all dependencies while `stdeb` requires custom
+  scripting to accomplish the same thing. Because `py2deb` is based on
+  `pip-accel` it is equally resilient against intermittent network errors and
+  it shares the same download and compiled package caches.
+
+- `py2deb` can build packages with a custom installation prefix (in fact this
+  is kind of its specialty) while `stdeb` doesn't have this concept.
+
+- `py2deb` is compatible with Python 3.4 while `stdeb` doesn't support Python
+  3.x (although support for Python 3.x will likely be added to `stdeb` at some
+  point).
+
+- `stdeb` integrates tightly with the Debian packaging ecosystem, for example
+  Python modules are installed in the `pyshared`_ directory so that multiple
+  Python versions can use the modules. The advantages of this are clear, but
+  the main disadvantage is that `stdeb` is sensitive to changes in Debian
+  packaging infrastructure. For example it doesn't run on older versions of
+  Ubuntu Linux (at one point this was a requirement for me). `py2deb` on the
+  other hand is kind of dumb but works almost everywhere.
+
 Contact
 -------
 
@@ -148,9 +176,12 @@ This software is licensed under the `MIT license`_.
 © 2014 Peter Odding, Arjan Verwer and Paylogic International.
 
 .. External references:
+.. _deb-pkg-tools: https://pypi.python.org/pypi/deb-pkg-tools
 .. _GitHub project page: https://github.com/paylogic/py2deb
 .. _hosted on Read The Docs: https://py2deb.readthedocs.org
 .. _MIT license: http://en.wikipedia.org/wiki/MIT_License
 .. _pip-accel: https://github.com/paylogic/pip-accel
 .. _PyPI: https://pypi.python.org/pypi/py2deb
+.. _pyshared: https://www.debian.org/doc/packaging-manuals/python-policy/ch-python.html#s-paths
 .. _requirement files: http://www.pip-installer.org/en/latest/cookbook.html#requirements-files
+.. _stdeb: https://pypi.python.org/pypi/stdeb
