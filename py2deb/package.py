@@ -3,7 +3,7 @@
 # Authors:
 #  - Arjan Verwer
 #  - Peter Odding <peter.odding@paylogic.com>
-# Last Change: June 13, 2014
+# Last Change: June 15, 2014
 # URL: https://py2deb.readthedocs.org
 
 """
@@ -40,7 +40,8 @@ from pip_accel.bdist import get_binary_dist
 from pip_accel.deps import sanity_check_dependencies
 from pkg_resources import Requirement
 from pkginfo import UnpackedSDist
-from six.moves import configparser, StringIO
+from six import BytesIO
+from six.moves import configparser
 
 # Modules included in our package.
 from py2deb.utils import python_version, TemporaryDirectory
@@ -380,7 +381,7 @@ class PackageToConvert(object):
             # Generate the DEBIAN/control file.
             control_file = os.path.join(debian_directory, 'control')
             logger.debug("Saving control file fields to %s: %s", control_file, control_fields)
-            with open(control_file, 'w') as handle:
+            with open(control_file, 'wb') as handle:
                 control_fields.dump(handle)
 
             # Install post-installation and pre-removal scripts.
@@ -414,7 +415,7 @@ class PackageToConvert(object):
                     for line in contents:
                         handle.write(line)
                 # Make sure the shell script is executable.
-                os.chmod(target, 0755)
+                os.chmod(target, 0o755)
 
             return build_package(build_directory)
 
@@ -443,13 +444,13 @@ class PackageToConvert(object):
                 # custom installation prefix.
                 if member.name.startswith('bin/'):
                     lines = handle.readlines()
-                    if lines and re.match(r'^#!.*\bpython', lines[0]):
+                    if lines and re.match(b'^#!.*\\bpython', lines[0]):
                         i = 0
-                        while i < len(lines) and lines[i].startswith('#'):
+                        while i < len(lines) and lines[i].startswith(b'#'):
                             i += 1
                         directory = os.path.join(self.converter.install_prefix, 'lib')
-                        lines.insert(i, 'import sys; sys.path.insert(0, %r)\n' % directory)
-                        handle = StringIO(''.join(lines))
+                        lines.insert(i, ('import sys; sys.path.insert(0, %r)\n' % directory).encode('UTF-8'))
+                        handle = BytesIO(b''.join(lines))
             else:
                 # Rewrite /site-packages/ to /dist-packages/. For details see
                 # https://wiki.debian.org/Python#Deviations_from_upstream.
