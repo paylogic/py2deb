@@ -44,7 +44,7 @@ from six import BytesIO
 from six.moves import configparser
 
 # Modules included in our package.
-from py2deb.utils import python_version, TemporaryDirectory
+from py2deb.utils import normalize_package_version, python_version, TemporaryDirectory
 
 # Initialize a logger.
 logger = logging.getLogger(__name__)
@@ -108,12 +108,15 @@ class PackageToConvert(object):
         """
         return self.requirement.version
 
-    @property
+    @cached_property
     def debian_version(self):
         """
         The version of the Debian package (a string).
+
+        Reformats the version of the Python package using
+        :py:func:`.normalize_package_version()`.
         """
-        return self.requirement.version
+        return normalize_package_version(self.requirement.version)
 
     @cached_property
     def debian_maintainer(self):
@@ -276,6 +279,7 @@ class PackageToConvert(object):
             debian_package_name = self.converter.transform_name(requirement.project_name, *requirement.extras)
             if requirement.specs:
                 for constraint, version in requirement.specs:
+                    version = normalize_package_version(version)
                     if constraint == '==':
                         dependencies.append('%s (= %s)' % (debian_package_name, version))
                     elif constraint == '!=':

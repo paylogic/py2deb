@@ -3,7 +3,7 @@
 # Authors:
 #  - Arjan Verwer
 #  - Peter Odding <peter.odding@paylogic.com>
-# Last Change: June 13, 2014
+# Last Change: June 18, 2014
 # URL: https://py2deb.readthedocs.org
 
 """
@@ -179,6 +179,19 @@ def normalize_package_name(python_package_name):
     'simple-json'
     """
     return re.sub('[^a-z0-9]+', '-', python_package_name.lower()).strip('-')
+
+
+def normalize_package_version(python_package_version):
+    """
+    Normalize Python package version to be used as Debian package version.
+
+    :param python_package_version: The version of a Python package (a string).
+
+    Reformats Python package versions to comply with the Debian policy manual.
+    All characters except alphanumerics, dot (.) and plus (+) are replaced with
+    tildes (~).
+    """
+    return re.sub('[^A-Za-z0-9.+]+', '~', python_package_version).strip('~')
 
 
 def compact_repeating_words(words):
