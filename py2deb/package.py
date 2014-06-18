@@ -3,7 +3,7 @@
 # Authors:
 #  - Arjan Verwer
 #  - Peter Odding <peter.odding@paylogic.com>
-# Last Change: June 16, 2014
+# Last Change: June 18, 2014
 # URL: https://py2deb.readthedocs.org
 
 """
@@ -389,6 +389,7 @@ class PackageToConvert(object):
             for source in glob.glob(scripts_pattern):
                 script, extension = os.path.splitext(os.path.basename(source))
                 target = os.path.join(debian_directory, script)
+                logger.debug("Preprocessing %s script ..", script)
                 # Read the shell script bundled with py2deb.
                 with open(source) as handle:
                     contents = list(handle)
@@ -399,6 +400,7 @@ class PackageToConvert(object):
                     command_template = "update-alternatives --install {link} {name} {path} 0\n"
                     for link, path in self.converter.alternatives:
                         if os.path.isfile(os.path.join(build_directory, path.lstrip('/'))):
+                            logger.debug("Preparing installation of alternative with link=%s, path=%s ..", link, path)
                             contents.append(command_template.format(link=pipes.quote(link),
                                                                     name=pipes.quote(os.path.basename(link)),
                                                                     path=pipes.quote(path)))
@@ -407,9 +409,11 @@ class PackageToConvert(object):
                     command_template = "update-alternatives --remove {name} {path}\n"
                     for link, path in self.converter.alternatives:
                         if os.path.isfile(os.path.join(build_directory, path.lstrip('/'))):
+                            logger.debug("Preparing removal of alternative with link=%s, path=%s ..", link, path)
                             contents.append(command_template.format(name=pipes.quote(os.path.basename(link)),
                                                                     path=pipes.quote(path)))
                 # Save the shell script in the build directory.
+                logger.debug("Writing %s script to control directory ..", script)
                 with open(target, 'w') as handle:
                     for line in contents:
                         handle.write(line)
