@@ -416,7 +416,7 @@ class PackageToConvert(object):
                 # Make sure the shell script is executable.
                 os.chmod(target, 0o755)
 
-            return build_package(build_directory)
+            return build_package(build_directory, copy_files=False)
 
     def transform_binary_dist(self):
         """
