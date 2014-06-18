@@ -67,6 +67,10 @@ So the ``--`` marker separates the `py2deb` options from the `pip` options.
 
     Can also be set using the environment variable ``$PY2DEB_CONFIG``.
 
+    The default configuration files ``/etc/py2deb.ini`` and ``~/.py2deb.ini``
+    are automatically loaded if they exist. This happens before environment
+    variables and command line options are processed.
+
   ``-r``, ``--repository=DIRECTORY``
 
     Change the directory where ``*.deb`` archives are stored. Defaults to the

@@ -3,7 +3,7 @@
 # Authors:
 #  - Arjan Verwer
 #  - Peter Odding <peter.odding@paylogic.com>
-# Last Change: June 16, 2014
+# Last Change: June 18, 2014
 # URL: https://py2deb.readthedocs.org
 
 """
@@ -275,12 +275,12 @@ class PackageConverter(object):
 
         **script**:
           Set a shell command to be executed during the conversion process
-          (refer to :py:func:`set_conversion_command()` for
-          details).
+          (refer to :py:func:`set_conversion_command()` for details).
         """
         # Load the configuration file.
         parser = configparser.RawConfigParser()
         configuration_file = os.path.expanduser(configuration_file)
+        logger.debug("Loading configuration file: %s", configuration_file)
         files_loaded = parser.read(configuration_file)
         try:
             assert len(files_loaded) == 1
@@ -314,6 +314,17 @@ class PackageConverter(object):
                 if parser.has_option(section, 'script'):
                     script = parser.get(section, 'script')
                     self.set_conversion_command(package, script)
+
+    def load_default_configuration_files(self):
+        """
+        Load configuration options from default configuration files.
+
+        :raises: :py:exc:`Exception` when a configuration file exists but
+                 cannot be loaded.
+        """
+        for location in ('/etc/py2deb.ini', os.path.expanduser('~/.py2deb.ini')):
+            if os.path.isfile(location):
+                self.load_configuration_file(location)
 
     def convert(self, pip_install_arguments):
         """

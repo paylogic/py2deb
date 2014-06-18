@@ -32,6 +32,10 @@ Supported options:
     command line options override configuration file options or vice versa.
     Refer to the documentation for details on the configuration file format.
 
+    The default configuration files /etc/py2deb.ini and ~/.py2deb.ini are
+    automatically loaded if they exist. This happens before environment
+    variables and command line options are processed.
+
     Can also be set using the environment variable $PY2DEB_CONFIG.
 
   -r, --repository=DIRECTORY
@@ -133,6 +137,8 @@ def main():
     # Initialize a package converter.
     converter = PackageConverter()
     try:
+        # Load configuration defaults from system wide configuration files.
+        converter.load_default_configuration_files()
         # Load configuration defaults from environment variables.
         converter.load_environment_variables()
         # Parse and validate the command line options.
