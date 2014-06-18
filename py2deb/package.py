@@ -385,13 +385,13 @@ class PackageToConvert(object):
 
             # Install post-installation and pre-removal scripts.
             installation_directory = os.path.dirname(os.path.abspath(__file__))
-            scripts_pattern = os.path.join(installation_directory, 'scripts', '*.sh')
-            for source in glob.glob(scripts_pattern):
-                script, extension = os.path.splitext(os.path.basename(source))
+            scripts_directory = os.path.join(installation_directory, 'scripts')
+            for filename in ('postinst.sh', 'prerm.sh'):
+                script, extension = os.path.splitext(filename)
                 target = os.path.join(debian_directory, script)
                 logger.debug("Preprocessing %s script ..", script)
                 # Read the shell script bundled with py2deb.
-                with open(source) as handle:
+                with open(os.path.join(scripts_directory, filename)) as handle:
                     contents = list(handle)
                 if script == 'postinst':
                     # Install a program available inside the custom installation
