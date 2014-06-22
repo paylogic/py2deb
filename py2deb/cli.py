@@ -1,7 +1,7 @@
 # Command line interface for the `py2deb' program.
 #
 # Author: Peter Odding <peter.odding@paylogic.com>
-# Last Change: June 18, 2014
+# Last Change: June 22, 2014
 # URL: https://py2deb.readthedocs.org
 
 """
@@ -188,7 +188,7 @@ def main():
     # Convert the requested package(s).
     try:
         if arguments:
-            relationships = converter.convert(arguments)
+            archives, relationships = converter.convert(arguments)
             if relationships and control_file_to_update:
                 patch_control_file(control_file_to_update, dict(depends=relationships))
         else:

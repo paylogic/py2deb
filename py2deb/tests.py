@@ -1,7 +1,7 @@
 # Automated tests for the `py2deb' package.
 #
 # Author: Peter Odding <peter.odding@paylogic.com>
-# Last Change: June 18, 2014
+# Last Change: June 22, 2014
 # URL: https://py2deb.readthedocs.org
 
 """
@@ -245,11 +245,9 @@ class PackageConverterTestCase(unittest.TestCase):
             # Run the conversion command.
             converter = PackageConverter()
             converter.set_repository(directory)
-            dependencies = converter.convert(['raven[flask]==3.6.0'])
-            assert dependencies == ['python-raven-flask (= 3.6.0)']
-            # Find the generated Debian package archive.
-            archives = glob.glob('%s/*.deb' % directory)
-            logger.debug("Found generated archive(s): %s", archives)
+            archives, relationships = converter.convert(['raven[flask]==3.6.0'])
+            # Check that a relationship with the extra in the package name was generated.
+            assert relationships == ['python-raven-flask (= 3.6.0)']
             # Check that a package with the extra in the filename was generated.
             assert find_package_archive(archives, 'python-raven-flask')
 

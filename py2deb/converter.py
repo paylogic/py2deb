@@ -3,7 +3,7 @@
 # Authors:
 #  - Arjan Verwer
 #  - Peter Odding <peter.odding@paylogic.com>
-# Last Change: June 18, 2014
+# Last Change: June 22, 2014
 # URL: https://py2deb.readthedocs.org
 
 """
@@ -332,33 +332,53 @@ class PackageConverter(object):
 
         :param pip_install_arguments: The command line arguments to the ``pip
                                       install`` command.
-        :returns: A list of strings containing the Debian package relationships
-                  required to depend on the converted package(s).
+        :returns: A tuple with two lists:
+
+                  1. A list of strings containing the pathname(s) of the
+                     generated Debian package package archive(s).
+
+                  2. A list of strings containing the Debian package
+                     relationship(s) required to depend on the converted
+                     package(s).
 
         Here's an example of what's returned:
 
         >>> from py2deb import PackageConverter
         >>> converter = PackageConverter()
-        >>> converter.convert(['py2deb'])
-        ['python-py2deb (=0.1)']
+        >>> archives, relationships = converter.convert(['py2deb'])
+        >>> print(archives)
+        ['/tmp/python-py2deb_0.18_all.deb']
+        >>> print(relationships)
+        ['python-py2deb (=0.18)']
 
         """
+        generated_archives = []
+        dependencies_to_report = []
         with TemporaryDirectory(prefix='py2deb-sdists-') as sources_directory:
-            primary_packages = []
             # Download, unpack and convert no-yet-converted packages.
             for package in self.get_source_distributions(pip_install_arguments, sources_directory):
+                # If the requirement is a 'direct' (non-transitive) requirement
+                # it means the caller explicitly asked for this package to be
+                # converted, so we add it to the list of converted dependencies
+                # that we report to the caller once we've finished converting.
                 if package.requirement.is_direct:
-                    primary_packages.append(package)
+                    dependencies_to_report.append('%s (= %s)' % (package.debian_name, package.debian_version))
                 if package.existing_archive:
+                    # If the same version of this package was converted in a
+                    # previous run we can save a lot of time by skipping it.
                     logger.info("Package %s (%s) already converted: %s",
                                 package.python_name, package.python_version,
                                 package.existing_archive.filename)
+                    generated_archives.append(package.existing_archive)
                 else:
                     archive = package.convert()
                     if not os.path.samefile(os.path.dirname(archive), self.repository.directory):
                         shutil.move(archive, self.repository.directory)
-            # Tell the caller how to depend on the converted packages.
-            return sorted('%s (= %s)' % (pkg.debian_name, pkg.debian_version) for pkg in primary_packages)
+                        archive = os.path.join(self.repository.directory, os.path.basename(archive))
+                    generated_archives.append(archive)
+            # Let the caller know which archives were generated (whether
+            # previously or now) and how to depend on the converted packages.
+            return generated_archives, sorted(dependencies_to_report)
 
     def get_source_distributions(self, pip_install_arguments, build_directory):
         """
