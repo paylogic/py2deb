@@ -28,6 +28,7 @@ import unittest
 
 # External dependencies.
 import coloredlogs
+from deb_pkg_tools.checks import DuplicateFilesFound
 from deb_pkg_tools.control import load_control_file
 from deb_pkg_tools.package import inspect_package, parse_filename
 from executor import execute
@@ -187,6 +188,24 @@ class PackageConverterTestCase(unittest.TestCase):
                 if filename.startswith('/usr/lib') and not entry.permissions.startswith('d'):
                     assert 'fabric' in filename.lower()
                     assert 'paramiko' not in filename.lower()
+
+    def test_duplicate_files_check(self):
+        """
+        Ensure that `py2deb` checks for duplicate file conflicts within dependency sets.
+
+        Converts a version of Fabric that bundles Paramiko but also includes
+        Paramiko itself in the dependency set, thereby causing a duplicate file
+        conflict, to verify that `py2deb` recognizes duplicate file conflicts.
+        """
+        if sys.version_info[0] == 3:
+            logger.warning("Skipping Fabric conversion test! (Fabric is not Python 3.x compatible)")
+            return
+        with TemporaryDirectory() as directory:
+            converter = PackageConverter()
+            converter.set_repository(directory)
+            self.assertRaises(DuplicateFilesFound,
+                              converter.convert,
+                              ['Fabric==0.9.0', 'Paramiko==1.14.0'])
 
     def test_conversion_of_package_with_dependencies(self):
         """

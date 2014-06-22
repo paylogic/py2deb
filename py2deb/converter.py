@@ -25,6 +25,8 @@ import tempfile
 
 # External dependencies.
 from cached_property import cached_property
+from deb_pkg_tools.cache import get_default_cache
+from deb_pkg_tools.checks import check_duplicate_files
 from executor import execute
 from pip.exceptions import DistributionNotFound
 from pip_accel import download_source_dists, initialize_directories, unpack_source_dists
@@ -340,6 +342,9 @@ class PackageConverter(object):
                   2. A list of strings containing the Debian package
                      relationship(s) required to depend on the converted
                      package(s).
+        :raises: :py:exc:`deb_pkg_tools.checks.DuplicateFilesFound` if two
+                 converted package archives contain the same files (certainly
+                 not what you want within a set of dependencies).
 
         Here's an example of what's returned:
 
@@ -376,6 +381,13 @@ class PackageConverter(object):
                         shutil.move(archive, self.repository.directory)
                         archive = os.path.join(self.repository.directory, os.path.basename(archive))
                     generated_archives.append(archive)
+            # Use deb-pkg-tools to sanity check the generated package archives
+            # for duplicate files. This should never occur but unfortunately
+            # can happen because Python's packaging infrastructure is a lot
+            # more `forgiving' in the sense of blindly overwriting files
+            # installed by other packages ;-).
+            if len(generated_archives) > 1:
+                check_duplicate_files(generated_archives, cache=get_default_cache())
             # Let the caller know which archives were generated (whether
             # previously or now) and how to depend on the converted packages.
             return generated_archives, sorted(dependencies_to_report)
