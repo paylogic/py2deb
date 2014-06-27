@@ -3,7 +3,7 @@
 # Authors:
 #  - Arjan Verwer
 #  - Peter Odding <peter.odding@paylogic.com>
-# Last Change: June 18, 2014
+# Last Change: June 27, 2014
 # URL: https://py2deb.readthedocs.org
 
 """
@@ -326,7 +326,7 @@ class PackageToConvert(object):
             install_binary_dist(members=self.transform_binary_dist(),
                                 prefix=build_install_prefix,
                                 python='/usr/bin/%s' % python_version(),
-                                enable_workarounds=False)
+                                virtualenv_compatible=False)
 
             # Execute a user defined command inside the directory where the Python modules are installed.
             command = self.converter.scripts.get(self.python_name.lower())
