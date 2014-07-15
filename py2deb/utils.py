@@ -22,9 +22,6 @@ from cached_property import cached_property
 from deb_pkg_tools.package import find_package_archives
 from six import string_types
 
-# Semi-standard module versioning.
-__version__ = '0.16'
-
 # Initialize a logger.
 logger = logging.getLogger(__name__)
 

@@ -1,7 +1,7 @@
 # Command line interface for the `py2deb' program.
 #
 # Author: Peter Odding <peter.odding@paylogic.com>
-# Last Change: June 22, 2014
+# Last Change: July 15, 2014
 # URL: https://py2deb.readthedocs.org
 
 """
@@ -120,9 +120,6 @@ from executor import execute
 
 # Modules included in our package.
 from py2deb.converter import PackageConverter
-
-# Semi-standard module versioning.
-__version__ = '0.18'
 
 # Initialize a logger.
 logger = logging.getLogger(__name__)
