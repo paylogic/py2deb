@@ -3,7 +3,7 @@
 # Authors:
 #  - Arjan Verwer
 #  - Peter Odding <peter.odding@paylogic.com>
-# Last Change: June 22, 2014
+# Last Change: July 15, 2014
 # URL: https://py2deb.readthedocs.org
 
 """
@@ -381,6 +381,8 @@ class PackageConverter(object):
                         shutil.move(archive, self.repository.directory)
                         archive = os.path.join(self.repository.directory, os.path.basename(archive))
                     generated_archives.append(archive)
+                # FIXME This is ugly. Can pip-accel hide this somehow?
+                package.requirement.pip_requirement.remove_temporary_source()
             # Use deb-pkg-tools to sanity check the generated package archives
             # for duplicate files. This should never occur but unfortunately
             # can happen because Python's packaging infrastructure is a lot
