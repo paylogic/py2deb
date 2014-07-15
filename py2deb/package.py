@@ -40,11 +40,10 @@ from pip_accel.bdist import get_binary_dist
 from pip_accel.deps import sanity_check_dependencies
 from pkg_resources import Requirement
 from pkginfo import UnpackedSDist
-from six import BytesIO
 from six.moves import configparser
 
 # Modules included in our package.
-from py2deb.utils import normalize_package_version, python_version, TemporaryDirectory
+from py2deb.utils import embed_install_prefix, normalize_package_version, python_version, TemporaryDirectory
 
 # Initialize a logger.
 logger = logging.getLogger(__name__)
@@ -477,14 +476,7 @@ class PackageToConvert(object):
                 # Rewrite executable Python scripts so they know about the
                 # custom installation prefix.
                 if member.name.startswith('bin/'):
-                    lines = handle.readlines()
-                    if lines and re.match(b'^#!.*\\bpython', lines[0]):
-                        i = 0
-                        while i < len(lines) and lines[i].startswith(b'#'):
-                            i += 1
-                        directory = os.path.join(self.converter.install_prefix, 'lib')
-                        lines.insert(i, ('import sys; sys.path.insert(0, %r)\n' % directory).encode('UTF-8'))
-                        handle = BytesIO(b''.join(lines))
+                    handle = embed_install_prefix(handle, os.path.join(self.converter.install_prefix, 'lib'))
             else:
                 # Rewrite /site-packages/ to /dist-packages/. For details see
                 # https://wiki.debian.org/Python#Deviations_from_upstream.

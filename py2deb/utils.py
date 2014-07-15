@@ -20,7 +20,7 @@ import tempfile
 # External dependencies.
 from cached_property import cached_property
 from deb_pkg_tools.package import find_package_archives
-from six import string_types
+from six import BytesIO, string_types
 
 # Initialize a logger.
 logger = logging.getLogger(__name__)
@@ -252,3 +252,45 @@ def coerce_to_boolean(value):
             raise ValueError(msg % value)
     else:
         return bool(value)
+
+
+def embed_install_prefix(handle, install_prefix):
+    """
+    Embed Python snippet that adds custom installation prefix to module search path.
+
+    :param handle: A file-like object containing an executable Python script.
+    :param install_prefix: The pathname of the custom installation prefix (a string).
+    :returns: A file-like object containing the modified Python script.
+    """
+    lines = handle.readlines()
+    # Make sure the first line of the file contains something that looks like a
+    # Python hashbang so we don't try to embed Python code in files like shell
+    # scripts :-). Note that the regular expression pattern is very
+    # unrestrictive on purpose.
+    if lines and re.match(b'^#!.*\\bpython', lines[0]):
+        # We need to choose where to inject our line into the Python script.
+        # This is trickier than it might seem at first, because of conflicting
+        # concerns:
+        #
+        # 1) We want our line to be the first one to be executed so that any
+        #    later imports respect the custom installation prefix.
+        #
+        # 2) Our line cannot be the very first line because we would break the
+        #    hashbang of the script, without which it won't be executable.
+        #
+        # 3) Python has the somewhat obscure `from __future__ import ...'
+        #    statement which must proceed all other statements.
+        #
+        # Our first step is to skip all comments, taking care of point two.
+        insertion_point = 0
+        while insertion_point < len(lines) and lines[insertion_point].startswith(b'#'):
+            insertion_point += 1
+        # The next step is to bump the insertion point if we find any `from
+        # __future__ import ...' statements.
+        for i, line in enumerate(lines):
+            if re.match(r'^\s*from\s+__future__\s+import\s+', line):
+                insertion_point = i + 1
+        lines.insert(insertion_point, ('import sys; sys.path.insert(0, %r)\n' % install_prefix).encode('UTF-8'))
+        # Turn the modified contents back into a file-like object.
+        handle = BytesIO(b''.join(lines))
+    return handle
