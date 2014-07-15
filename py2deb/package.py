@@ -3,7 +3,7 @@
 # Authors:
 #  - Arjan Verwer
 #  - Peter Odding <peter.odding@paylogic.com>
-# Last Change: July 2, 2014
+# Last Change: July 15, 2014
 # URL: https://py2deb.readthedocs.org
 
 """
@@ -158,6 +158,11 @@ class PackageToConvert(object):
         """
         Python package description converted to Debian package description.
 
+        .. warning:: The process below is not used at the moment because it
+                     seems to cause "Unable to parse package file" warnings
+                     from ``apt-get`` during installation of packages (given
+                     input packages with complex enough long descriptions).
+
         Converts and reformats the Python package's description so that it can
         be used as the description of a Debian binary package. The conversion
         process works as follows:
@@ -188,6 +193,7 @@ class PackageToConvert(object):
         .. _Markdown: http://daringfireball.net/projects/markdown/
         .. _reStructuredText: http://docutils.sourceforge.net/rst.html
         """
+        return ' '.join(time.strftime('Packaged by py2deb on %B %e, %Y at %H:%M.').split())
         description = self.metadata.description or ''
         # Use docutils to convert the (assumed to be) reStructuredText input
         # text to UTF-8 encoded HTML and decode that to a Unicode string.
