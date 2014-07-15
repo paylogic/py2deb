@@ -97,6 +97,7 @@ class PackageConverterTestCase(unittest.TestCase):
         Test reformatting of Python version strings.
         """
         assert normalize_package_version('1.5_42') == '1.5-42'
+        assert normalize_package_version('1.5-whatever') == '1.5-whatever-0'
 
     def test_conversion_of_simple_package(self):
         """

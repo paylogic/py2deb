@@ -191,7 +191,13 @@ def normalize_package_version(python_package_version):
     All characters except alphanumerics, dot (``.``) and plus (``+``) are
     replaced with dashes (``-``).
     """
-    return re.sub('[^a-z0-9.+]+', '-', python_package_version.lower()).strip('-')
+    sanitized_version = re.sub('[^a-z0-9.+]+', '-', python_package_version.lower()).strip('-')
+    components = sanitized_version.split('-')
+    # Make sure the "Debian revision" contains a digit.
+    if len(components) > 1 and not re.search('[0-9]', components[-1]):
+        components.append('0')
+        sanitized_version = '-'.join(components)
+    return sanitized_version
 
 
 def compact_repeating_words(words):
