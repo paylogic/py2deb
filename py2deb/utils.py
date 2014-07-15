@@ -3,7 +3,7 @@
 # Authors:
 #  - Arjan Verwer
 #  - Peter Odding <peter.odding@paylogic.com>
-# Last Change: June 18, 2014
+# Last Change: July 15, 2014
 # URL: https://py2deb.readthedocs.org
 
 """
@@ -188,10 +188,10 @@ def normalize_package_version(python_package_version):
     :param python_package_version: The version of a Python package (a string).
 
     Reformats Python package versions to comply with the Debian policy manual.
-    All characters except alphanumerics, dot (.) and plus (+) are replaced with
-    tildes (~).
+    All characters except alphanumerics, dot (``.``) and plus (``+``) are
+    replaced with dashes (``-``).
     """
-    return re.sub('[^A-Za-z0-9.+]+', '~', python_package_version).strip('~')
+    return re.sub('[^a-z0-9.+]+', '-', python_package_version.lower()).strip('-')
 
 
 def compact_repeating_words(words):

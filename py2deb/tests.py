@@ -1,7 +1,7 @@
 # Automated tests for the `py2deb' package.
 #
 # Author: Peter Odding <peter.odding@paylogic.com>
-# Last Change: June 22, 2014
+# Last Change: July 15, 2014
 # URL: https://py2deb.readthedocs.org
 
 """
@@ -96,7 +96,7 @@ class PackageConverterTestCase(unittest.TestCase):
         """
         Test reformatting of Python version strings.
         """
-        assert normalize_package_version('1.5-42') == '1.5~42'
+        assert normalize_package_version('1.5_42') == '1.5-42'
 
     def test_conversion_of_simple_package(self):
         """
