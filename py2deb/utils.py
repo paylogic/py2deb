@@ -3,7 +3,7 @@
 # Authors:
 #  - Arjan Verwer
 #  - Peter Odding <peter.odding@paylogic.com>
-# Last Change: July 15, 2014
+# Last Change: July 23, 2014
 # URL: https://py2deb.readthedocs.org
 
 """
@@ -192,7 +192,7 @@ def normalize_package_version(python_package_version):
     components = sanitized_version.split('-')
     # Make sure the "Debian revision" contains a digit.
     if len(components) > 1 and not re.search('[0-9]', components[-1]):
-        components.append('0')
+        components.append('1')
         sanitized_version = '-'.join(components)
     return sanitized_version
 
@@ -279,7 +279,7 @@ def embed_install_prefix(handle, install_prefix):
         #    hashbang of the script, without which it won't be executable.
         #
         # 3) Python has the somewhat obscure `from __future__ import ...'
-        #    statement which must proceed all other statements.
+        #    statement which must precede all other statements.
         #
         # Our first step is to skip all comments, taking care of point two.
         insertion_point = 0
