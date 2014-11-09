@@ -3,7 +3,7 @@
 # Authors:
 #  - Arjan Verwer
 #  - Peter Odding <peter.odding@paylogic.com>
-# Last Change: July 15, 2014
+# Last Change: November 9, 2014
 # URL: https://py2deb.readthedocs.org
 
 """
@@ -465,9 +465,11 @@ class PackageToConvert(object):
                   1. A :py:class:`tarfile.TarInfo` object;
                   2. A file-like object.
         """
-        for member, handle in get_binary_dist(self.requirement.name,
-                                              self.requirement.version,
-                                              self.requirement.source_directory):
+        for member, handle in get_binary_dist(package=self.requirement.name,
+                                              version=self.requirement.version,
+                                              directory=self.requirement.source_directory,
+                                              url=self.requirement.url,
+                                              cache=self.converter.cache_manager):
             if self.has_custom_install_prefix:
                 # Strip the complete /usr/lib/pythonX.Y/site-packages/ prefix
                 # so we can replace it with the custom installation prefix

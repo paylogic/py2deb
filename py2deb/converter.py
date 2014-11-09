@@ -3,7 +3,7 @@
 # Authors:
 #  - Arjan Verwer
 #  - Peter Odding <peter.odding@paylogic.com>
-# Last Change: July 15, 2014
+# Last Change: November 9, 2014
 # URL: https://py2deb.readthedocs.org
 
 """
@@ -30,6 +30,7 @@ from deb_pkg_tools.checks import check_duplicate_files
 from executor import execute
 from pip.exceptions import DistributionNotFound
 from pip_accel import download_source_dists, initialize_directories, unpack_source_dists
+from pip_accel.caches import CacheManager
 from six.moves import configparser
 
 # Modules included in our package.
@@ -53,6 +54,7 @@ class PackageConverter(object):
         """
         self.alternatives = set()
         self.auto_install = False
+        self.cache_manager = CacheManager()
         self.install_prefix = '/usr'
         self.max_download_attempts = 10
         self.name_mapping = {}
