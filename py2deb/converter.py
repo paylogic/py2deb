@@ -3,7 +3,7 @@
 # Authors:
 #  - Arjan Verwer
 #  - Peter Odding <peter.odding@paylogic.com>
-# Last Change: November 9, 2014
+# Last Change: November 12, 2014
 # URL: https://py2deb.readthedocs.org
 
 """
@@ -48,7 +48,7 @@ class PackageConverter(object):
     The external interface of `py2deb`, the Python to Debian package converter.
     """
 
-    def __init__(self):
+    def __init__(self, load_configuration_files=True, load_environment_variables=True):
         """
         Initialize a Python to Debian package converter.
         """
@@ -61,6 +61,10 @@ class PackageConverter(object):
         self.name_prefix = 'python'
         self.repository = PackageRepository(tempfile.gettempdir())
         self.scripts = {}
+        if load_configuration_files:
+            self.load_default_configuration_files()
+        if load_environment_variables:
+            self.load_environment_variables()
 
     def set_repository(self, directory):
         """
