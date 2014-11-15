@@ -3,7 +3,7 @@
 # Authors:
 #  - Arjan Verwer
 #  - Peter Odding <peter.odding@paylogic.com>
-# Last Change: November 12, 2014
+# Last Change: November 15, 2014
 # URL: https://py2deb.readthedocs.org
 
 """
@@ -28,13 +28,14 @@ from cached_property import cached_property
 from deb_pkg_tools.cache import get_default_cache
 from deb_pkg_tools.checks import check_duplicate_files
 from executor import execute
+from humanfriendly import coerce_boolean
 from pip.exceptions import DistributionNotFound
 from pip_accel import download_source_dists, initialize_directories, unpack_source_dists
 from pip_accel.caches import CacheManager
 from six.moves import configparser
 
 # Modules included in our package.
-from py2deb.utils import (coerce_to_boolean, compact_repeating_words, normalize_package_name,
+from py2deb.utils import (compact_repeating_words, normalize_package_name,
                           PackageRepository, TemporaryDirectory)
 from py2deb.package import PackageToConvert
 
@@ -129,9 +130,9 @@ class PackageConverter(object):
         """
         Enable or disable automatic installation of build time dependencies.
 
-        :param enabled: Any value, evaluated using :py:func:`.coerce_to_boolean()`.
+        :param enabled: Any value, evaluated using :py:func:`.coerce_boolean()`.
         """
-        self.auto_install = coerce_to_boolean(enabled)
+        self.auto_install = coerce_boolean(enabled)
 
     def install_alternative(self, link, path):
         r"""

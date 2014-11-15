@@ -1,7 +1,7 @@
 # Automated tests for the `py2deb' package.
 #
 # Author: Peter Odding <peter.odding@paylogic.com>
-# Last Change: July 15, 2014
+# Last Change: November 15, 2014
 # URL: https://py2deb.readthedocs.org
 
 """
@@ -36,7 +36,7 @@ from executor import execute
 # Modules included in our package.
 from py2deb.cli import main
 from py2deb.converter import PackageConverter
-from py2deb.utils import normalize_package_version, coerce_to_boolean, TemporaryDirectory
+from py2deb.utils import normalize_package_version, TemporaryDirectory
 
 # Initialize a logger.
 logger = logging.getLogger(__name__)
@@ -81,16 +81,6 @@ class PackageConverterTestCase(unittest.TestCase):
             self.assertRaises(SystemExit, py2deb)
         finally:
             del os.environ['PY2DEB_CONFIG']
-
-    def test_boolean_conversion(self):
-        """
-        Test coercion of booleans encoded in strings.
-        """
-        for value in ['1', 'yes', 'true', 'on']:
-            assert coerce_to_boolean(value)
-        for value in ['0', 'no', 'false', 'off']:
-            assert not coerce_to_boolean(value)
-        self.assertRaises(ValueError, coerce_to_boolean, 'not a boolean!')
 
     def test_version_reformatting(self):
         """

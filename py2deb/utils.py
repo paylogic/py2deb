@@ -3,7 +3,7 @@
 # Authors:
 #  - Arjan Verwer
 #  - Peter Odding <peter.odding@paylogic.com>
-# Last Change: July 23, 2014
+# Last Change: November 15, 2014
 # URL: https://py2deb.readthedocs.org
 
 """
@@ -20,7 +20,7 @@ import tempfile
 # External dependencies.
 from cached_property import cached_property
 from deb_pkg_tools.package import find_package_archives
-from six import BytesIO, string_types
+from six import BytesIO
 
 # Initialize a logger.
 logger = logging.getLogger(__name__)
@@ -224,34 +224,6 @@ def compact_repeating_words(words):
         if word != last_word:
             yield word
         last_word = word
-
-
-def coerce_to_boolean(value):
-    """
-    Coerce any value to a boolean.
-
-    :param value: Any Python value. If the value is a string:
-
-                  - The strings '1', 'yes', 'true' and 'on' are coerced to ``True``.
-                  - The strings '0', 'no', 'false' and 'off' are coerced to ``False``.
-                  - Other strings raise an exception.
-
-                  Other Python values are coerced using :py:func:`bool()`.
-    :returns: A proper boolean value.
-    :raises: :py:exc:`exceptions.ValueError` when the value is a string but
-             cannot be coerced with certainty.
-    """
-    if isinstance(value, string_types):
-        normalized = str(value).strip().lower()
-        if normalized in ('1', 'yes', 'true', 'on'):
-            return True
-        elif normalized in ('0', 'no', 'false', 'off'):
-            return False
-        else:
-            msg = "Failed to coerce string to boolean! (%r)"
-            raise ValueError(msg % value)
-    else:
-        return bool(value)
 
 
 def embed_install_prefix(handle, install_prefix):
