@@ -3,7 +3,7 @@
 # Authors:
 #  - Arjan Verwer
 #  - Peter Odding <peter.odding@paylogic.com>
-# Last Change: November 9, 2014
+# Last Change: November 18, 2014
 # URL: https://py2deb.readthedocs.org
 
 """
@@ -296,28 +296,37 @@ class PackageToConvert(object):
         .. _Python version specifiers: http://www.python.org/dev/peps/pep-0440/#version-specifiers
         .. _Debian package relationships: https://www.debian.org/doc/debian-policy/ch-relationships.html
         """
-        dependencies = []
+        dependencies = set()
         for requirement in self.python_requirements:
             debian_package_name = self.converter.transform_name(requirement.project_name, *requirement.extras)
             if requirement.specs:
                 for constraint, version in requirement.specs:
                     version = normalize_package_version(version)
-                    if constraint == '==':
-                        dependencies.append('%s (= %s)' % (debian_package_name, version))
+                    if version == 'dev':
+                        # Requirements like 'pytz > dev' (celery==3.1.16) don't
+                        # seem to really mean anything to pip (based on my
+                        # reading of the 1.4.x source code) but Debian will
+                        # definitely complain because version strings should
+                        # start with a digit. In this case we'll just fall
+                        # back to a dependency without a version specification
+                        # so we don't drop the dependency.
+                        dependencies.add(debian_package_name)
+                    elif constraint == '==':
+                        dependencies.add('%s (= %s)' % (debian_package_name, version))
                     elif constraint == '!=':
                         values = (debian_package_name, version, debian_package_name, version)
-                        dependencies.append('%s (<< %s) | %s (>> %s)' % values)
+                        dependencies.add('%s (<< %s) | %s (>> %s)' % values)
                     elif constraint == '<':
-                        dependencies.append('%s (<< %s)' % (debian_package_name, version))
+                        dependencies.add('%s (<< %s)' % (debian_package_name, version))
                     elif constraint == '>':
-                        dependencies.append('%s (>> %s)' % (debian_package_name, version))
+                        dependencies.add('%s (>> %s)' % (debian_package_name, version))
                     elif constraint in ('<=', '>='):
-                        dependencies.append('%s (%s %s)' % (debian_package_name, constraint, version))
+                        dependencies.add('%s (%s %s)' % (debian_package_name, constraint, version))
                     else:
                         msg = "Conversion specifier not supported! (%r used by Python package %s)"
                         raise Exception(msg % (constraint, self.python_name))
             else:
-                dependencies.append(debian_package_name)
+                dependencies.add(debian_package_name)
         dependencies = sorted(dependencies)
         logger.debug("Debian dependencies of %s: %r", self, dependencies)
         return dependencies
