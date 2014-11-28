@@ -3,7 +3,7 @@
 # Authors:
 #  - Arjan Verwer
 #  - Peter Odding <peter.odding@paylogic.com>
-# Last Change: November 18, 2014
+# Last Change: November 28, 2014
 # URL: https://py2deb.readthedocs.org
 
 """
@@ -35,9 +35,6 @@ from docutils.writers.html4css1 import Writer
 from executor import execute
 from html2text import HTML2Text
 from humanfriendly import concatenate, pluralize
-from pip_accel import install_binary_dist
-from pip_accel.bdist import get_binary_dist
-from pip_accel.deps import sanity_check_dependencies
 from pkg_resources import Requirement
 from pkginfo import UnpackedSDist
 from six.moves import configparser
@@ -349,15 +346,16 @@ class PackageToConvert(object):
 
         :returns: The pathname of the generated ``*.deb`` archive.
         """
-        sanity_check_dependencies(self.python_name, self.converter.auto_install)
         with TemporaryDirectory(prefix='py2deb-build-') as build_directory:
 
             # Unpack the binary distribution archive provided by pip-accel inside our build directory.
             build_install_prefix = os.path.join(build_directory, self.converter.install_prefix.lstrip('/'))
-            install_binary_dist(members=self.transform_binary_dist(),
-                                prefix=build_install_prefix,
-                                python='/usr/bin/%s' % python_version(),
-                                virtualenv_compatible=False)
+            self.converter.pip_accel.bdists.install_binary_dist(
+                members=self.transform_binary_dist(),
+                prefix=build_install_prefix,
+                python='/usr/bin/%s' % python_version(),
+                virtualenv_compatible=False,
+            )
 
             # Execute a user defined command inside the directory where the Python modules are installed.
             command = self.converter.scripts.get(self.python_name.lower())
@@ -474,11 +472,7 @@ class PackageToConvert(object):
                   1. A :py:class:`tarfile.TarInfo` object;
                   2. A file-like object.
         """
-        for member, handle in get_binary_dist(package=self.requirement.name,
-                                              version=self.requirement.version,
-                                              directory=self.requirement.source_directory,
-                                              url=self.requirement.url,
-                                              cache=self.converter.cache_manager):
+        for member, handle in self.converter.pip_accel.bdists.get_binary_dist(self.requirement):
             if self.has_custom_install_prefix:
                 # Strip the complete /usr/lib/pythonX.Y/site-packages/ prefix
                 # so we can replace it with the custom installation prefix

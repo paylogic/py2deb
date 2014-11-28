@@ -1,7 +1,7 @@
 # Command line interface for the `py2deb' program.
 #
 # Author: Peter Odding <peter.odding@paylogic.com>
-# Last Change: July 15, 2014
+# Last Change: November 28, 2014
 # URL: https://py2deb.readthedocs.org
 
 """
@@ -131,13 +131,9 @@ def main():
     """
     # Configure terminal output.
     coloredlogs.install()
-    # Initialize a package converter.
-    converter = PackageConverter()
     try:
-        # Load configuration defaults from system wide configuration files.
-        converter.load_default_configuration_files()
-        # Load configuration defaults from environment variables.
-        converter.load_environment_variables()
+        # Initialize a package converter.
+        converter = PackageConverter()
         # Parse and validate the command line options.
         options, arguments = getopt.getopt(sys.argv[1:], 'c:r:yvh', [
             'config=', 'repository=', 'name-prefix=', 'no-name-prefix=',

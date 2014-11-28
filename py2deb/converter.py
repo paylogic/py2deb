@@ -3,7 +3,7 @@
 # Authors:
 #  - Arjan Verwer
 #  - Peter Odding <peter.odding@paylogic.com>
-# Last Change: November 15, 2014
+# Last Change: November 28, 2014
 # URL: https://py2deb.readthedocs.org
 
 """
@@ -29,9 +29,8 @@ from deb_pkg_tools.cache import get_default_cache
 from deb_pkg_tools.checks import check_duplicate_files
 from executor import execute
 from humanfriendly import coerce_boolean
-from pip.exceptions import DistributionNotFound
-from pip_accel import download_source_dists, initialize_directories, unpack_source_dists
-from pip_accel.caches import CacheManager
+from pip_accel import PipAccelerator
+from pip_accel.config import Config as PipAccelConfig
 from six.moves import configparser
 
 # Modules included in our package.
@@ -55,9 +54,7 @@ class PackageConverter(object):
         """
         self.alternatives = set()
         self.auto_install = False
-        self.cache_manager = CacheManager()
         self.install_prefix = '/usr'
-        self.max_download_attempts = 10
         self.name_mapping = {}
         self.name_prefix = 'python'
         self.repository = PackageRepository(tempfile.gettempdir())
@@ -66,6 +63,7 @@ class PackageConverter(object):
             self.load_default_configuration_files()
         if load_environment_variables:
             self.load_environment_variables()
+        self.pip_accel = PipAccelerator(PipAccelConfig())
 
     def set_repository(self, directory):
         """
@@ -418,31 +416,13 @@ class PackageConverter(object):
                  because it uses :py:mod:`pip_accel` to call pip (as a Python
                  API).
         """
-        # Compose the `pip install' command line:
-        #  - The command line arguments to `py2deb' are the command line
-        #    arguments to `pip install'. Since it doesn't make any sense for
-        #    users of `py2deb' to type out commands like `py2deb install ...'
-        #    we'll have to fill in the `install' command ourselves.
-        #  - We depend on `pip install --ignore-installed ...' so we can
-        #    guarantee that all of the packages specified by the caller are
-        #    converted, instead of only those not currently installed somewhere
-        #    where pip can see them (a poorly defined concept to begin with).
-        pip_install_arguments = ['install', '--ignore-installed'] + list(pip_install_arguments)
-        # Make sure pip-accel has been properly initialized.
-        initialize_directories()
-        # Loop to retry downloading source packages a couple of times (so
-        # we don't fail immediately when a package index server returns a
-        # transient error).
-        for _ in range(self.max_download_attempts):
-            try:
-                for requirement in unpack_source_dists(pip_install_arguments, build_directory):
-                    yield PackageToConvert(self, requirement)
-                return
-            except DistributionNotFound:
-                logger.warning("We don't have all source distributions yet!")
-                download_source_dists(pip_install_arguments, build_directory)
-        msg = "Failed to download source distribution archive(s)! (tried %i times)"
-        raise DistributionNotFound(msg % self.max_download_attempts)
+        # We depend on `pip install --ignore-installed ...' so we can guarantee
+        # that all of the packages specified by the caller are converted,
+        # instead of only those not currently installed somewhere where pip can
+        # see them (a poorly defined concept to begin with).
+        arguments = ['--ignore-installed'] + list(pip_install_arguments)
+        for requirement in self.pip_accel.get_requirements(arguments):
+            yield PackageToConvert(self, requirement)
 
     def transform_name(self, python_package_name, *extras):
         """
