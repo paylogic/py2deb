@@ -53,7 +53,6 @@ class PackageConverter(object):
         Initialize a Python to Debian package converter.
         """
         self.alternatives = set()
-        self.auto_install = False
         self.install_prefix = '/usr'
         self.name_mapping = {}
         self.name_prefix = 'python'
@@ -130,7 +129,7 @@ class PackageConverter(object):
 
         :param enabled: Any value, evaluated using :py:func:`.coerce_boolean()`.
         """
-        self.auto_install = coerce_boolean(enabled)
+        self.pip_accel.config.auto_install = coerce_boolean(enabled)
 
     def install_alternative(self, link, path):
         r"""
