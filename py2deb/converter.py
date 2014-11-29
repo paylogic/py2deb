@@ -3,7 +3,7 @@
 # Authors:
 #  - Arjan Verwer
 #  - Peter Odding <peter.odding@paylogic.com>
-# Last Change: November 28, 2014
+# Last Change: November 29, 2014
 # URL: https://py2deb.readthedocs.org
 
 """
@@ -58,11 +58,11 @@ class PackageConverter(object):
         self.name_prefix = 'python'
         self.repository = PackageRepository(tempfile.gettempdir())
         self.scripts = {}
+        self.pip_accel = PipAccelerator(PipAccelConfig())
         if load_configuration_files:
             self.load_default_configuration_files()
         if load_environment_variables:
             self.load_environment_variables()
-        self.pip_accel = PipAccelerator(PipAccelConfig())
 
     def set_repository(self, directory):
         """
