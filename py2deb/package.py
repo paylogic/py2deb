@@ -3,7 +3,7 @@
 # Authors:
 #  - Arjan Verwer
 #  - Peter Odding <peter.odding@paylogic.com>
-# Last Change: November 28, 2014
+# Last Change: December 9, 2014
 # URL: https://py2deb.readthedocs.org
 
 """
@@ -401,14 +401,18 @@ class PackageToConvert(object):
             # Python package's source distribution) into the Debian package's
             # control file fields?
             py2deb_cfg = os.path.join(self.requirement.source_directory, 'stdeb.cfg')
-            parser = configparser.RawConfigParser()
-            parser.read(py2deb_cfg)
-            for section_name in ('DEFAULT', self.python_name):
-                if parser.has_section(section_name):
-                    overrides = dict(parser.items(section_name))
-                    logger.debug("Found %i control file field override(s) in section %s of %s: %r",
-                                 len(overrides), section_name, py2deb_cfg, overrides)
-                    control_fields = merge_control_fields(control_fields, overrides)
+            if not os.path.isfile(py2deb_cfg):
+                logger.debug("Control field overrides file not found (%s).", py2deb_cfg)
+            else:
+                logger.debug("Loading control field overrides from %s ..", py2deb_cfg)
+                parser = configparser.RawConfigParser()
+                parser.read(py2deb_cfg)
+                for section_name in ('DEFAULT', self.python_name):
+                    if parser.has_section(section_name):
+                        overrides = dict(parser.items(section_name))
+                        logger.debug("Found %i control file field override(s) in section %s of %s: %r",
+                                     len(overrides), section_name, py2deb_cfg, overrides)
+                        control_fields = merge_control_fields(control_fields, overrides)
 
             # Create the DEBIAN directory.
             debian_directory = os.path.join(build_directory, 'DEBIAN')
