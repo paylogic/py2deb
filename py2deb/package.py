@@ -65,7 +65,7 @@ class PackageToConvert(object):
         :param converter: The :py:class:`.PackageConverter` that holds the user
                           options and knows how to transform package names.
         :param requirement: A :py:class:`pip_accel.req.Requirement` object
-                            (created by :py:func:`.PackageConverter.get_source_distributions()`).
+                            (created by :py:func:`~py2deb.converter.PackageConverter.get_source_distributions()`).
         """
         self.converter = converter
         self.requirement = requirement
