@@ -1,7 +1,7 @@
 # Makefile for py2deb.
 #
 # Author: Peter Odding <peter.odding@paylogic.com>
-# Last Change: June 7, 2014
+# Last Change: February 25, 2015
 # URL: https://github.com/paylogic/py2deb
 
 PROJECT_NAME = py2deb
@@ -24,12 +24,13 @@ default:
 	@echo 'Usage:'
 	@echo
 	@echo '    make install    install the package in a virtual environment'
-	@echo '    make reset      recreate the virtual environment'
+	@echo '    make check      check PEP-8 and PEP-257 compliance'
 	@echo '    make test       run the test suite'
 	@echo '    make coverage   run the tests, report coverage'
 	@echo '    make docs       update documentation using Sphinx'
 	@echo '    make publish    publish changes to GitHub/PyPI'
 	@echo '    make clean      cleanup temporary files'
+	@echo '    make reset      recreate the virtual environment'
 	@echo
 
 install:
