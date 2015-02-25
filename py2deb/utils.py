@@ -3,7 +3,7 @@
 # Authors:
 #  - Arjan Verwer
 #  - Peter Odding <peter.odding@paylogic.com>
-# Last Change: November 15, 2014
+# Last Change: February 25, 2015
 # URL: https://py2deb.readthedocs.org
 
 """
@@ -260,7 +260,7 @@ def embed_install_prefix(handle, install_prefix):
         # The next step is to bump the insertion point if we find any `from
         # __future__ import ...' statements.
         for i, line in enumerate(lines):
-            if re.match(r'^\s*from\s+__future__\s+import\s+', line):
+            if re.match(b'^\\s*from\\s+__future__\\s+import\\s+', line):
                 insertion_point = i + 1
         lines.insert(insertion_point, ('import sys; sys.path.insert(0, %r)\n' % install_prefix).encode('UTF-8'))
         # Turn the modified contents back into a file-like object.
