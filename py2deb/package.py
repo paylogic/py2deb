@@ -3,7 +3,7 @@
 # Authors:
 #  - Arjan Verwer
 #  - Peter Odding <peter.odding@paylogic.com>
-# Last Change: December 9, 2014
+# Last Change: February 25, 2015
 # URL: https://py2deb.readthedocs.org
 
 """
@@ -30,10 +30,7 @@ import time
 from cached_property import cached_property
 from deb_pkg_tools.control import merge_control_fields, unparse_control_fields
 from deb_pkg_tools.package import build_package
-from docutils.core import publish_string
-from docutils.writers.html4css1 import Writer
 from executor import execute
-from html2text import HTML2Text
 from humanfriendly import concatenate, pluralize
 from pkg_resources import Requirement
 from pkginfo import UnpackedSDist
@@ -152,80 +149,20 @@ class PackageToConvert(object):
     @cached_property
     def debian_description(self):
         """
-        Python package description converted to Debian package description.
+        Get a minimal description for the converted Debian package.
 
-        .. warning:: The process below is not used at the moment because it
-                     seems to cause "Unable to parse package file" warnings
-                     from ``apt-get`` during installation of packages (given
-                     input packages with complex enough long descriptions).
-
-        Converts and reformats the Python package's description so that it can
-        be used as the description of a Debian binary package. The conversion
-        process works as follows:
-
-        1. The Python package's description is run through Docutils_ to convert
-           reStructuredText_ to HTML, because reStructuredText is the de facto
-           standard in the Python community and because it's a fairly sensible
-           superset of plain text.
-
-        2. The html2text_ package is used to convert the HTML back to plain
-           text without all of the line noise inherent in reStructuredText.
-           Actually html2text doesn't convert to plain text, it converts to
-           Markdown_, but Markdown is a lot closer to plain text than
-           reStructuredText is :-)
-
-        3. The output of html2text is modified slightly to improve its
-           appearance.
-
-        4. The resulting text is converted to the format expected to be used in
-           Debian control files (all lines are indented and empty lines are
-           replaced with a dot).
-
-        5. Finally a tag like `Packaged by py2deb on June 5, 2014 at 18:42` is
-           appended to the end of the description.
-
-        .. _Docutils: https://pypi.python.org/pypi/docutils
-        .. _html2text: https://pypi.python.org/pypi/html2text
-        .. _Markdown: http://daringfireball.net/projects/markdown/
-        .. _reStructuredText: http://docutils.sourceforge.net/rst.html
+        Includes the name of the Python package and the date at which the
+        package was converted.
         """
-        return ' '.join(time.strftime('Packaged by py2deb on %B %e, %Y at %H:%M.').split())
-        description = self.metadata.description or ''
-        # Use docutils to convert the (assumed to be) reStructuredText input
-        # text to UTF-8 encoded HTML and decode that to a Unicode string.
-        # UTF-8 is the documented default output encoding of docutils:
-        # http://docutils.sourceforge.net/docs/api/publisher.html#encodings
-        html_text = publish_string(description, writer=Writer()).decode('UTF-8')
-        # Convert the HTML to human friendly plain text. This is a very lossy
-        # conversion but that's not all that relevant given our context...
-        converter = HTML2Text()
-        converter.ignore_links = True
-        converter.ignore_images = True
-        plain_text = converter.handle(html_text)
-        # I have almost nothing to complain about html2text except that it
-        # sometimes emits repeating empty lines (ignoring whitespace).
-        lines = []
-        for line in plain_text.splitlines():
-            if line and not line.isspace():
-                lines.append(line.rstrip())
-            elif not (lines and lines[-1] == ''):
-                lines.append('')
-        # Join the lines back together and strip any leading and/or trailing
-        # whitespace (this will also remove a possible empty trailing line).
-        description = '\n'.join(lines).strip()
-        # Most descriptions will start with a level one Markdown heading which
-        # looks a bit weird given that the first line of a Debian package's
-        # description is the synopsis, so let's remove the `#' marker.
-        description = description.lstrip('#').lstrip()
-        # Tag the description with a reference to py2deb and the date/time when
-        # the package was converted.
-        tag = ' '.join(time.strftime('Packaged by py2deb on %B %e, %Y at %H:%M.').split())
-        description = description + '\n\n' + tag if description else tag
-        # Replace empty lines in the description with a dot and indent all
-        # lines to make the description compatible with the control file
-        # format. It's a shame that the deb822 package won't do this...
-        return '\n'.join('  ' + line if line and not line.isspace() else ' .'
-                         for line in description.splitlines())
+        text = ["Python package", self.python_name, "converted by py2deb on"]
+        # The %e directive (not documented in the Python standard library but
+        # definitely available on Linux which is the only platform that py2deb
+        # targets, for obvious reasons :-) includes a leading space for single
+        # digit day-of-month numbers. I don't like that, fixed width fields are
+        # an artefact of 30 years ago and have no place in my software
+        # (generally speaking :-). This explains the split/compact duo.
+        text.extend(time.strftime('%B %e, %Y at %H:%M').split())
+        return ' '.join(text)
 
     @cached_property
     def metadata(self):

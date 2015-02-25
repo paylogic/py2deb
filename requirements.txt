@@ -1,9 +1,7 @@
 cached-property >= 0.1.5
 coloredlogs >= 0.5
 deb-pkg-tools >= 1.29
-docutils >= 0.11
 executor >= 1.2
-html2text >= 2014.4.5
 humanfriendly >= 1.11
 pip-accel >= 0.20
 pkginfo >= 1.1
