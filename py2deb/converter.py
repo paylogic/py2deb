@@ -3,7 +3,7 @@
 # Authors:
 #  - Arjan Verwer
 #  - Peter Odding <peter.odding@paylogic.com>
-# Last Change: November 29, 2014
+# Last Change: February 26, 2015
 # URL: https://py2deb.readthedocs.org
 
 """
@@ -27,7 +27,6 @@ import tempfile
 from cached_property import cached_property
 from deb_pkg_tools.cache import get_default_cache
 from deb_pkg_tools.checks import check_duplicate_files
-from executor import execute
 from humanfriendly import coerce_boolean
 from pip_accel import PipAccelerator
 from pip_accel.config import Config as PipAccelConfig
@@ -40,6 +39,10 @@ from py2deb.package import PackageToConvert
 
 # Initialize a logger.
 logger = logging.getLogger(__name__)
+
+# Mapping of supported machine architectures reported by os.uname() to the
+# machine architecture labels used in the Debian packaging system.
+MACHINE_ARCHITECTURE_MAPPING = dict(i686='i386', x86_64='amd64', armv6l='armhf')
 
 
 class PackageConverter(object):
@@ -467,17 +470,16 @@ class PackageConverter(object):
         """
         Find Debian architecture of current environment.
 
-        Uses the external command ``uname --machine``.
+        Uses the :py:func:`os.uname()` function.
 
-        :raises: If the output of the command is not recognized
-                 :py:exc:`exceptions.Exception` is raised.
-        :returns: The Debian architecture (a string like ``i386`` or ``amd64``).
+        :returns: The Debian architecture (one of the strings ``i386``,
+                  ``amd64`` or ``armhf``).
+        :raises: If the machine architecture is not recognized
+                 :py:exc:`~exceptions.RuntimeError` is raised.
         """
-        architecture = execute('uname', '--machine', capture=True, logger=logger)
-        if architecture == 'i686':
-            return 'i386'
-        elif architecture == 'x86_64':
-            return 'amd64'
+        sysname, nodename, release, version, machine = os.uname()
+        if machine in MACHINE_ARCHITECTURE_MAPPING:
+            return MACHINE_ARCHITECTURE_MAPPING[machine]
         else:
-            msg = "The current architecture is not supported by py2deb! (architecture reported by uname -m: %s)"
-            raise Exception(msg % architecture)
+            msg = "The current architecture is not supported by py2deb! (architecture reported by os.uname(): %s)"
+            raise RuntimeError(msg % machine)
