@@ -1,7 +1,7 @@
 # Automated tests for the `py2deb' package.
 #
 # Author: Peter Odding <peter.odding@paylogic.com>
-# Last Change: November 28, 2014
+# Last Change: February 26, 2015
 # URL: https://py2deb.readthedocs.org
 
 """
@@ -23,6 +23,7 @@ import glob
 import logging
 import os
 import sys
+import tempfile
 import textwrap
 import unittest
 
@@ -59,6 +60,17 @@ class PackageConverterTestCase(unittest.TestCase):
         """
         coloredlogs.install()
         coloredlogs.increase_verbosity()
+        # Create a temporary working directory to store the pip download cache
+        # and pip-accel's binary cache, to make sure these tests run isolated
+        # from the rest of the system.
+        self.working_directory = tempfile.mkdtemp()
+        pip_download_cache = os.path.join(self.working_directory, 'pip-download-cache')
+        pip_accel_cache = os.path.join(self.working_directory, 'pip-accel-cache')
+        for directory in [pip_download_cache, pip_accel_cache]:
+            os.makedirs(directory)
+        # Make pip and pip-accel use the temporary working directory.
+        os.environ['PIP_DOWNLOAD_CACHE'] = pip_download_cache
+        os.environ['PIP_ACCEL_CACHE'] = pip_accel_cache
 
     def test_argument_validation(self):
         """
