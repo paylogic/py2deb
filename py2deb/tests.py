@@ -326,7 +326,6 @@ class PackageConverterTestCase(unittest.TestCase):
         3. The package is documented to support Python 3.x as well which means
            we can run this test on all supported Python versions.
 
-        .. _dpkg-shlibdeps: http://man.he.net/man1/dpkg-shlibdeps
         .. _setproctitle: https://pypi.python.org/pypi/setproctitle/
         """
         with TemporaryDirectory() as directory:
