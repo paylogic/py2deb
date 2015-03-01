@@ -8,10 +8,11 @@ py2deb: Python to Debian package converter
    :target: https://coveralls.io/r/paylogic/py2deb?branch=master
 
 The Python package `py2deb` converts Python source distributions to Debian
-packages. It uses pip-accel_ to download, unpack and compile Python packages.
-Because of this `py2deb` is compatible with the command line interface of the
-``pip install`` command. For example you can specify packages to convert as
-command line arguments but you can also use `requirement files`_ if you want.
+binary packages (the ones used for installation). It uses pip-accel_ to
+download, unpack and compile Python packages. Because of this `py2deb` is
+compatible with the command line interface of the ``pip install`` command. For
+example you can specify packages to convert as command line arguments but you
+can also use `requirement files`_ if you want.
 
 During the conversion process dependencies are automatically taken into account
 and converted as well so you don't actually have to use requirement files
