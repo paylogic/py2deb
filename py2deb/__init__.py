@@ -15,4 +15,4 @@ The top level :py:mod:`py2deb` module contains only a version number.
 """
 
 # Semi-standard module versioning.
-__version__ = '0.20.6'
+__version__ = '0.20.7'
