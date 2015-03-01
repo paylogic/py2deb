@@ -3,7 +3,7 @@
 # Authors:
 #  - Arjan Verwer
 #  - Peter Odding <peter.odding@paylogic.com>
-# Last Change: February 25, 2015
+# Last Change: March 1, 2015
 # URL: https://py2deb.readthedocs.org
 
 """
@@ -23,7 +23,6 @@ import logging
 import os
 import pipes
 import re
-import sys
 import time
 
 # External dependencies.
@@ -488,24 +487,22 @@ class PackageToConvert(object):
         Determine binary architecture that Debian package should be tagged with.
 
         If a package contains ``*.so`` files we're dealing with a compiled
-        Python module. To determine the applicable architecture, we simply take
-        the architecture of the current system and (for now) ignore the
-        existence of cross-compilation.
+        Python module. To determine the applicable architecture, we take the
+        Debian architecture reported by
+        :py:attr:`~py2deb.converter.PackageConverter.debian_architecture`.
 
-        :param has_shared_objects: ``True`` if the package contains ``*.so`` files.
-        :returns: The architecture string, one of 'all', 'i386' or 'amd64'.
+        :param has_shared_objects: ``True`` if the package contains ``*.so``
+                                   files, ``False`` otherwise.
+        :returns: The architecture string, 'all' or one of the values of
+                  :py:attr:`~py2deb.converter.PackageConverter.debian_architecture`.
         """
         logger.debug("Checking package architecture ..")
         if has_shared_object_files:
-            if sys.maxsize > 2**32:
-                logger.debug("We're running on a 64 bit host -> assuming package is also 64 bit.")
-                return 'amd64'
-            else:
-                logger.debug("We're running on a 32 bit host -> assuming package is also 32 bit.")
-                return 'i386'
+            logger.debug("Package contains shared object files, tagging with %s architecture.",
+                         self.converter.debian_architecture)
+            return self.converter.debian_architecture
         else:
-            logger.debug("The package's binary distribution doesn't contain any shared"
-                         " object files -> we must be dealing with a portable package.")
+            logger.debug("Package doesn't contain shared object files, dealing with a portable package.")
             return 'all'
 
     def find_egg_info_file(self, pattern=''):
