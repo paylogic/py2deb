@@ -38,7 +38,21 @@ There are some system dependencies which you have to install as well:
 
 .. code-block:: sh
 
-   $ sudo apt-get install dpkg-dev fakeroot lintian
+   $ sudo apt-get install dpkg-dev fakeroot
+
+Optionally you can also install Lintian_ (which is not a hard dependency but
+more of a "nice to have"):
+
+.. code-block:: sh
+
+   $ sudo apt-get install lintian
+
+When Lintian is installed it will be run automatically to sanity check
+converted packages. This slows down the conversion process somewhat but can be
+very useful, especially when working on py2deb itself. Currently py2deb doesn't
+fail when Lintian reports errors, this is due to the unorthodox ways in which
+py2deb can be used. This may change in the future as py2deb becomes more
+mature.
 
 Usage
 -----
@@ -189,6 +203,7 @@ This software is licensed under the `MIT license`_.
 .. _deb-pkg-tools: https://pypi.python.org/pypi/deb-pkg-tools
 .. _GitHub project page: https://github.com/paylogic/py2deb
 .. _hosted on Read The Docs: https://py2deb.readthedocs.org
+.. _Lintian: http://en.wikipedia.org/wiki/Lintian
 .. _MIT license: http://en.wikipedia.org/wiki/MIT_License
 .. _pip-accel: https://github.com/paylogic/pip-accel
 .. _PyPI: https://pypi.python.org/pypi/py2deb
