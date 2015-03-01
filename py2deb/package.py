@@ -469,7 +469,12 @@ class PackageToConvert(object):
             open(os.path.join(fake_source_directory, 'debian', 'control'), 'w').close()
             # Run `dpkg-shlibdeps' inside the fake source package directory, but
             # let it analyze the *.so files from the actual build directory.
-            command = ['dpkg-shlibdeps', '-O', '--warnings=0'] + shared_object_files
+            command = ['dpkg-shlibdeps', '-O', '--warnings=0']
+            # Minimal effort test for viability of `--ignore-missing-info'
+            # option, refer to https://github.com/paylogic/py2deb/issues/3
+            if os.environ.get('TRAVIS', 'false') == 'true':
+                command.append('--ignore-missing-info')
+            command.extend(shared_object_files)
             output = execute(*command, directory=fake_source_directory, capture=True, logger=logger)
             expected_prefix = 'shlibs:Depends='
             if not output.startswith(expected_prefix):
