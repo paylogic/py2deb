@@ -4,9 +4,9 @@ env:
   - TOXENV=py27
   - TOXENV=py34
 install:
-  ./.travis.sh --install
-  pip install tox coveralls
+  - ./.travis.sh --install
+  - pip install tox coveralls
 script:
-  tox -v
+  - tox -v
 after_success:
-  coveralls
+  - coveralls
