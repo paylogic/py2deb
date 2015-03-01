@@ -306,6 +306,48 @@ class PackageConverterTestCase(unittest.TestCase):
             # Check that a package with the extra in the filename was generated.
             assert find_package_archive(archives, 'python-raven-flask')
 
+    def test_conversion_of_binary_package(self):
+        """
+        Convert a package that includes a ``*.so`` file (a shared object file).
+
+        Converts ``setproctitle==1.1.8`` and sanity checks the result. The goal
+        of this test is to verify that pydeb properly handles packages with
+        binary components (including dpkg-shlibdeps_ magic). This explains why
+        I chose the setproctitle_ package:
+
+        1. This package is known to require a compiled shared object file for
+           proper functioning.
+
+        2. Despite requiring a compiled shared object file the package is
+           fairly lightweight and has little dependencies so including this
+           test on every run of the test suite won't slow things down so much
+           that it becomes annoying.
+
+        3. The package is documented to support Python 3.x as well which means
+           we can run this test on all supported Python versions.
+
+        .. _dpkg-shlibdeps: http://man.he.net/man1/dpkg-shlibdeps
+        .. _setproctitle: https://pypi.python.org/pypi/setproctitle/
+        """
+        with TemporaryDirectory() as directory:
+            # Run the conversion command.
+            converter = PackageConverter()
+            converter.set_repository(directory)
+            archives, relationships = converter.convert(['setproctitle==1.1.8'])
+            # Find the generated *.deb archive.
+            pathname = find_package_archive(archives, 'python-setproctitle')
+            # Use deb-pkg-tools to inspect the package metadata.
+            metadata, contents = inspect_package(pathname)
+            logger.debug("Metadata of generated package: %s", dict(metadata))
+            logger.debug("Contents of generated package: %s", dict(contents))
+            # Make sure the package's architecture was properly set.
+            assert metadata['Architecture'] != 'all'
+            # Make sure the shared object file is included in the package.
+            assert find_file(contents, '/usr/lib/*/setproctitle*.so')
+            # Make sure a dependency on libc was added (this shows that
+            # dpkg-shlibdeps was run successfully).
+            assert 'libc6' in metadata['Depends'].names
+
     def test_conversion_of_isolated_packages(self):
         """
         Convert a group of packages with a custom name and installation prefix.
