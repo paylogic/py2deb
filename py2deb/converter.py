@@ -484,7 +484,7 @@ class PackageConverter(object):
         Find Debian architecture of current environment.
 
         Uses the :py:func:`os.uname()` function.
-        
+
         :returns: The Debian architecture (one of the strings ``i386``,
                   ``amd64`` or ``armhf``).
         :raises: If the machine architecture is not recognized
