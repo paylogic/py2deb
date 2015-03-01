@@ -1,0 +1,4 @@
+[run]
+branch = true
+source = py2deb
+omit = py2deb/tests.py

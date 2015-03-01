@@ -1,31 +1,69 @@
-#!/bin/bash
+#!/bin/bash -e
 
-cat >&2 << EOF
+# This Bash script is responsible for running the py2deb test suite on the
+# Travis CI hosted continuous integration service. Some notes about this
+# script:
+#
+# 1. Travis CI provides Python 2.6, 2.7 and 3.4 installations based on a Chef
+#    cookbook that uses pyenv which means that the Python installations used
+#    are custom compiled and not managed using Debian packages. This is a
+#    problem for py2deb because it depends on the correct functioning of
+#    dpkg-shlibdeps which expects Python to be installed using Debian
+#    packages.
+#
+# 2. A dozen convoluted workarounds can be constructed to work around this.
+#    I've decided to go with a fairly simple one that I know very well and
+#    which has worked very well for the local testing that I've been doing for
+#    months: Using the `deadsnakes PPA' to install various Python versions
+#    using Debian packages.
 
-###########################
-## Environment variables ##
-###########################
+# The following Debian system packages are required for all builds.
+REQUIRED_SYSTEM_PACKAGES="dpkg-dev fakeroot lintian"
 
-EOF
+main () {
+  msg "Preparing Travis CI test environment .."
+  case "$TOXENV" in
+    py26)
+      # We need to get Python 2.6 from the deadsnakes PPA.
+      install_with_deadsnakes_ppa python2.6 python2.6-dev
+      ;;
+    py27)
+      # At the time of writing Travis CI workers are running Ubuntu 12.04 which
+      # includes Python 2.7 as the default system wide Python version so we
+      # don't need the deadsnakes PPA.
+      install_with_apt_get python2.7 python2.7-dev
+      ;;
+    py34)
+      # We need to get Python 3.4 from the deadsnakes PPA.
+      install_with_deadsnakes_ppa python3.4 python3.4-dev
+      ;;
+    *)
+      # Make sure .travis.yml and .travis.sh don't get out of sync.
+      die "Unsupported Python version requested! (\$TOXENV not set)"
+      ;;
+  esac
+}
 
-export
+install_with_deadsnakes_ppa () {
+  msg "Installing deadsnakes PPA .."
+  sudo add-apt-repository --yes ppa:fkrull/deadsnakes
+  install_with_apt_get "$@"
+}
 
-cat >&2 << EOF
+install_with_apt_get () {
+  export DEBIAN_FRONTEND=noninteractive
+  msg "Installing with apt-get: $REQUIRED_SYSTEM_PACKAGES $*"
+  sudo apt-get update --quiet --quiet
+  sudo apt-get install --yes --quiet $REQUIRED_SYSTEM_PACKAGES "$@"
+}
 
-#############################
-## Python shared libraries ##
-#############################
+die () {
+  msg "Error: $*"
+  exit 1
+}
 
-EOF
+msg () {
+  echo "[travis.sh] $*" >&2
+}
 
-find /opt/python -name 'libpython*.so*' -print0 | xargs -0 ls -ld
-
-cat >&2 << EOF
-
-##########################
-## Output of test suite ##
-##########################
-
-EOF
-
-python setup.py test
+main "$@"
