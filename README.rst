@@ -4,7 +4,7 @@ py2deb: Python to Debian package converter
 .. image:: https://travis-ci.org/paylogic/py2deb.svg?branch=master
    :target: https://travis-ci.org/paylogic/py2deb
 
-.. image:: https://coveralls.io/repos/paylogic/py2deb/badge.png?branch=master
+.. image:: https://coveralls.io/repos/paylogic/py2deb/badge.svg?branch=master
    :target: https://coveralls.io/r/paylogic/py2deb?branch=master
 
 The Python package `py2deb` converts Python source distributions to Debian
