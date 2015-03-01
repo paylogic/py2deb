@@ -3,7 +3,7 @@
 # Authors:
 #  - Arjan Verwer
 #  - Peter Odding <peter.odding@paylogic.com>
-# Last Change: February 26, 2015
+# Last Change: March 1, 2015
 # URL: https://py2deb.readthedocs.org
 
 """
@@ -54,6 +54,13 @@ class PackageConverter(object):
     def __init__(self, load_configuration_files=True, load_environment_variables=True):
         """
         Initialize a Python to Debian package converter.
+
+        :param load_configuration_files: When ``True`` (the default)
+                                         :py:func:`load_default_configuration_files()`
+                                         is called automatically.
+        :param load_environment_variables: When ``True`` (the default)
+                                         :py:func:`load_environment_variables()`
+                                         is called automatically.
         """
         self.alternatives = set()
         self.install_prefix = '/usr'
@@ -72,7 +79,7 @@ class PackageConverter(object):
         Set pathname of directory where `py2deb` stores converted packages.
 
         :param directory: The pathname of a directory (a string).
-        :raises: :py:exc:`exceptions.ValueError` when the directory doesn't
+        :raises: :py:exc:`~exceptions.ValueError` when the directory doesn't
                  exist.
         """
         directory = os.path.abspath(directory)
@@ -86,7 +93,7 @@ class PackageConverter(object):
         Set package name prefix to use during package conversion.
 
         :param prefix: The name prefix to use (a string).
-        :raises: :py:exc:`exceptions.ValueError` when no name prefix is
+        :raises: :py:exc:`~exceptions.ValueError` when no name prefix is
                  provided (e.g. an empty string).
         """
         if not prefix:
@@ -101,7 +108,7 @@ class PackageConverter(object):
                                     as found on PyPI (a string).
         :param debian_package_name: The name of the converted
                                     Debian package (a string).
-        :raises: :py:exc:`exceptions.ValueError` when a package name is not
+        :raises: :py:exc:`~exceptions.ValueError` when a package name is not
                  provided (e.g. an empty string).
         """
         if not python_package_name:
@@ -119,7 +126,7 @@ class PackageConverter(object):
 
         :param directory: The pathname of the directory where the converted
                           packages should be installed (a string).
-        :raises: :py:exc:`exceptions.ValueError` when no installation prefix is
+        :raises: :py:exc:`~exceptions.ValueError` when no installation prefix is
                  provided (e.g. an empty string).
         """
         if not directory:
@@ -130,7 +137,8 @@ class PackageConverter(object):
         """
         Enable or disable automatic installation of build time dependencies.
 
-        :param enabled: Any value, evaluated using :py:func:`.coerce_boolean()`.
+        :param enabled: Any value, evaluated using
+                        :py:func:`~humanfriendly.coerce_boolean()`.
         """
         self.pip_accel.config.auto_install = coerce_boolean(enabled)
 
@@ -148,7 +156,7 @@ class PackageConverter(object):
         :param path: The alternative being introduced for the master link (a
                      string). This is the third argument passed to
                      ``update-alternatives --install``.
-        :raises: :py:exc:`exceptions.ValueError` when one of the paths is not
+        :raises: :py:exc:`~exceptions.ValueError` when one of the paths is not
                  provided (e.g. an empty string).
 
         If this is a bit vague, consider the following example:
@@ -186,7 +194,7 @@ class PackageConverter(object):
         :param python_package_name: The name of a Python package
                                     as found on PyPI (a string).
         :param command: The shell command to execute (a string).
-        :raises: :py:exc:`exceptions.ValueError` when the package name or
+        :raises: :py:exc:`~exceptions.ValueError` when the package name or
                  command is not provided (e.g. an empty string).
 
         .. warning:: This functionality allows arbitrary manipulation of the
@@ -242,8 +250,8 @@ class PackageConverter(object):
 
         :param configuration_file: The pathname of a configuration file (a
                                    string).
-        :raises: :py:exc:`Exception` when the configuration file cannot be
-                 loaded.
+        :raises: :py:exc:`~exceptions.Exception` when the configuration file
+                 cannot be loaded.
 
         Below is an example of the available options, I assume that the mapping
         between the configuration options and the setters of
@@ -328,8 +336,13 @@ class PackageConverter(object):
         """
         Load configuration options from default configuration files.
 
-        :raises: :py:exc:`Exception` when a configuration file exists but
-                 cannot be loaded.
+        The following default configuration file locations are checked:
+
+        - ``/etc/py2deb.ini``
+        - ``~/.py2deb.ini``
+
+        :raises: :py:exc:`~exceptions.Exception` when a configuration file
+                 exists but cannot be loaded.
         """
         for location in ('/etc/py2deb.ini', os.path.expanduser('~/.py2deb.ini')):
             if os.path.isfile(location):
@@ -349,7 +362,7 @@ class PackageConverter(object):
                   2. A list of strings containing the Debian package
                      relationship(s) required to depend on the converted
                      package(s).
-        :raises: :py:exc:`deb_pkg_tools.checks.DuplicateFilesFound` if two
+        :raises: :py:exc:`~deb_pkg_tools.checks.DuplicateFilesFound` if two
                  converted package archives contain the same files (certainly
                  not what you want within a set of dependencies).
 
@@ -471,11 +484,15 @@ class PackageConverter(object):
         Find Debian architecture of current environment.
 
         Uses the :py:func:`os.uname()` function.
-
+        
         :returns: The Debian architecture (one of the strings ``i386``,
                   ``amd64`` or ``armhf``).
         :raises: If the machine architecture is not recognized
                  :py:exc:`~exceptions.RuntimeError` is raised.
+
+        .. note:: There is no specific reason why more architectures are not
+                  supported here, if you're missing your favorite architecture
+                  then feel free to submit a request to the issue tracker.
         """
         sysname, nodename, release, version, machine = os.uname()
         if machine in MACHINE_ARCHITECTURE_MAPPING:

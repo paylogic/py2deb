@@ -67,6 +67,7 @@ pygments_style = 'sphinx'
 intersphinx_mapping = {
     'debpkgtools': ('http://deb-pkg-tools.readthedocs.org/en/latest', None),
     'executor': ('http://executor.readthedocs.org/en/latest', None),
+    'humanfriendly': ('http://humanfriendly.readthedocs.org/en/latest', None),
     'pipaccel': ('http://pip-accel.readthedocs.org/en/latest', None),
     'python': ('http://docs.python.org', None),
     'setuptools': ('https://pythonhosted.org/setuptools/', None),
