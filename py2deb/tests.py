@@ -1,7 +1,7 @@
 # Automated tests for the `py2deb' package.
 #
 # Author: Peter Odding <peter.odding@paylogic.com>
-# Last Change: February 26, 2015
+# Last Change: March 1, 2015
 # URL: https://py2deb.readthedocs.org
 
 """
@@ -22,6 +22,7 @@ import functools
 import glob
 import logging
 import os
+import shutil
 import sys
 import tempfile
 import textwrap
@@ -43,9 +44,59 @@ from py2deb.utils import normalize_package_version, TemporaryDirectory
 logger = logging.getLogger(__name__)
 execute = functools.partial(execute, logger=logger)
 
-# Find the sample packages that we're going to build during our tests.
-TESTS_DIRECTORY = os.path.dirname(os.path.abspath(__file__))
-TRIVIAL_PACKAGE_DIRECTORY = os.path.join(TESTS_DIRECTORY, 'samples', 'trivial-package')
+# Global state of the test suite (yes, this is ugly :-).
+TEMPORARY_DIRECTORIES = []
+
+
+def setUpModule():
+    """
+    Prepare the test suite.
+
+    This function does two things:
+
+    1. Sets up verbose logging to the terminal. When a test fails the logging
+       output can help to perform a post-mortem analysis of the failure in
+       question (even when its hard to reproduce locally). This is especially
+       useful when debugging remote test failures, whether they happened on
+       Travis CI or a user's local system.
+
+    2. Creates temporary directories where the pip download cache and the
+       pip-accel binary cache are located. Isolating the pip-accel binary cache
+       from the user's system is meant to ensure that the tests are as
+       independent from the user's system as possible. The function
+       :py:func:`tearDownModule` is responsible for cleaning up the temporary
+       directory after the test suite finishes.
+    """
+    # Initialize verbose logging to the terminal.
+    coloredlogs.install()
+    coloredlogs.increase_verbosity()
+    # Create temporary directories to store the pip download cache and
+    # pip-accel's binary cache, to make sure these tests run isolated from the
+    # rest of the system.
+    os.environ['PIP_DOWNLOAD_CACHE'] = create_temporary_directory()
+    os.environ['PIP_ACCEL_CACHE'] = create_temporary_directory()
+
+
+def tearDownModule():
+    """
+    Clean up temporary directories created by :py:func:`setUpModule()`.
+    """
+    for directory in TEMPORARY_DIRECTORIES:
+        shutil.rmtree(directory)
+
+
+def create_temporary_directory():
+    """
+    Create a temporary directory for the test suite to use.
+
+    The created temporary directory will be cleaned up by
+    :py:func:`tearDownModule()` when the test suite is being torn down.
+
+    :returns: The pathname of the created temporary directory (a string).
+    """
+    temporary_directory = tempfile.mkdtemp()
+    TEMPORARY_DIRECTORIES.append(temporary_directory)
+    return temporary_directory
 
 
 class PackageConverterTestCase(unittest.TestCase):
@@ -53,24 +104,6 @@ class PackageConverterTestCase(unittest.TestCase):
     """
     :py:mod:`unittest` compatible container for the test suite of `py2deb`.
     """
-
-    def setUp(self):
-        """
-        Initialize verbose logging to the terminal.
-        """
-        coloredlogs.install()
-        coloredlogs.increase_verbosity()
-        # Create a temporary working directory to store the pip download cache
-        # and pip-accel's binary cache, to make sure these tests run isolated
-        # from the rest of the system.
-        self.working_directory = tempfile.mkdtemp()
-        pip_download_cache = os.path.join(self.working_directory, 'pip-download-cache')
-        pip_accel_cache = os.path.join(self.working_directory, 'pip-accel-cache')
-        for directory in [pip_download_cache, pip_accel_cache]:
-            os.makedirs(directory)
-        # Make pip and pip-accel use the temporary working directory.
-        os.environ['PIP_DOWNLOAD_CACHE'] = pip_download_cache
-        os.environ['PIP_ACCEL_CACHE'] = pip_accel_cache
 
     def test_argument_validation(self):
         """
