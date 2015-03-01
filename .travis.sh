@@ -12,23 +12,13 @@ export
 
 cat >&2 << EOF
 
-#######################################
-## Overview of libpython.so versions ##
-#######################################
+#############################
+## Python shared libraries ##
+#############################
 
 EOF
 
-ls -ld /usr/lib/libpython*.so*
-
-cat >&2 << EOF
-
-##################################################
-## Overview of installed Python system packages ##
-##################################################
-
-EOF
-
-dpkg -l | grep python
+find /opt/python -name 'libpython*.so*' -print0 | xargs -0 ls -ld
 
 cat >&2 << EOF
 
