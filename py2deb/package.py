@@ -334,34 +334,8 @@ class PackageToConvert(object):
             if self.vcs_revision:
                 control_fields['Vcs-Hg'] = self.vcs_revision
 
-            # Merge any control file fields defined in stdeb.cfg (inside the
-            # Python package's source distribution) into the Debian package's
-            # control file fields?
-            py2deb_cfg = os.path.join(self.requirement.source_directory, 'stdeb.cfg')
-            if not os.path.isfile(py2deb_cfg):
-                logger.debug("Control field overrides file not found (%s).", py2deb_cfg)
-            else:
-                logger.debug("Loading control field overrides from %s ..", py2deb_cfg)
-                parser = configparser.RawConfigParser()
-                parser.read(py2deb_cfg)
-                # Prepare to load the overrides from the DEFAULT section and
-                # the section whose name matches that of the Python package.
-                # DEFAULT is processed first on purpose.
-                section_names = ['DEFAULT']
-                # Match the normalized package name instead of the raw package
-                # name because `python setup.py egg_info' normalizes
-                # underscores in package names to dashes which can bite
-                # unsuspecting users. For what it's worth, PEP-8 discourages
-                # underscores in package names but doesn't forbid them:
-                # https://www.python.org/dev/peps/pep-0008/#package-and-module-names
-                section_names.extend(section_name for section_name in parser.sections()
-                                     if package_names_match(section_name, self.python_name))
-                for section_name in section_names:
-                    if parser.has_section(section_name):
-                        overrides = dict(parser.items(section_name))
-                        logger.debug("Found %i control file field override(s) in section %s of %s: %r",
-                                     len(overrides), section_name, py2deb_cfg, overrides)
-                        control_fields = merge_control_fields(control_fields, overrides)
+            # Apply user defined control field overrides from `stdeb.cfg'.
+            control_fields = self.load_control_field_overrides(control_fields)
 
             # Create the DEBIAN directory.
             debian_directory = os.path.join(build_directory, 'DEBIAN')
@@ -517,6 +491,51 @@ class PackageToConvert(object):
         else:
             logger.debug("Package doesn't contain shared object files, dealing with a portable package.")
             return 'all'
+
+    def load_control_field_overrides(self, control_fields):
+        """
+        Apply user defined control field overrides.
+
+        Looks for an ``stdeb.cfg`` file inside the Python package's source
+        distribution and if found it merges the overrides into the control
+        fields that will be embedded in the generated Debian binary package.
+
+        This method first applies any overrides defined in the ``DEFAULT``
+        section and then it applies any overrides defined in the section whose
+        normalized name (see :py:func:`~py2deb.utils.package_names_match()`)
+        matches that of the Python package.
+
+        :param control_fields: The control field defaults constructed by py2deb
+                               (a :py:class:`debian.deb822.Deb822` object).
+        :returns: The merged defaults and overrides (a
+                  :py:class:`debian.deb822.Deb822` object).
+        """
+        py2deb_cfg = os.path.join(self.requirement.source_directory, 'stdeb.cfg')
+        if not os.path.isfile(py2deb_cfg):
+            logger.debug("Control field overrides file not found (%s).", py2deb_cfg)
+        else:
+            logger.debug("Loading control field overrides from %s ..", py2deb_cfg)
+            parser = configparser.RawConfigParser()
+            parser.read(py2deb_cfg)
+            # Prepare to load the overrides from the DEFAULT section and
+            # the section whose name matches that of the Python package.
+            # DEFAULT is processed first on purpose.
+            section_names = ['DEFAULT']
+            # Match the normalized package name instead of the raw package
+            # name because `python setup.py egg_info' normalizes
+            # underscores in package names to dashes which can bite
+            # unsuspecting users. For what it's worth, PEP-8 discourages
+            # underscores in package names but doesn't forbid them:
+            # https://www.python.org/dev/peps/pep-0008/#package-and-module-names
+            section_names.extend(section_name for section_name in parser.sections()
+                                 if package_names_match(section_name, self.python_name))
+            for section_name in section_names:
+                if parser.has_section(section_name):
+                    overrides = dict(parser.items(section_name))
+                    logger.debug("Found %i control file field override(s) in section %s of %s: %r",
+                                 len(overrides), section_name, py2deb_cfg, overrides)
+                    control_fields = merge_control_fields(control_fields, overrides)
+        return control_fields
 
     def find_egg_info_file(self, pattern=''):
         """
