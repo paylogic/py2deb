@@ -3,7 +3,7 @@
 # Authors:
 #  - Arjan Verwer
 #  - Peter Odding <peter.odding@paylogic.com>
-# Last Change: March 1, 2015
+# Last Change: March 4, 2015
 # URL: https://py2deb.readthedocs.org
 
 """
@@ -36,7 +36,8 @@ from pkginfo import UnpackedSDist
 from six.moves import configparser
 
 # Modules included in our package.
-from py2deb.utils import embed_install_prefix, normalize_package_version, python_version, TemporaryDirectory
+from py2deb.utils import (embed_install_prefix, package_names_match, normalize_package_version,
+                          python_version, TemporaryDirectory)
 
 # Initialize a logger.
 logger = logging.getLogger(__name__)
@@ -343,7 +344,19 @@ class PackageToConvert(object):
                 logger.debug("Loading control field overrides from %s ..", py2deb_cfg)
                 parser = configparser.RawConfigParser()
                 parser.read(py2deb_cfg)
-                for section_name in ('DEFAULT', self.python_name):
+                # Prepare to load the overrides from the DEFAULT section and
+                # the section whose name matches that of the Python package.
+                # DEFAULT is processed first on purpose.
+                section_names = ['DEFAULT']
+                # Match the normalized package name instead of the raw package
+                # name because `python setup.py egg_info' normalizes
+                # underscores in package names to dashes which can bite
+                # unsuspecting users. For what it's worth, PEP-8 discourages
+                # underscores in package names but doesn't forbid them:
+                # https://www.python.org/dev/peps/pep-0008/#package-and-module-names
+                section_names.extend(section_name for section_name in parser.sections()
+                                     if package_names_match(section_name, self.python_name))
+                for section_name in section_names:
                     if parser.has_section(section_name):
                         overrides = dict(parser.items(section_name))
                         logger.debug("Found %i control file field override(s) in section %s of %s: %r",

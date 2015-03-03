@@ -3,7 +3,7 @@
 # Authors:
 #  - Arjan Verwer
 #  - Peter Odding <peter.odding@paylogic.com>
-# Last Change: February 25, 2015
+# Last Change: March 4, 2015
 # URL: https://py2deb.readthedocs.org
 
 """
@@ -195,6 +195,21 @@ def normalize_package_version(python_package_version):
         components.append('1')
         sanitized_version = '-'.join(components)
     return sanitized_version
+
+
+def package_names_match(a, b):
+    """
+    Check whether two Python package names are equal.
+
+    Uses :py:func:`normalize_package_name()` to normalize both names before
+    comparing them for equality. This makes sure differences in case and dashes
+    versus underscores are ignored.
+
+    :param a: The name of the first Python package (a string).
+    :param b: The name of the second Python package (a string).
+    :returns: ``True`` if the package names match, ``False`` if they don't.
+    """
+    return normalize_package_name(a) == normalize_package_name(b)
 
 
 def compact_repeating_words(words):
