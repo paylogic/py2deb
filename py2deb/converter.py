@@ -3,7 +3,7 @@
 # Authors:
 #  - Arjan Verwer
 #  - Peter Odding <peter.odding@paylogic.com>
-# Last Change: March 1, 2015
+# Last Change: March 18, 2015
 # URL: https://py2deb.readthedocs.org
 
 """
@@ -27,6 +27,7 @@ import tempfile
 from cached_property import cached_property
 from deb_pkg_tools.cache import get_default_cache
 from deb_pkg_tools.checks import check_duplicate_files
+from deb_pkg_tools.utils import find_debian_architecture
 from humanfriendly import coerce_boolean
 from pip_accel import PipAccelerator
 from pip_accel.config import Config as PipAccelConfig
@@ -481,22 +482,10 @@ class PackageConverter(object):
     @cached_property
     def debian_architecture(self):
         """
-        Find Debian architecture of current environment.
+        Find the Debian architecture of the current environment.
 
-        Uses the :py:func:`os.uname()` function.
-
-        :returns: The Debian architecture (one of the strings ``i386``,
-                  ``amd64`` or ``armhf``).
-        :raises: If the machine architecture is not recognized
-                 :py:exc:`~exceptions.RuntimeError` is raised.
-
-        .. note:: There is no specific reason why more architectures are not
-                  supported here, if you're missing your favorite architecture
-                  then feel free to submit a request to the issue tracker.
+        This logic was originally implemented in py2deb but has since been
+        moved to :py:func:`deb_pkg_tools.utils.find_debian_architecture()`.
+        This property remains as a convenient shortcut.
         """
-        sysname, nodename, release, version, machine = os.uname()
-        if machine in MACHINE_ARCHITECTURE_MAPPING:
-            return MACHINE_ARCHITECTURE_MAPPING[machine]
-        else:
-            msg = "The current architecture is not supported by py2deb! (architecture reported by os.uname(): %s)"
-            raise RuntimeError(msg % machine)
+        return find_debian_architecture()
