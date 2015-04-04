@@ -3,6 +3,6 @@ coloredlogs >= 0.5
 deb-pkg-tools >= 1.30
 executor >= 1.2
 humanfriendly >= 1.11
-pip-accel >= 0.20
+pip-accel >= 0.25
 pkginfo >= 1.1
 six >= 1.6.1
