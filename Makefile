@@ -1,7 +1,7 @@
 # Makefile for py2deb.
 #
 # Author: Peter Odding <peter.odding@paylogic.com>
-# Last Change: March 1, 2015
+# Last Change: April 5, 2015
 # URL: https://github.com/paylogic/py2deb
 
 PROJECT_NAME = py2deb
@@ -27,6 +27,7 @@ default:
 	@echo '    make check      check PEP-8 and PEP-257 compliance'
 	@echo '    make test       run the test suite'
 	@echo '    make coverage   run the tests, report coverage'
+	@echo '    make readme     update usage instructions embedded in readme'
 	@echo '    make docs       update documentation using Sphinx'
 	@echo '    make publish    publish changes to GitHub/PyPI'
 	@echo '    make clean      cleanup temporary files'
@@ -63,6 +64,9 @@ coverage: check install
 	@test -x "$(VIRTUAL_ENV)/bin/coverage" || ($(ACTIVATE) && pip-accel install coverage)
 	$(ACTIVATE) && coverage run --source=$(PROJECT_NAME) setup.py test
 	$(ACTIVATE) && coverage html --omit=py2deb/tests.py
+
+readme:
+	@python misc/usage.py
 
 docs: check install
 	@test -x "$(VIRTUAL_ENV)/bin/sphinx-build" || ($(ACTIVATE) && pip-accel install sphinx)
