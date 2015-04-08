@@ -377,41 +377,43 @@ class PackageConverter(object):
         ['python-py2deb (=0.18)']
 
         """
-        generated_archives = []
-        dependencies_to_report = []
-        # Download, unpack and convert no-yet-converted packages.
-        for package in self.get_source_distributions(pip_install_arguments):
-            # If the requirement is a 'direct' (non-transitive) requirement
-            # it means the caller explicitly asked for this package to be
-            # converted, so we add it to the list of converted dependencies
-            # that we report to the caller once we've finished converting.
-            if package.requirement.is_direct:
-                dependencies_to_report.append('%s (= %s)' % (package.debian_name, package.debian_version))
-            if package.existing_archive:
-                # If the same version of this package was converted in a
-                # previous run we can save a lot of time by skipping it.
-                logger.info("Package %s (%s) already converted: %s",
-                            package.python_name, package.python_version,
-                            package.existing_archive.filename)
-                generated_archives.append(package.existing_archive)
-            else:
-                archive = package.convert()
-                if not os.path.samefile(os.path.dirname(archive), self.repository.directory):
-                    shutil.move(archive, self.repository.directory)
-                    archive = os.path.join(self.repository.directory, os.path.basename(archive))
-                generated_archives.append(archive)
-            # FIXME This is ugly. Can pip-accel hide this somehow?
-            package.requirement.pip_requirement.remove_temporary_source()
-        # Use deb-pkg-tools to sanity check the generated package archives
-        # for duplicate files. This should never occur but unfortunately
-        # can happen because Python's packaging infrastructure is a lot
-        # more `forgiving' in the sense of blindly overwriting files
-        # installed by other packages ;-).
-        if len(generated_archives) > 1:
-            check_duplicate_files(generated_archives, cache=get_default_cache())
-        # Let the caller know which archives were generated (whether
-        # previously or now) and how to depend on the converted packages.
-        return generated_archives, sorted(dependencies_to_report)
+        try:
+            generated_archives = []
+            dependencies_to_report = []
+            # Download, unpack and convert no-yet-converted packages.
+            for package in self.get_source_distributions(pip_install_arguments):
+                # If the requirement is a 'direct' (non-transitive) requirement
+                # it means the caller explicitly asked for this package to be
+                # converted, so we add it to the list of converted dependencies
+                # that we report to the caller once we've finished converting.
+                if package.requirement.is_direct:
+                    dependencies_to_report.append('%s (= %s)' % (package.debian_name, package.debian_version))
+                if package.existing_archive:
+                    # If the same version of this package was converted in a
+                    # previous run we can save a lot of time by skipping it.
+                    logger.info("Package %s (%s) already converted: %s",
+                                package.python_name, package.python_version,
+                                package.existing_archive.filename)
+                    generated_archives.append(package.existing_archive)
+                else:
+                    archive = package.convert()
+                    if not os.path.samefile(os.path.dirname(archive), self.repository.directory):
+                        shutil.move(archive, self.repository.directory)
+                        archive = os.path.join(self.repository.directory, os.path.basename(archive))
+                    generated_archives.append(archive)
+            # Use deb-pkg-tools to sanity check the generated package archives
+            # for duplicate files. This should never occur but unfortunately
+            # can happen because Python's packaging infrastructure is a lot
+            # more `forgiving' in the sense of blindly overwriting files
+            # installed by other packages ;-).
+            if len(generated_archives) > 1:
+                check_duplicate_files(generated_archives, cache=get_default_cache())
+            # Let the caller know which archives were generated (whether
+            # previously or now) and how to depend on the converted packages.
+            return generated_archives, sorted(dependencies_to_report)
+        finally:
+            # Always clean up temporary directories created by pip and pip-accel.
+            self.pip_accel.cleanup_temporary_directories()
 
     def get_source_distributions(self, pip_install_arguments):
         """
