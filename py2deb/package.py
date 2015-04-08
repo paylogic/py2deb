@@ -3,7 +3,7 @@
 # Authors:
 #  - Arjan Verwer
 #  - Peter Odding <peter.odding@paylogic.com>
-# Last Change: March 4, 2015
+# Last Change: April 8, 2015
 # URL: https://py2deb.readthedocs.org
 
 """
@@ -21,7 +21,6 @@ conversion logic.
 import glob
 import logging
 import os
-import pipes
 import re
 import time
 
@@ -29,7 +28,7 @@ import time
 from cached_property import cached_property
 from deb_pkg_tools.control import merge_control_fields, unparse_control_fields
 from deb_pkg_tools.package import build_package
-from executor import execute
+from executor import execute, quote
 from humanfriendly import concatenate, pluralize
 from pkg_resources import Requirement
 from pkginfo import UnpackedSDist
@@ -365,17 +364,17 @@ class PackageToConvert(object):
                     for link, path in self.converter.alternatives:
                         if os.path.isfile(os.path.join(build_directory, path.lstrip('/'))):
                             logger.debug("Preparing installation of alternative with link=%s, path=%s ..", link, path)
-                            contents.append(command_template.format(link=pipes.quote(link),
-                                                                    name=pipes.quote(os.path.basename(link)),
-                                                                    path=pipes.quote(path)))
+                            contents.append(command_template.format(link=quote(link),
+                                                                    name=quote(os.path.basename(link)),
+                                                                    path=quote(path)))
                 elif script == 'prerm':
                     # Cleanup the previously created alternative.
                     command_template = "update-alternatives --remove {name} {path}\n"
                     for link, path in self.converter.alternatives:
                         if os.path.isfile(os.path.join(build_directory, path.lstrip('/'))):
                             logger.debug("Preparing removal of alternative with link=%s, path=%s ..", link, path)
-                            contents.append(command_template.format(name=pipes.quote(os.path.basename(link)),
-                                                                    path=pipes.quote(path)))
+                            contents.append(command_template.format(name=quote(os.path.basename(link)),
+                                                                    path=quote(path)))
                 # Save the shell script in the build directory.
                 logger.debug("Writing %s script to control directory ..", script)
                 with open(target, 'w') as handle:
