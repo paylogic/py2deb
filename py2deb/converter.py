@@ -3,7 +3,7 @@
 # Authors:
 #  - Arjan Verwer
 #  - Peter Odding <peter.odding@paylogic.com>
-# Last Change: March 18, 2015
+# Last Change: April 8, 2015
 # URL: https://py2deb.readthedocs.org
 
 """
@@ -34,8 +34,7 @@ from pip_accel.config import Config as PipAccelConfig
 from six.moves import configparser
 
 # Modules included in our package.
-from py2deb.utils import (compact_repeating_words, normalize_package_name,
-                          PackageRepository, TemporaryDirectory)
+from py2deb.utils import compact_repeating_words, normalize_package_name, PackageRepository
 from py2deb.package import PackageToConvert
 
 # Initialize a logger.
@@ -380,42 +379,41 @@ class PackageConverter(object):
         """
         generated_archives = []
         dependencies_to_report = []
-        with TemporaryDirectory(prefix='py2deb-sdists-') as sources_directory:
-            # Download, unpack and convert no-yet-converted packages.
-            for package in self.get_source_distributions(pip_install_arguments, sources_directory):
-                # If the requirement is a 'direct' (non-transitive) requirement
-                # it means the caller explicitly asked for this package to be
-                # converted, so we add it to the list of converted dependencies
-                # that we report to the caller once we've finished converting.
-                if package.requirement.is_direct:
-                    dependencies_to_report.append('%s (= %s)' % (package.debian_name, package.debian_version))
-                if package.existing_archive:
-                    # If the same version of this package was converted in a
-                    # previous run we can save a lot of time by skipping it.
-                    logger.info("Package %s (%s) already converted: %s",
-                                package.python_name, package.python_version,
-                                package.existing_archive.filename)
-                    generated_archives.append(package.existing_archive)
-                else:
-                    archive = package.convert()
-                    if not os.path.samefile(os.path.dirname(archive), self.repository.directory):
-                        shutil.move(archive, self.repository.directory)
-                        archive = os.path.join(self.repository.directory, os.path.basename(archive))
-                    generated_archives.append(archive)
-                # FIXME This is ugly. Can pip-accel hide this somehow?
-                package.requirement.pip_requirement.remove_temporary_source()
-            # Use deb-pkg-tools to sanity check the generated package archives
-            # for duplicate files. This should never occur but unfortunately
-            # can happen because Python's packaging infrastructure is a lot
-            # more `forgiving' in the sense of blindly overwriting files
-            # installed by other packages ;-).
-            if len(generated_archives) > 1:
-                check_duplicate_files(generated_archives, cache=get_default_cache())
-            # Let the caller know which archives were generated (whether
-            # previously or now) and how to depend on the converted packages.
-            return generated_archives, sorted(dependencies_to_report)
+        # Download, unpack and convert no-yet-converted packages.
+        for package in self.get_source_distributions(pip_install_arguments):
+            # If the requirement is a 'direct' (non-transitive) requirement
+            # it means the caller explicitly asked for this package to be
+            # converted, so we add it to the list of converted dependencies
+            # that we report to the caller once we've finished converting.
+            if package.requirement.is_direct:
+                dependencies_to_report.append('%s (= %s)' % (package.debian_name, package.debian_version))
+            if package.existing_archive:
+                # If the same version of this package was converted in a
+                # previous run we can save a lot of time by skipping it.
+                logger.info("Package %s (%s) already converted: %s",
+                            package.python_name, package.python_version,
+                            package.existing_archive.filename)
+                generated_archives.append(package.existing_archive)
+            else:
+                archive = package.convert()
+                if not os.path.samefile(os.path.dirname(archive), self.repository.directory):
+                    shutil.move(archive, self.repository.directory)
+                    archive = os.path.join(self.repository.directory, os.path.basename(archive))
+                generated_archives.append(archive)
+            # FIXME This is ugly. Can pip-accel hide this somehow?
+            package.requirement.pip_requirement.remove_temporary_source()
+        # Use deb-pkg-tools to sanity check the generated package archives
+        # for duplicate files. This should never occur but unfortunately
+        # can happen because Python's packaging infrastructure is a lot
+        # more `forgiving' in the sense of blindly overwriting files
+        # installed by other packages ;-).
+        if len(generated_archives) > 1:
+            check_duplicate_files(generated_archives, cache=get_default_cache())
+        # Let the caller know which archives were generated (whether
+        # previously or now) and how to depend on the converted packages.
+        return generated_archives, sorted(dependencies_to_report)
 
-    def get_source_distributions(self, pip_install_arguments, build_directory):
+    def get_source_distributions(self, pip_install_arguments):
         """
         Use :py:mod:`pip_accel` to download and unpack Python source distributions.
 
@@ -424,7 +422,6 @@ class PackageConverter(object):
 
         :param pip_install_arguments: The command line arguments to the ``pip
                                       install`` command.
-        :param build_directory: The pathname of a build directory (a string).
         :returns: A generator of :py:class:`.PackageToConvert` objects.
         :raises: When downloading fails even after several retries this
                  function raises :py:exc:`pip.exceptions.DistributionNotFound`.
