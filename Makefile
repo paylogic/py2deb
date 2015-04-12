@@ -1,7 +1,7 @@
 # Makefile for py2deb.
 #
 # Author: Peter Odding <peter.odding@paylogic.com>
-# Last Change: April 5, 2015
+# Last Change: April 11, 2015
 # URL: https://github.com/paylogic/py2deb
 
 PROJECT_NAME = py2deb
@@ -62,8 +62,8 @@ test: check install
 
 coverage: check install
 	@test -x "$(VIRTUAL_ENV)/bin/coverage" || ($(ACTIVATE) && pip-accel install coverage)
-	$(ACTIVATE) && coverage run --source=$(PROJECT_NAME) setup.py test
-	$(ACTIVATE) && coverage html --omit=py2deb/tests.py
+	$(ACTIVATE) && coverage run setup.py test
+	$(ACTIVATE) && coverage html
 
 readme:
 	@python misc/usage.py

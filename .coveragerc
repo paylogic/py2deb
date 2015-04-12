@@ -1,4 +1,9 @@
+# .coveragerc: Configuration file for coverage.py.
+# http://nedbatchelder.com/code/coverage/
+
 [run]
 branch = true
 source = py2deb
 omit = py2deb/tests.py
+
+# vim: ft=dosini

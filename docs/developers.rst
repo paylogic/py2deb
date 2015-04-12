@@ -45,6 +45,12 @@ Here are the relevant Python modules that make up py2deb:
 .. automodule:: py2deb.utils
    :members:
 
+:py:mod:`py2deb.hooks` - Maintainer scripts
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. automodule:: py2deb.hooks
+   :members:
+
 :py:mod:`py2deb.tests` - The test suite
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 

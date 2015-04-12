@@ -1,7 +1,7 @@
 # Automated tests for the `py2deb' package.
 #
 # Author: Peter Odding <peter.odding@paylogic.com>
-# Last Change: March 1, 2015
+# Last Change: April 12, 2015
 # URL: https://py2deb.readthedocs.org
 
 """
@@ -39,6 +39,18 @@ from executor import execute
 from py2deb.cli import main
 from py2deb.converter import PackageConverter
 from py2deb.utils import normalize_package_version, TemporaryDirectory
+from py2deb.hooks import (
+    cleanup_bytecode_files,
+    cleanup_namespaces,
+    find_bytecode_files,
+    find_installed_files,
+    generate_bytecode_files,
+    HAS_PEP_3147,
+    initialize_namespaces,
+    post_installation_hook,
+    pre_removal_hook,
+    touch,
+)
 
 # Initialize a logger.
 logger = logging.getLogger(__name__)
@@ -306,6 +318,14 @@ class PackageConverterTestCase(unittest.TestCase):
             # Check that a package with the extra in the filename was generated.
             assert find_package_archive(archives, 'python-raven-flask')
 
+    def test_namespace_package_parsing(self):
+        """Test parsing of ``namespace_package.txt`` files."""
+        with TemporaryDirectory() as directory:
+            converter = PackageConverter()
+            package = next(converter.get_source_distributions(['--no-deps', 'zope.app.cache==3.7.0']))
+            assert package.namespace_packages == ['zope', 'zope.app']
+            assert package.namespaces == [('zope',), ('zope', 'app')]
+
     def test_conversion_of_binary_package(self):
         """
         Convert a package that includes a ``*.so`` file (a shared object file).
@@ -452,10 +472,117 @@ class PackageConverterTestCase(unittest.TestCase):
         # Verify that all files are installed in the custom installation
         # prefix. We have to ignore directories, otherwise we would start
         # complaining about the parent directories /, /usr, /usr/lib, etc.
+        paths_to_ignore = ['/usr/share/lintian/overrides/pip-accel']
         for filename, properties in contents.items():
-            is_directory = properties.permissions.startswith('d')
-            in_isolated_directory = filename.startswith('/usr/lib/pip-accel/')
-            assert is_directory or in_isolated_directory
+            if filename not in paths_to_ignore:
+                is_directory = properties.permissions.startswith('d')
+                in_isolated_directory = filename.startswith('/usr/lib/pip-accel/')
+                assert is_directory or in_isolated_directory
+
+    def test_find_installed_files(self):
+        """Test the :py:func:`py2deb.hooks.find_installed_files()` function."""
+        assert '/usr/bin/dpkg' in find_installed_files('dpkg'), \
+            "find_installed_files() returned unexpected output for the 'dpkg' package!"
+
+    def test_bytecode_generation(self):
+        """
+        Test byte code generation and cleanup.
+
+        This tests the :py:func:`~py2deb.hooks.generate_bytecode_files()` and
+        :py:func:`~py2deb.hooks.cleanup_bytecode_files()` functions.
+        """
+        with TemporaryDirectory() as directory:
+            # Generate a Python file.
+            python_file = os.path.join(directory, 'test.py')
+            with open(python_file, 'w') as handle:
+                handle.write('print(42)\n')
+            # Generate the byte code file.
+            generate_bytecode_files('bytecode-test', [python_file])
+            # Make sure a byte code file was generated.
+            bytecode_files = list(find_bytecode_files(python_file))
+            assert len(bytecode_files) > 0 and all(os.path.isfile(fn) for fn in bytecode_files), \
+                "Failed to generate Python byte code file!"
+            # Sneak a random file into the __pycache__ directory to test the
+            # error handling in cleanup_bytecode_files().
+            cache_directory = os.path.join(directory, '__pycache__')
+            random_file = os.path.join(cache_directory, 'random-file')
+            if HAS_PEP_3147:
+                touch(random_file)
+            # Cleanup the byte code file.
+            cleanup_bytecode_files('bytecode-test', [python_file])
+            assert len(bytecode_files) > 0 and all(not os.path.isfile(fn) for fn in bytecode_files), \
+                "Failed to cleanup Python byte code file!"
+            if HAS_PEP_3147:
+                assert os.path.isfile(random_file), \
+                    "Byte code cleanup removed unrelated file!"
+                os.unlink(random_file)
+                cleanup_bytecode_files('test-package', [python_file])
+                assert not os.path.isdir(cache_directory), \
+                    "Failed to clean up __pycache__ directory!"
+
+    test_namespaces = [('foo',),
+                       ('foo', 'bar'),
+                       ('foo', 'bar', 'baz')]
+
+    def test_namespace_initialization(self):
+        """
+        Test namespace package initialization and cleanup.
+
+        This tests the :py:func:`~py2deb.hooks.initialize_namespaces()` and
+        :py:func:`~py2deb.hooks.cleanup_namespaces()` functions.
+        """
+        with TemporaryDirectory() as directory:
+            package_name = 'namespace-package-test'
+            initialize_namespaces(package_name, directory, self.test_namespaces)
+            self.check_test_namespaces(directory)
+            # Increase the reference count of the top level name space.
+            initialize_namespaces(package_name, directory, set([('foo',)]))
+            self.check_test_namespaces(directory)
+            # Clean up the nested name spaces.
+            cleanup_namespaces(package_name, directory, self.test_namespaces)
+            # Make sure top level name space is still intact.
+            assert os.path.isdir(os.path.join(directory, 'foo'))
+            assert os.path.isfile(os.path.join(directory, 'foo', '__init__.py'))
+            # Make sure the nested name spaces were cleaned up.
+            assert not os.path.isdir(os.path.join(directory, 'foo', 'bar'))
+            assert not os.path.isfile(os.path.join(directory, 'foo', 'bar', '__init__.py'))
+            assert not os.path.isdir(os.path.join(directory, 'foo', 'bar', 'baz'))
+            assert not os.path.isfile(os.path.join(directory, 'foo', 'bar', 'baz', '__init__.py'))
+            # Clean up the top level name space as well.
+            cleanup_namespaces(package_name, directory, self.test_namespaces)
+            assert not os.path.isdir(os.path.join(directory, 'foo'))
+
+    def test_post_install_hook(self):
+        """Test the :py:func:`~py2deb.hooks.post_installation_hook()` function."""
+        with TemporaryDirectory() as directory:
+            self.run_post_install_hook(directory)
+            self.check_test_namespaces(directory)
+
+    def test_pre_removal_hook(self):
+        """Test the :py:func:`~py2deb.hooks.pre_removal_hook()` function."""
+        with TemporaryDirectory() as directory:
+            self.run_post_install_hook(directory)
+            pre_removal_hook(package_name='prerm-test-package',
+                             alternatives=set(),
+                             modules_directory=directory,
+                             namespaces=self.test_namespaces)
+            assert not os.path.isdir(os.path.join(directory, 'foo'))
+
+    def run_post_install_hook(self, directory):
+        """Helper for :py:func:`test_post_install_hook()` and :py:func:`test_pre_removal_hook()`."""
+        post_installation_hook(package_name='postinst-test-package',
+                               alternatives=set(),
+                               modules_directory=directory,
+                               namespaces=self.test_namespaces)
+
+    def check_test_namespaces(self, directory):
+        """Make sure the test name spaces are properly initialized."""
+        assert os.path.isdir(os.path.join(directory, 'foo'))
+        assert os.path.isfile(os.path.join(directory, 'foo', '__init__.py'))
+        assert os.path.isdir(os.path.join(directory, 'foo', 'bar'))
+        assert os.path.isfile(os.path.join(directory, 'foo', 'bar', '__init__.py'))
+        assert os.path.isdir(os.path.join(directory, 'foo', 'bar', 'baz'))
+        assert os.path.isfile(os.path.join(directory, 'foo', 'bar', 'baz', '__init__.py'))
 
 
 def py2deb(*arguments):

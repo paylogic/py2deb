@@ -3,7 +3,7 @@
 # Authors:
 #  - Arjan Verwer
 #  - Peter Odding <peter.odding@paylogic.com>
-# Last Change: April 8, 2015
+# Last Change: April 12, 2015
 # URL: https://py2deb.readthedocs.org
 
 """
@@ -28,7 +28,7 @@ import time
 from cached_property import cached_property
 from deb_pkg_tools.control import merge_control_fields, unparse_control_fields
 from deb_pkg_tools.package import build_package
-from executor import execute, quote
+from executor import execute
 from humanfriendly import concatenate, pluralize
 from pkg_resources import Requirement
 from pkginfo import UnpackedSDist
@@ -177,6 +177,64 @@ class PackageToConvert(object):
         return UnpackedSDist(self.find_egg_info_file())
 
     @cached_property
+    def namespace_packages(self):
+        """
+        Get the Python `namespace packages`_ defined by the Python package.
+
+        This property returns the same value that was originally passed to the
+        ``namespace_packages`` keyword argument of ``setuptools.setup()``
+        (albeit in a very indirect way, but nonetheless the same value :-).
+
+        :returns: A list of dotted names (strings).
+
+        .. _namespace packages: https://pythonhosted.org/setuptools/setuptools.html#namespace-packages
+        """
+        dotted_names = []
+        namespace_packages_file = self.find_egg_info_file('namespace_packages.txt')
+        if namespace_packages_file:
+            with open(namespace_packages_file) as handle:
+                for line in handle:
+                    line = line.strip()
+                    if line:
+                        dotted_names.append(line)
+        return dotted_names
+
+    @cached_property
+    def namespaces(self):
+        """
+        Get the Python `namespace packages`_ defined by the Python package.
+
+        :returns: A list of unique tuples of strings. The tuples are sorted by
+                  increasing length (the number of strings in each tuple) so
+                  that e.g. ``zope`` is guaranteed to sort before
+                  ``zope.app``.
+
+        This property processes the result of :py:attr:`namespace_packages`
+        into a more easily usable format. Here's an example of the difference
+        between :py:attr:`namespace_packages` and :py:attr:`namespaces`:
+
+        >>> from py2deb.converter import PackageConverter
+        >>> converter = PackageConverter()
+        >>> package = next(converter.get_source_distributions(['zope.app.cache']))
+        >>> package.namespace_packages
+        ['zope', 'zope.app']
+        >>> package.namespaces
+        [('zope',), ('zope', 'app')]
+
+        The value of this property is used by
+        :py:func:`~py2deb.hooks.initialize_namespaces()` and
+        :py:func:`~py2deb.hooks.cleanup_namespaces()` during installation and
+        removal of the generated package.
+        """
+        namespaces = set()
+        for namespace_package in self.namespace_packages:
+            dotted_name = []
+            for component in namespace_package.split('.'):
+                dotted_name.append(component)
+                namespaces.add(tuple(dotted_name))
+        return sorted(namespaces, key=lambda n: len(n))
+
+    @cached_property
     def has_custom_install_prefix(self):
         """
         Check whether package is being installed under custom installation prefix.
@@ -284,27 +342,40 @@ class PackageToConvert(object):
         """
         with TemporaryDirectory(prefix='py2deb-build-') as build_directory:
 
+            # Prepare the absolute pathname of the Python interpreter on the
+            # target system. This pathname will be embedded in the first line
+            # of executable scripts (including the post-installation and
+            # pre-removal scripts).
+            python_executable = '/usr/bin/%s' % python_version()
+
             # Unpack the binary distribution archive provided by pip-accel inside our build directory.
             build_install_prefix = os.path.join(build_directory, self.converter.install_prefix.lstrip('/'))
             self.converter.pip_accel.bdists.install_binary_dist(
                 members=self.transform_binary_dist(),
                 prefix=build_install_prefix,
-                python='/usr/bin/%s' % python_version(),
+                python=python_executable,
                 virtualenv_compatible=False,
             )
+
+            # Determine the directory (at build time) where the *.py files for
+            # Python modules are located (the site-packages equivalent).
+            if self.has_custom_install_prefix:
+                build_modules_directory = os.path.join(build_install_prefix, 'lib')
+            else:
+                dist_packages_directories = glob.glob(os.path.join(build_install_prefix, 'lib/python*/dist-packages'))
+                if len(dist_packages_directories) != 1:
+                    msg = "Expected to find a single 'dist-packages' directory inside converted package!"
+                    raise Exception(msg)
+                build_modules_directory = dist_packages_directories[0]
+
+            # Determine the directory (at installation time) where the *.py
+            # files for Python modules are located.
+            install_modules_directory = os.path.join('/', os.path.relpath(build_modules_directory, build_directory))
 
             # Execute a user defined command inside the directory where the Python modules are installed.
             command = self.converter.scripts.get(self.python_name.lower())
             if command:
-                if self.has_custom_install_prefix:
-                    lib_directory = os.path.join(build_install_prefix, 'lib')
-                else:
-                    dist_packages = glob.glob(os.path.join(build_install_prefix, 'lib/python*/dist-packages'))
-                    if len(dist_packages) != 1:
-                        msg = "Expected to find a single 'dist-packages' directory inside converted package!"
-                        raise Exception(msg)
-                    lib_directory = dist_packages[0]
-                execute(command, directory=lib_directory, logger=logger)
+                execute(command, directory=build_modules_directory, logger=logger)
 
             # Determine the package's dependencies, starting with the currently
             # running version of Python and the Python requirements converted
@@ -346,42 +417,44 @@ class PackageToConvert(object):
             with open(control_file, 'wb') as handle:
                 control_fields.dump(handle)
 
-            # Install post-installation and pre-removal scripts.
-            installation_directory = os.path.dirname(os.path.abspath(__file__))
-            scripts_directory = os.path.join(installation_directory, 'scripts')
-            for filename in ('postinst.sh', 'prerm.sh'):
-                script, extension = os.path.splitext(filename)
-                target = os.path.join(debian_directory, script)
-                logger.debug("Preprocessing %s script ..", script)
-                # Read the shell script bundled with py2deb.
-                with open(os.path.join(scripts_directory, filename)) as handle:
-                    contents = list(handle)
-                if script == 'postinst':
-                    # Install a program available inside the custom installation
-                    # prefix in the system wide executable search path using the
-                    # Debian alternatives system.
-                    command_template = "update-alternatives --install {link} {name} {path} 0\n"
-                    for link, path in self.converter.alternatives:
-                        if os.path.isfile(os.path.join(build_directory, path.lstrip('/'))):
-                            logger.debug("Preparing installation of alternative with link=%s, path=%s ..", link, path)
-                            contents.append(command_template.format(link=quote(link),
-                                                                    name=quote(os.path.basename(link)),
-                                                                    path=quote(path)))
-                elif script == 'prerm':
-                    # Cleanup the previously created alternative.
-                    command_template = "update-alternatives --remove {name} {path}\n"
-                    for link, path in self.converter.alternatives:
-                        if os.path.isfile(os.path.join(build_directory, path.lstrip('/'))):
-                            logger.debug("Preparing removal of alternative with link=%s, path=%s ..", link, path)
-                            contents.append(command_template.format(name=quote(os.path.basename(link)),
-                                                                    path=quote(path)))
-                # Save the shell script in the build directory.
-                logger.debug("Writing %s script to control directory ..", script)
-                with open(target, 'w') as handle:
-                    for line in contents:
-                        handle.write(line)
-                # Make sure the shell script is executable.
-                os.chmod(target, 0o755)
+            # Lintian is a useful tool to find mistakes in Debian binary
+            # packages however Lintian checks from the perspective of a package
+            # included in the official Debian repositories. Because py2deb
+            # doesn't and probably never will generate such packages some
+            # messages emitted by Lintian are useless (they merely point out
+            # how the internals of py2deb work). Because of this we silence
+            # `known to be irrelevant' messages from Lintian using overrides.
+            overrides_directory = os.path.join(build_directory, 'usr', 'share',
+                                               'lintian', 'overrides')
+            overrides_file = os.path.join(overrides_directory, self.debian_name)
+            os.makedirs(overrides_directory)
+            with open(overrides_file, 'w') as handle:
+                for tag in ['debian-changelog-file-missing',
+                            'embedded-javascript-library',
+                            'extra-license-file',
+                            'unknown-control-interpreter',
+                            'vcs-field-uses-unknown-uri-format']:
+                    handle.write('%s: %s\n' % (self.debian_name, tag))
+
+            # Find the alternatives relevant to the package we're building.
+            alternatives = set((link, path) for link, path in self.converter.alternatives
+                               if os.path.isfile(os.path.join(build_directory, path.lstrip('/'))))
+
+            # Generate post-installation and pre-removal maintainer scripts.
+            self.generate_maintainer_script(filename=os.path.join(debian_directory, 'postinst'),
+                                            python_executable=python_executable,
+                                            function='post_installation_hook',
+                                            package_name=self.debian_name,
+                                            alternatives=alternatives,
+                                            modules_directory=install_modules_directory,
+                                            namespaces=self.namespaces)
+            self.generate_maintainer_script(filename=os.path.join(debian_directory, 'prerm'),
+                                            python_executable=python_executable,
+                                            function='pre_removal_hook',
+                                            package_name=self.debian_name,
+                                            alternatives=alternatives,
+                                            modules_directory=install_modules_directory,
+                                            namespaces=self.namespaces)
 
             return build_package(build_directory, copy_files=False)
 
@@ -535,6 +608,38 @@ class PackageToConvert(object):
                                  len(overrides), section_name, py2deb_cfg, overrides)
                     control_fields = merge_control_fields(control_fields, overrides)
         return control_fields
+
+    def generate_maintainer_script(self, filename, python_executable, function, **arguments):
+        """
+        Generate a post-installation or pre-removal maintainer script.
+
+        :param filename: The pathname of the maintainer script (a string).
+        :param python_executable: The absolute pathname of the Python
+                                  interpreter on the target system (a string).
+        :param function: The name of the function in the :py:mod:`py2deb.hooks`
+                         module to be called when the maintainer script is run
+                         (a string).
+        :param arguments: Any keyword arguments to the function in the
+                          :py:mod:`py2deb.hooks` are serialized and embedded
+                          inside the generated maintainer script.
+        """
+        # Read the py2deb/hooks.py script.
+        py2deb_directory = os.path.dirname(os.path.abspath(__file__))
+        hooks_script = os.path.join(py2deb_directory, 'hooks.py')
+        with open(hooks_script) as handle:
+            contents = handle.read()
+        blocks = contents.split('\n\n')
+        # Generate the shebang / hashbang line.
+        blocks.insert(0, '#!%s' % python_executable)
+        # Generate the call to the top level function.
+        encoded_arguments = ', '.join('%s=%r' % (k, v) for k, v in arguments.items())
+        blocks.append('%s(%s)' % (function, encoded_arguments))
+        # Write the maintainer script.
+        with open(filename, 'w') as handle:
+            handle.write('\n\n'.join(blocks))
+            handle.write('\n')
+        # Make sure the maintainer script is executable.
+        os.chmod(filename, 0o755)
 
     def find_egg_info_file(self, pattern=''):
         """

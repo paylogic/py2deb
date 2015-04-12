@@ -3,7 +3,7 @@
 # Authors:
 #  - Arjan Verwer
 #  - Peter Odding <peter.odding@paylogic.com>
-# Last Change: April 8, 2015
+# Last Change: April 11, 2015
 # URL: https://py2deb.readthedocs.org
 
 """
@@ -49,6 +49,14 @@ class PackageConverter(object):
 
     """
     The external interface of `py2deb`, the Python to Debian package converter.
+
+    .. attribute:: alternatives
+
+       A :py:class:`set` of tuples with two strings each (the strings passed to
+       :py:func:`install_alternative()`). Used by
+       :py:func:`~py2deb.hooks.create_alternatives()` and
+       :py:func:`~py2deb.hooks.cleanup_alternatives()` during installation and
+       removal of the generated package.
     """
 
     def __init__(self, load_configuration_files=True, load_environment_variables=True):
