@@ -1,7 +1,7 @@
 # Automated tests for the `py2deb' package.
 #
 # Author: Peter Odding <peter.odding@paylogic.com>
-# Last Change: April 12, 2015
+# Last Change: April 21, 2015
 # URL: https://py2deb.readthedocs.org
 
 """
@@ -117,11 +117,16 @@ class PackageConverterTestCase(unittest.TestCase):
     :py:mod:`unittest` compatible container for the test suite of `py2deb`.
     """
 
+    def create_isolated_converter(self):
+        """Instantiate an isolated package converter."""
+        return PackageConverter(load_configuration_files=False,
+                                load_environment_variables=False)
+
     def test_argument_validation(self):
         """
         Test argument validation done by setters of :py:class:`py2deb.converter.PackageConverter`.
         """
-        converter = PackageConverter()
+        converter = self.create_isolated_converter()
         self.assertRaises(ValueError, converter.set_repository, '/foo/bar/baz')
         self.assertRaises(ValueError, converter.set_name_prefix, '')
         self.assertRaises(ValueError, converter.rename_package, 'old-name', '')
@@ -221,7 +226,7 @@ class PackageConverterTestCase(unittest.TestCase):
             return
         with TemporaryDirectory() as directory:
             # Run the conversion command.
-            converter = PackageConverter()
+            converter = self.create_isolated_converter()
             converter.set_repository(directory)
             converter.set_conversion_command('Fabric', 'rm -Rf paramiko')
             converter.convert(['Fabric==0.9.0'])
@@ -249,7 +254,7 @@ class PackageConverterTestCase(unittest.TestCase):
             logger.warning("Skipping Fabric conversion test! (Fabric is not Python 3.x compatible)")
             return
         with TemporaryDirectory() as directory:
-            converter = PackageConverter()
+            converter = self.create_isolated_converter()
             converter.set_repository(directory)
             self.assertRaises(DuplicateFilesFound,
                               converter.convert,
@@ -310,7 +315,7 @@ class PackageConverterTestCase(unittest.TestCase):
         """
         with TemporaryDirectory() as directory:
             # Run the conversion command.
-            converter = PackageConverter()
+            converter = self.create_isolated_converter()
             converter.set_repository(directory)
             archives, relationships = converter.convert(['raven[flask]==3.6.0'])
             # Check that a relationship with the extra in the package name was generated.
@@ -320,11 +325,10 @@ class PackageConverterTestCase(unittest.TestCase):
 
     def test_namespace_package_parsing(self):
         """Test parsing of ``namespace_package.txt`` files."""
-        with TemporaryDirectory() as directory:
-            converter = PackageConverter()
-            package = next(converter.get_source_distributions(['--no-deps', 'zope.app.cache==3.7.0']))
-            assert package.namespace_packages == ['zope', 'zope.app']
-            assert package.namespaces == [('zope',), ('zope', 'app')]
+        converter = self.create_isolated_converter()
+        package = next(converter.get_source_distributions(['--no-deps', 'zope.app.cache==3.7.0']))
+        assert package.namespace_packages == ['zope', 'zope.app']
+        assert package.namespaces == [('zope',), ('zope', 'app')]
 
     def test_conversion_of_binary_package(self):
         """
@@ -350,7 +354,7 @@ class PackageConverterTestCase(unittest.TestCase):
         """
         with TemporaryDirectory() as directory:
             # Run the conversion command.
-            converter = PackageConverter()
+            converter = self.create_isolated_converter()
             converter.set_repository(directory)
             archives, relationships = converter.convert(['setproctitle==1.1.8'])
             # Find the generated *.deb archive.
