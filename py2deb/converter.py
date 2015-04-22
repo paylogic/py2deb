@@ -3,7 +3,7 @@
 # Authors:
 #  - Arjan Verwer
 #  - Peter Odding <peter.odding@paylogic.com>
-# Last Change: April 11, 2015
+# Last Change: April 21, 2015
 # URL: https://py2deb.readthedocs.org
 
 """
@@ -72,11 +72,12 @@ class PackageConverter(object):
         """
         self.alternatives = set()
         self.install_prefix = '/usr'
+        self.lintian_enabled = True
         self.name_mapping = {}
         self.name_prefix = 'python'
+        self.pip_accel = PipAccelerator(PipAccelConfig())
         self.repository = PackageRepository(tempfile.gettempdir())
         self.scripts = {}
-        self.pip_accel = PipAccelerator(PipAccelConfig())
         if load_configuration_files:
             self.load_default_configuration_files()
         if load_environment_variables:
@@ -149,6 +150,17 @@ class PackageConverter(object):
                         :py:func:`~humanfriendly.coerce_boolean()`.
         """
         self.pip_accel.config.auto_install = coerce_boolean(enabled)
+
+    def set_lintian_enabled(self, enabled):
+        """
+        Enable or disable automatic Lintian_ checks after package building.
+
+        :param enabled: Any value, evaluated using
+                        :py:func:`~humanfriendly.coerce_boolean()`.
+
+        .. _Lintian: http://lintian.debian.org/
+        """
+        self.lintian_enabled = coerce_boolean(enabled)
 
     def install_alternative(self, link, path):
         r"""
@@ -242,12 +254,14 @@ class PackageConverter(object):
         - ``$PY2DEB_NAME_PREFIX``
         - ``$PY2DEB_INSTALL_PREFIX``
         - ``$PY2DEB_AUTO_INSTALL``
+        - ``$PY2DEB_LINTIAN``
         """
         for variable, setter in (('PY2DEB_CONFIG', self.load_configuration_file),
                                  ('PY2DEB_REPOSITORY', self.set_repository),
                                  ('PY2DEB_NAME_PREFIX', self.set_name_prefix),
                                  ('PY2DEB_INSTALL_PREFIX', self.set_install_prefix),
-                                 ('PY2DEB_AUTO_INSTALL', self.set_auto_install)):
+                                 ('PY2DEB_AUTO_INSTALL', self.set_auto_install),
+                                 ('PY2DEB_LINTIAN', self.set_lintian_enabled)):
             value = os.environ.get(variable)
             if value is not None:
                 setter(value)
@@ -273,6 +287,7 @@ class PackageConverter(object):
            name-prefix = py2deb
            install-prefix = /usr/lib/py2deb
            auto-install = on
+           lintian = on
 
            # The `alternatives' section contains instructions
            # for Debian's `update-alternatives' system.
@@ -322,6 +337,8 @@ class PackageConverter(object):
             self.set_install_prefix(parser.get('py2deb', 'install-prefix'))
         if parser.has_option('py2deb', 'auto-install'):
             self.set_auto_install(parser.get('py2deb', 'auto-install'))
+        if parser.has_option('py2deb', 'lintian'):
+            self.set_lintian_enabled(parser.get('py2deb', 'lintian'))
         # Apply the defined alternatives.
         if parser.has_section('alternatives'):
             for link, path in parser.items('alternatives'):

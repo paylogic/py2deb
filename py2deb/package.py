@@ -3,7 +3,7 @@
 # Authors:
 #  - Arjan Verwer
 #  - Peter Odding <peter.odding@paylogic.com>
-# Last Change: April 12, 2015
+# Last Change: April 21, 2015
 # URL: https://py2deb.readthedocs.org
 
 """
@@ -456,7 +456,9 @@ class PackageToConvert(object):
                                             modules_directory=install_modules_directory,
                                             namespaces=self.namespaces)
 
-            return build_package(build_directory, copy_files=False)
+            return build_package(directory=build_directory,
+                                 check_package=self.converter.lintian_enabled,
+                                 copy_files=False)
 
     def transform_binary_dist(self):
         """
