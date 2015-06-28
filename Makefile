@@ -1,7 +1,7 @@
 # Makefile for py2deb.
 #
 # Author: Peter Odding <peter.odding@paylogic.com>
-# Last Change: April 11, 2015
+# Last Change: June 27, 2015
 # URL: https://github.com/paylogic/py2deb
 
 PROJECT_NAME = py2deb
@@ -66,9 +66,10 @@ coverage: check install
 	$(ACTIVATE) && coverage html
 
 readme:
-	@python misc/usage.py
+	test -x "$(VIRTUAL_ENV)/bin/cog.py" || ($(ACTIVATE) && pip-accel install cogapp)
+	$(ACTIVATE) && cog.py -r README.rst
 
-docs: check install
+docs: check install readme
 	@test -x "$(VIRTUAL_ENV)/bin/sphinx-build" || ($(ACTIVATE) && pip-accel install sphinx)
 	$(ACTIVATE) && cd docs && sphinx-build -b html -d build/doctrees . build/html
 
