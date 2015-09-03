@@ -154,6 +154,29 @@ So the "--" marker separates the py2deb options from the pip options.
 
 .. [[[end]]]
 
+Future improvements
+-------------------
+
+Some random ideas for possible improvements to py2deb (in no specific order):
+
+- Find a way to facilitate (explicit / opt-in) installation of system wide
+  files (not related to Python per se) based on a Python distribution? This
+  could significantly reduce the need for "wrapper packages" that basically
+  just pull in packages converted by py2deb and drop a few configuration files
+  into place.
+
+- Investigate the feasability of supporting conversion of binary wheels. Slowly
+  but surely the Python community seems to be gravitating towards (binary)
+  wheels and once gravity has shifted we don't want to be left in the dust! ;-)
+
+- Make it possible to "replace" Python requirements in a requirement set with a
+  Debian package that's included in the official repositories (e.g. Pillow_
+  becomes python-imaging_ or python-pil_). There are some hairy details
+  involved here.
+
+- Dive into PEP-440_ and see if there is a way to fully support it? Then `this
+  question on Reddit`_ can finally get a satisfying answer :-).
+
 Similar projects
 ----------------
 
@@ -185,7 +208,12 @@ This software is licensed under the `MIT license`_.
 .. _hosted on Read The Docs: https://py2deb.readthedocs.org
 .. _Lintian: http://en.wikipedia.org/wiki/Lintian
 .. _MIT license: http://en.wikipedia.org/wiki/MIT_License
+.. _PEP-440: https://www.python.org/dev/peps/pep-0440/
+.. _Pillow: https://python-pillow.github.io/
 .. _pip-accel: https://github.com/paylogic/pip-accel
 .. _PyPI: https://pypi.python.org/pypi/py2deb
+.. _python-imaging: https://packages.debian.org/search?keywords=python-imaging
+.. _python-pil: https://packages.debian.org/search?keywords=python-pil
 .. _requirement files: http://www.pip-installer.org/en/latest/cookbook.html#requirements-files
 .. _stdeb: https://pypi.python.org/pypi/stdeb
+.. _this question on Reddit: https://www.reddit.com/r/Python/comments/2x7s17/py2deb_python_to_debian_package_converter/coxyyzu
