@@ -3,7 +3,7 @@
 # Authors:
 #  - Arjan Verwer
 #  - Peter Odding <peter.odding@paylogic.com>
-# Last Change: March 4, 2015
+# Last Change: September 4, 2015
 # URL: https://py2deb.readthedocs.org
 
 """
@@ -24,6 +24,9 @@ from six import BytesIO
 
 # Initialize a logger.
 logger = logging.getLogger(__name__)
+
+integer_pattern = re.compile('([0-9]+)')
+"""Compiled regular expression to match a consecutive run of digits."""
 
 
 class PackageRepository(object):
@@ -195,6 +198,16 @@ def normalize_package_version(python_package_version):
         components.append('1')
         sanitized_version = '-'.join(components)
     return sanitized_version
+
+
+def tokenize_version(version_number):
+    """
+    Tokenize a string containing a version number.
+
+    :param version_number: The string to tokenize.
+    :returns: A list of strings.
+    """
+    return [t for t in integer_pattern.split(version_number) if t]
 
 
 def package_names_match(a, b):

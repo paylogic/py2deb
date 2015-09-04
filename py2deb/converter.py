@@ -3,7 +3,7 @@
 # Authors:
 #  - Arjan Verwer
 #  - Peter Odding <peter.odding@paylogic.com>
-# Last Change: April 21, 2015
+# Last Change: September 4, 2015
 # URL: https://py2deb.readthedocs.org
 
 """
@@ -20,6 +20,7 @@ conversion logic.
 # Standard library modules.
 import logging
 import os
+import re
 import shutil
 import tempfile
 
@@ -28,13 +29,14 @@ from cached_property import cached_property
 from deb_pkg_tools.cache import get_default_cache
 from deb_pkg_tools.checks import check_duplicate_files
 from deb_pkg_tools.utils import find_debian_architecture
-from humanfriendly import coerce_boolean
+from humanfriendly import coerce_boolean, compact
 from pip_accel import PipAccelerator
 from pip_accel.config import Config as PipAccelConfig
 from six.moves import configparser
 
 # Modules included in our package.
-from py2deb.utils import compact_repeating_words, normalize_package_name, PackageRepository
+from py2deb.utils import (compact_repeating_words, normalize_package_name, normalize_package_version,
+                          package_names_match, PackageRepository, tokenize_version)
 from py2deb.package import PackageToConvert
 
 # Initialize a logger.
@@ -405,8 +407,12 @@ class PackageConverter(object):
         try:
             generated_archives = []
             dependencies_to_report = []
-            # Download, unpack and convert no-yet-converted packages.
-            for package in self.get_source_distributions(pip_install_arguments):
+            # Download and unpack the requirement set and store the complete
+            # set as an instance variable because transform_version() will need
+            # it later on.
+            self.packages_to_convert = list(self.get_source_distributions(pip_install_arguments))
+            # Convert packages that haven't been converted already.
+            for package in self.packages_to_convert:
                 # If the requirement is a 'direct' (non-transitive) requirement
                 # it means the caller explicitly asked for this package to be
                 # converted, so we add it to the list of converted dependencies
@@ -502,6 +508,91 @@ class PackageConverter(object):
             debian_package_name = '%s-%s' % (debian_package_name, '-'.join(sorted_extras))
         # Always normalize the package name (even if it was given to us by the caller).
         return normalize_package_name(debian_package_name)
+
+    def transform_version(self, package_to_convert, python_requirement_name, python_requirement_version):
+        """
+        Transform a Python requirement version to a Debian version number.
+
+        :param package_to_convert: The :class:`.PackageToConvert` whose
+                                   requirement is being transformed.
+        :param python_requirement_name: The name of a Python package
+                                        as found on PyPI (a string).
+        :param python_requirement_version: The required version of the
+                                           Python package (a string).
+        :returns: The transformed version (a string).
+
+        This method is a wrapper for :func:`.normalize_package_version()` that
+        takes care of one additional quirk to ensure compatibility with pip.
+        Explaining this quirk requires a bit of context:
+
+        - When package A requires package B (via ``install_requires``) and
+          package A absolutely pins the required version of package B using one
+          or more trailing zeros (e.g. ``B==1.0.0``) but the actual version
+          number of package B (embedded in the metadata of package B) contains
+          less trailing zeros (e.g. ``1.0``) then pip will not complain but
+          silently fetch version ``1.0`` of package B to satisfy the
+          requirement.
+
+        - However this doesn't change the absolutely pinned version in the
+          ``install_requires`` metadata of package A.
+
+        - When py2deb converts the resulting requirement set, the dependency of
+          package A is converted as ``B (= 1.0.0)``. The resulting packages
+          will not be installable because ``apt`` considers ``1.0`` to be
+          different from ``1.0.0``.
+
+        This method analyzes the requirement set to identify occurrences of
+        this quirk and strip trailing zeros in ``install_requires`` metadata
+        that would otherwise result in converted packages that cannot be
+        installed.
+        """
+        matching_packages = [p for p in self.packages_to_convert
+                             if package_names_match(p.python_name, python_requirement_name)]
+        if len(matching_packages) != 1:
+            # My assumption while writing this code is that this should never
+            # happen. This check is to make sure that if it does happen it will
+            # be noticed because the last thing I want is for this `hack' to
+            # result in packages that are silently wrongly converted.
+            normalized_name = normalize_package_name(python_requirement_name)
+            num_matches = len(matching_packages)
+            raise Exception(compact("""
+                Expected requirement set to contain exactly one Python package
+                whose name can be normalized to {name} but encountered {count}
+                packages instead! (matching packages: {matches})
+            """, name=normalized_name, count=num_matches, matches=matching_packages))
+        # Check whether the version number included in the requirement set
+        # matches the version number in a package's requirements.
+        requirement_to_convert = matching_packages[0]
+        if python_requirement_version != requirement_to_convert.python_version:
+            logger.debug("Checking whether to strip trailing zeros from required version ..")
+            # Check whether the version numbers share the same prefix.
+            required_version = tokenize_version(python_requirement_version)
+            included_version = tokenize_version(requirement_to_convert.python_version)
+            common_length = min(len(required_version), len(included_version))
+            required_prefix = required_version[:common_length]
+            included_prefix = included_version[:common_length]
+            prefixes_match = (required_prefix == included_prefix)
+            logger.debug("Prefix of required version: %s", required_prefix)
+            logger.debug("Prefix of included version: %s", included_prefix)
+            logger.debug("Prefixes match? %s", prefixes_match)
+            # Check if 1) only the required version has a suffix and 2) this
+            # suffix consists only of trailing zeros.
+            required_suffix = required_version[common_length:]
+            included_suffix = included_version[common_length:]
+            logger.debug("Suffix of required version: %s", required_suffix)
+            logger.debug("Suffix of included version: %s", included_suffix)
+            if prefixes_match and required_suffix and not included_suffix:
+                # Check whether the suffix of the required version contains
+                # only zeros, i.e. pip considers the version numbers the same
+                # although apt would not agree.
+                if all(re.match('^0+$', t) for t in required_suffix if t.isdigit()):
+                    modified_version = ''.join(required_prefix)
+                    logger.warning("Stripping superfluous trailing zeros from required"
+                                   " version of %s required by %s! (%s -> %s)",
+                                   python_requirement_name, package_to_convert.python_name,
+                                   python_requirement_version, modified_version)
+                    python_requirement_version = modified_version
+        return normalize_package_version(python_requirement_version)
 
     @cached_property
     def debian_architecture(self):

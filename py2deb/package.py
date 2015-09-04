@@ -3,7 +3,7 @@
 # Authors:
 #  - Arjan Verwer
 #  - Peter Odding <peter.odding@paylogic.com>
-# Last Change: April 21, 2015
+# Last Change: September 4, 2015
 # URL: https://py2deb.readthedocs.org
 
 """
@@ -35,7 +35,7 @@ from pkginfo import UnpackedSDist
 from six.moves import configparser
 
 # Modules included in our package.
-from py2deb.utils import (embed_install_prefix, package_names_match, normalize_package_version,
+from py2deb.utils import (embed_install_prefix, normalize_package_version, package_names_match,
                           python_version, TemporaryDirectory)
 
 # Initialize a logger.
@@ -122,10 +122,10 @@ class PackageToConvert(object):
         """
         The version of the Debian package (a string).
 
-        Reformats the version of the Python package using
-        :py:func:`.normalize_package_version()`.
+        Reformats :attr:`python_version` using
+        :func:`.normalize_package_version()`.
         """
-        return normalize_package_version(self.requirement.version)
+        return normalize_package_version(self.python_version)
 
     @cached_property
     def debian_maintainer(self):
@@ -292,7 +292,7 @@ class PackageToConvert(object):
             debian_package_name = self.converter.transform_name(requirement.project_name, *requirement.extras)
             if requirement.specs:
                 for constraint, version in requirement.specs:
-                    version = normalize_package_version(version)
+                    version = self.converter.transform_version(self, requirement.project_name, version)
                     if version == 'dev':
                         # Requirements like 'pytz > dev' (celery==3.1.16) don't
                         # seem to really mean anything to pip (based on my

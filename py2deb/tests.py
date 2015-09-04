@@ -1,7 +1,7 @@
 # Automated tests for the `py2deb' package.
 #
 # Author: Peter Odding <peter.odding@paylogic.com>
-# Last Change: April 21, 2015
+# Last Change: September 4, 2015
 # URL: https://py2deb.readthedocs.org
 
 """
@@ -25,7 +25,6 @@ import os
 import shutil
 import sys
 import tempfile
-import textwrap
 import unittest
 
 # External dependencies.
@@ -34,6 +33,7 @@ from deb_pkg_tools.checks import DuplicateFilesFound
 from deb_pkg_tools.control import load_control_file
 from deb_pkg_tools.package import inspect_package, parse_filename
 from executor import execute
+from humanfriendly import dedent
 
 # Modules included in our package.
 from py2deb.cli import main
@@ -371,6 +371,41 @@ class PackageConverterTestCase(unittest.TestCase):
             # dpkg-shlibdeps was run successfully).
             assert 'libc6' in metadata['Depends'].names
 
+    def test_install_requires_version_munging(self):
+        """
+        Convert a package with a requirement whose version is "munged" by pip.
+
+        Refer to :func:`py2deb.converter.PackageConverter.transform_version()`
+        for details about the purpose of this test.
+        """
+        with TemporaryDirectory() as repository_directory:
+            with TemporaryDirectory() as distribution_directory:
+                # Create a temporary (and rather trivial :-) Python package.
+                with open(os.path.join(distribution_directory, 'setup.py'), 'w') as handle:
+                    handle.write(dedent('''
+                        from setuptools import setup
+                        setup(
+                            name='install-requires-munging-test',
+                            version='1.0',
+                            install_requires=['humanfriendly==1.30.0'],
+                        )
+                    '''))
+                # Run the conversion command.
+                converter = self.create_isolated_converter()
+                converter.set_repository(repository_directory)
+                archives, relationships = converter.convert([distribution_directory])
+                # Find the generated *.deb archive.
+                pathname = find_package_archive(archives, 'python-install-requires-munging-test')
+                # Use deb-pkg-tools to inspect the package metadata.
+                metadata, contents = inspect_package(pathname)
+                logger.debug("Metadata of generated package: %s", dict(metadata))
+                logger.debug("Contents of generated package: %s", dict(contents))
+                # Inspect the converted package's dependency.
+                assert metadata['Depends'].matches('python-humanfriendly', '1.30'), \
+                    "py2deb failed to rewrite version of dependency!"
+                assert not metadata['Depends'].matches('python-humanfriendly', '1.30.0'), \
+                    "py2deb failed to rewrite version of dependency!"
+
     def test_conversion_of_isolated_packages(self):
         """
         Convert a group of packages with a custom name and installation prefix.
@@ -416,7 +451,7 @@ class PackageConverterTestCase(unittest.TestCase):
         with TemporaryDirectory() as directory:
             configuration_file = os.path.join(directory, 'py2deb.ini')
             with open(configuration_file, 'w') as handle:
-                handle.write(format('''
+                handle.write(dedent('''
                     [py2deb]
                     repository = {repository}
                     name-prefix = pip-accel
@@ -643,14 +678,3 @@ def find_file(contents, pattern):
             matches.append(metadata)
     assert len(matches) == 1, "Expected to match exactly one archive entry!"
     return matches[0]
-
-
-def format(text, **kw):
-    """
-    Dedent, strip and format a multiline string with format specifications.
-
-    :param text: The text to format (a string).
-    :param kw: Any format string arguments.
-    :returns: The formatted text (a string).
-    """
-    return textwrap.dedent(text).strip().format(**kw)
