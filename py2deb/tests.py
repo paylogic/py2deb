@@ -1,7 +1,7 @@
 # Automated tests for the `py2deb' package.
 #
 # Author: Peter Odding <peter.odding@paylogic.com>
-# Last Change: September 4, 2015
+# Last Change: September 24, 2015
 # URL: https://py2deb.readthedocs.org
 
 """
@@ -30,7 +30,7 @@ import unittest
 # External dependencies.
 import coloredlogs
 from deb_pkg_tools.checks import DuplicateFilesFound
-from deb_pkg_tools.control import load_control_file
+from deb_pkg_tools.control import load_control_file, patch_control_file
 from deb_pkg_tools.package import inspect_package, parse_filename
 from executor import execute
 from humanfriendly import dedent
@@ -518,6 +518,40 @@ class PackageConverterTestCase(unittest.TestCase):
                 in_isolated_directory = filename.startswith('/usr/lib/pip-accel/')
                 assert is_directory or in_isolated_directory
 
+    def test_python_callback_from_api(self):
+        """Test Python callback logic (registered through the Python API)."""
+        self.check_python_callback(python_callback_fn)
+
+    def test_python_callback_from_dotted_path(self):
+        """Test Python callback logic (through a dotted path expression)."""
+        self.check_python_callback('py2deb.tests:python_callback_fn')
+
+    def test_python_callback_from_filename(self):
+        """Test Python callback logic (through a filename expression)."""
+        filename = os.path.abspath(__file__)
+        self.check_python_callback('%s:python_callback_fn' % filename)
+
+    def check_python_callback(self, expression):
+        """Test for Python callback logic manipulating the build of a package."""
+        with TemporaryDirectory() as repository_directory:
+            # Run the conversion command.
+            converter = self.create_isolated_converter()
+            converter.set_repository(repository_directory)
+            converter.set_python_callback(expression)
+            converter.set_name_prefix('callback-test')
+            archives, relationships = converter.convert(['naturalsort'])
+            # Find the generated *.deb archive.
+            pathname = find_package_archive(archives, 'callback-test-naturalsort')
+            # Use deb-pkg-tools to inspect the package metadata.
+            metadata, contents = inspect_package(pathname)
+            logger.debug("Metadata of generated package: %s", dict(metadata))
+            logger.debug("Contents of generated package: %s", dict(contents))
+            # Inspect the converted package's dependency.
+            assert metadata['Breaks'].matches('callback-test-natsort'), \
+                "Result of Python callback not visible?!"
+            assert metadata['Replaces'].matches('callback-test-natsort'), \
+                "Result of Python callback not visible?!"
+
     def test_find_installed_files(self):
         """Test the :py:func:`py2deb.hooks.find_installed_files()` function."""
         assert '/usr/bin/dpkg' in find_installed_files('dpkg'), \
@@ -678,3 +712,13 @@ def find_file(contents, pattern):
             matches.append(metadata)
     assert len(matches) == 1, "Expected to match exactly one archive entry!"
     return matches[0]
+
+
+def python_callback_fn(converter, package, build_directory):
+    """Simple Python function to test support for callbacks."""
+    if package.python_name.lower() == 'naturalsort':
+        control_file = os.path.join(build_directory, 'DEBIAN', 'control')
+        patch_control_file(control_file, dict(
+            replaces=converter.transform_name('natsort'),
+            breaks=converter.transform_name('natsort'),
+        ))

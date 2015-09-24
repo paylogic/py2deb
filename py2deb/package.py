@@ -3,7 +3,7 @@
 # Authors:
 #  - Arjan Verwer
 #  - Peter Odding <peter.odding@paylogic.com>
-# Last Change: September 4, 2015
+# Last Change: September 24, 2015
 # URL: https://py2deb.readthedocs.org
 
 """
@@ -455,6 +455,14 @@ class PackageToConvert(object):
                                             alternatives=alternatives,
                                             modules_directory=install_modules_directory,
                                             namespaces=self.namespaces)
+
+            # Enable a user defined Python callback to manipulate the resulting
+            # binary package before it's turned into a *.deb archive (e.g.
+            # manipulate the contents or change the package metadata).
+            if self.converter.python_callback:
+                logger.debug("Invoking user defined Python callback ..")
+                self.converter.python_callback(self.converter, self, build_directory)
+                logger.debug("User defined Python callback finished!")
 
             return build_package(directory=build_directory,
                                  check_package=self.converter.lintian_enabled,

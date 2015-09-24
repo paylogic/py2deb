@@ -5,7 +5,7 @@ Setup script for the `py2deb` package.
 """
 
 # Author: Peter Odding <peter.odding@paylogic.com>
-# Last Change: June 18, 2014
+# Last Change: September 24, 2015
 # URL: https://py2deb.readthedocs.org
 
 # Standard library modules.
@@ -32,6 +32,11 @@ with open(os.path.join(source_directory, 'README.rst')) as handle:
 # Fill in the "install_requires" field based on requirements.txt.
 with open(os.path.join(source_directory, 'requirements.txt')) as handle:
     requirements = [line.strip() for line in handle if not line.startswith('#')]
+
+# Check if `importlib' is required as an external dependency. We're only
+# concerned about Python 2.6 because py2deb doesn't support Python 3.0.
+if sys.version_info[0:2] < (2, 7):
+    requirements.append('importlib')
 
 setuptools.setup(
     name='py2deb',

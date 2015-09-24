@@ -1,7 +1,7 @@
 # Command line interface for the `py2deb' program.
 #
 # Author: Peter Odding <peter.odding@paylogic.com>
-# Last Change: November 28, 2014
+# Last Change: September 24, 2015
 # URL: https://py2deb.readthedocs.org
 
 """
@@ -84,6 +84,14 @@ Supported options:
     the system wide executable search path. Refer to the documentation
     for details.
 
+  --python-callback=EXPRESSION
+
+    Set a Python callback to be called during the conversion process. Refer to
+    the documentation for details about the use of this feature and the syntax
+    of EXPRESSION.
+
+    Can also be set using the environment variable $PY2DEB_CALLBACK.
+
   --report-dependencies=FILENAME
 
     Add the Debian relationships needed to depend on the converted
@@ -138,7 +146,8 @@ def main():
         options, arguments = getopt.getopt(sys.argv[1:], 'c:r:yvh', [
             'config=', 'repository=', 'name-prefix=', 'no-name-prefix=',
             'rename=', 'install-prefix=', 'install-alternative=',
-            'report-dependencies=', 'yes', 'verbose', 'help'
+            'python-callback=', 'report-dependencies=',
+            'yes', 'verbose', 'help',
         ])
         control_file_to_update = None
         for option, value in options:
@@ -158,6 +167,8 @@ def main():
             elif option == '--install-alternative':
                 link, _, path = value.partition(',')
                 converter.install_alternative(link, path)
+            elif option == '--python-callback':
+                converter.set_python_callback(value)
             elif option == '--report-dependencies':
                 control_file_to_update = value
                 if not os.path.isfile(control_file_to_update):

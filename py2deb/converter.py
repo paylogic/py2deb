@@ -3,7 +3,7 @@
 # Authors:
 #  - Arjan Verwer
 #  - Peter Odding <peter.odding@paylogic.com>
-# Last Change: September 4, 2015
+# Last Change: September 24, 2015
 # URL: https://py2deb.readthedocs.org
 
 """
@@ -18,6 +18,7 @@ conversion logic.
 """
 
 # Standard library modules.
+import importlib
 import logging
 import os
 import re
@@ -42,9 +43,13 @@ from py2deb.package import PackageToConvert
 # Initialize a logger.
 logger = logging.getLogger(__name__)
 
-# Mapping of supported machine architectures reported by os.uname() to the
-# machine architecture labels used in the Debian packaging system.
 MACHINE_ARCHITECTURE_MAPPING = dict(i686='i386', x86_64='amd64', armv6l='armhf')
+"""
+Mapping of supported machine architectures (a dictionary).
+
+The keys are the names reported by :func:`os.uname()` and the values are
+machine architecture labels used in the Debian packaging system.
+"""
 
 
 class PackageConverter(object):
@@ -78,6 +83,7 @@ class PackageConverter(object):
         self.name_mapping = {}
         self.name_prefix = 'python'
         self.pip_accel = PipAccelerator(PipAccelConfig())
+        self.python_callback = None
         self.repository = PackageRepository(tempfile.gettempdir())
         self.scripts = {}
         if load_configuration_files:
@@ -210,14 +216,14 @@ class PackageConverter(object):
         """
         Set shell command to be executed during conversion process.
 
-        The shell command is executed in the directory containing the Python
-        module(s) that are to be installed by the converted package.
-
         :param python_package_name: The name of a Python package
                                     as found on PyPI (a string).
         :param command: The shell command to execute (a string).
         :raises: :py:exc:`~exceptions.ValueError` when the package name or
                  command is not provided (e.g. an empty string).
+
+        The shell command is executed in the directory containing the Python
+        module(s) that are to be installed by the converted package.
 
         .. warning:: This functionality allows arbitrary manipulation of the
                      Python modules to be installed by the converted package.
@@ -245,6 +251,90 @@ class PackageConverter(object):
             raise ValueError("Please provide a nonempty shell command!")
         self.scripts[python_package_name.lower()] = command
 
+    def set_python_callback(self, expression):
+        """
+        Set a Python callback to be called during the conversion process.
+
+        :param expression: One of the following:
+
+                           1. A callable object (to be provided by Python API callers).
+                           2. A string containing the pathname of a Python
+                              script and the name of a callable, separated by a
+                              colon. The Python script will be loaded using
+                              :func:`execfile()`.
+                           3. A string containing the "dotted path" of a Python
+                              module and the name of a callable, separated by a
+                              colon. The Python module will be loaded using
+                              :func:`importlib.import_module()`.
+                           4. Any value that evaluates to :data:`False` will
+                              clear an existing callback (if any).
+        :raises: :exc:`~exceptions.ValueError` when the given expression does
+                 not result in a valid callable. :exc:`~exceptions.ImportError`
+                 when the expression contains a dotted path that cannot be
+                 imported.
+
+        The callback will be called at the very last step before the binary
+        package's metadata and contents are packaged as a ``*.deb`` archive.
+
+        This allows arbitrary manipulation of resulting binary packages, e.g.
+        changing package metadata or files to be packaged.
+
+        An example use case:
+
+        - Consider a dependency set (group of related packages) that has
+          previously been converted and deployed.
+
+        - A new version of the dependency set switches from Python package A to
+          Python package B, where the two Python packages contain conflicting
+          files (installed in the same location). This could happen when
+          switching to a project's fork.
+
+        - A deployment of the new dependency set will conflict with existing
+          installations due to "unrelated" packages (in the eyes of ``apt`` and
+          ``dpkg``) installing the same files.
+
+        - By injecting a custom Python callback the user can mark package B as
+          "replacing" and "breaking" package A. Refer to `section 7.6`_ of the
+          Debian policy manual for details about the required binary control
+          fields (hint: ``Replaces:`` and ``Breaks:``).
+
+        .. warning:: The callback is responsible for not making changes that
+                     would break the installation of the converted dependency
+                     set!
+
+        .. _section 7.6: https://www.debian.org/doc/debian-policy/ch-relationships.html#s-replaces
+        """
+        if expression:
+            if callable(expression):
+                # Python callers get to pass a callable directly.
+                self.python_callback = expression
+            else:
+                # Otherwise we expect a string to parse (from a command line
+                # argument, environment variable or configuration file).
+                callback_path, _, callback_name = expression.partition(':')
+                if os.path.isfile(callback_path):
+                    # Callback specified as Python script.
+                    script_name = os.path.basename(callback_path)
+                    if script_name.endswith('.py'):
+                        script_name, _ = os.path.splitext(script_name)
+                    environment = dict(__file__=callback_path, __name__=script_name)
+                    logger.debug("Loading Python callback from pathname: %s", callback_path)
+                    execfile(callback_path, environment, environment)
+                    self.python_callback = environment.get(callback_name)
+                else:
+                    # Callback specified as `dotted path'.
+                    logger.debug("Loading Python callback from dotted path: %s", callback_path)
+                    module = importlib.import_module(callback_path)
+                    self.python_callback = getattr(module, callback_name, None)
+                if not callable(self.python_callback):
+                    raise ValueError(compact("""
+                        The Python callback expression {expr} didn't result in
+                        a valid callable! (result: {value})
+                    """, expr=expression, value=self.python_callback))
+        else:
+            # Clear an existing callback (if any).
+            self.python_callback = None
+
     def load_environment_variables(self):
         """
         Load configuration defaults from environment variables.
@@ -263,7 +353,8 @@ class PackageConverter(object):
                                  ('PY2DEB_NAME_PREFIX', self.set_name_prefix),
                                  ('PY2DEB_INSTALL_PREFIX', self.set_install_prefix),
                                  ('PY2DEB_AUTO_INSTALL', self.set_auto_install),
-                                 ('PY2DEB_LINTIAN', self.set_lintian_enabled)):
+                                 ('PY2DEB_LINTIAN', self.set_lintian_enabled),
+                                 ('PY2DEB_CALLBACK', self.set_python_callback)):
             value = os.environ.get(variable)
             if value is not None:
                 setter(value)
@@ -341,6 +432,8 @@ class PackageConverter(object):
             self.set_auto_install(parser.get('py2deb', 'auto-install'))
         if parser.has_option('py2deb', 'lintian'):
             self.set_lintian_enabled(parser.get('py2deb', 'lintian'))
+        if parser.has_option('py2deb', 'python-callback'):
+            self.set_python_callback(parser.get('py2deb', 'python-callback'))
         # Apply the defined alternatives.
         if parser.has_section('alternatives'):
             for link, path in parser.items('alternatives'):
