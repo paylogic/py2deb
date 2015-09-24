@@ -261,7 +261,7 @@ class PackageConverter(object):
                            2. A string containing the pathname of a Python
                               script and the name of a callable, separated by a
                               colon. The Python script will be loaded using
-                              :func:`execfile()`.
+                              :keyword:`exec`.
                            3. A string containing the "dotted path" of a Python
                               module and the name of a callable, separated by a
                               colon. The Python module will be loaded using
@@ -319,7 +319,8 @@ class PackageConverter(object):
                         script_name, _ = os.path.splitext(script_name)
                     environment = dict(__file__=callback_path, __name__=script_name)
                     logger.debug("Loading Python callback from pathname: %s", callback_path)
-                    execfile(callback_path, environment, environment)
+                    with open(callback_path) as handle:
+                        exec(handle.read(), environment)
                     self.python_callback = environment.get(callback_name)
                 else:
                     # Callback specified as `dotted path'.

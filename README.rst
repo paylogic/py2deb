@@ -137,6 +137,12 @@ So the "--" marker separates the py2deb options from the pip options.
    the system wide executable search path. Refer to the documentation
    for details.
    "
+   ``--python-callback=EXPRESSION``,"Set a Python callback to be called during the conversion process. Refer to
+   the documentation for details about the use of this feature and the syntax
+   of ``EXPRESSION``.
+   
+   Can also be set using the environment variable ``$PY2DEB_CALLBACK``.
+   "
    ``--report-dependencies=FILENAME``,"Add the Debian relationships needed to depend on the converted
    package(s) to the given control file. If the control file already
    contains relationships the additional relationships will be added
