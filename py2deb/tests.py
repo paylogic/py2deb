@@ -1,7 +1,7 @@
 # Automated tests for the `py2deb' package.
 #
 # Author: Peter Odding <peter.odding@paylogic.com>
-# Last Change: September 24, 2015
+# Last Change: January 19, 2016
 # URL: https://py2deb.readthedocs.org
 
 """
@@ -279,7 +279,8 @@ class PackageConverterTestCase(unittest.TestCase):
             archives = glob.glob('%s/*.deb' % directory)
             logger.debug("Found generated archive(s): %s", archives)
             # Make sure the expected dependencies have been converted.
-            assert sorted(parse_filename(a).name for a in archives) == sorted([
+            converted_dependencies = set(parse_filename(a).name for a in archives)
+            expected_dependencies = set([
                 'python-cached-property',
                 'python-chardet',
                 'python-coloredlogs',
@@ -289,6 +290,7 @@ class PackageConverterTestCase(unittest.TestCase):
                 'python-humanfriendly',
                 'python-six',
             ])
+            assert expected_dependencies.issubset(converted_dependencies)
             # Use deb-pkg-tools to inspect ... deb-pkg-tools :-)
             pathname = find_package_archive(archives, 'python-deb-pkg-tools')
             metadata, contents = inspect_package(pathname)
