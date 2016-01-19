@@ -1,7 +1,7 @@
 # Command line interface for the `py2deb' program.
 #
 # Author: Peter Odding <peter.odding@paylogic.com>
-# Last Change: September 24, 2015
+# Last Change: January 19, 2016
 # URL: https://py2deb.readthedocs.org
 
 """
@@ -124,7 +124,7 @@ import sys
 # External dependencies.
 import coloredlogs
 from deb_pkg_tools.control import patch_control_file
-from executor import execute
+from humanfriendly.terminal import usage, warning
 
 # Modules included in our package.
 from py2deb.converter import PackageConverter
@@ -179,15 +179,12 @@ def main():
             elif option in ('-v', '--verbose'):
                 coloredlogs.increase_verbosity()
             elif option in ('-h', '--help'):
-                usage()
+                usage(__doc__)
                 return
             else:
                 assert False, "Unhandled option!"
     except Exception as e:
-        # Since we control the exception messages emitted above, there's no
-        # point in showing an exception traceback here, hence logger.error().
-        logger.error(e)
-        logger.info("Hint: Use `py2deb --help' for instructions.")
+        warning("Failed to parse command line arguments: %s", e)
         sys.exit(1)
     # Convert the requested package(s).
     try:
@@ -196,22 +193,7 @@ def main():
             if relationships and control_file_to_update:
                 patch_control_file(control_file_to_update, dict(depends=relationships))
         else:
-            usage()
+            usage(__doc__)
     except Exception:
         logger.exception("Caught an unhandled exception!")
         sys.exit(1)
-
-
-def usage():
-    """
-    Print a usage message to standard output.
-
-    Uses the ``less`` pager because the usage message is quite big and having
-    the user start reading it from the bottom is not exactly user friendly...
-    """
-    lines = __doc__.strip().splitlines()
-    for i, line in enumerate(lines):
-        if line.startswith(('Usage:', '  -')):
-            lines[i] = coloredlogs.ansi_text(line, color='green')
-    # FYI: We don't use $PAGER here because we don't know if $PAGER supports -R.
-    execute('less', '-R', input='\n'.join(lines))
