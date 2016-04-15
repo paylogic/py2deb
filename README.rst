@@ -203,7 +203,7 @@ License
 
 This software is licensed under the `MIT license`_.
 
-© 2015 Peter Odding, Arjan Verwer and Paylogic International.
+© 2016 Peter Odding, Arjan Verwer and Paylogic International.
 
 .. External references:
 .. _deb-pkg-tools: https://pypi.python.org/pypi/deb-pkg-tools
