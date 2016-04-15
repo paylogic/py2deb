@@ -37,6 +37,10 @@ main () {
       # We need to get Python 3.4 from the deadsnakes PPA.
       install_with_deadsnakes_ppa python3.4 python3.4-dev
       ;;
+    py35)
+      # We need to get Python 3.4 from the deadsnakes PPA.
+      install_with_deadsnakes_ppa python3.5 python3.5-dev
+      ;;
     *)
       # Make sure .travis.yml and .travis.sh don't get out of sync.
       die "Unsupported Python version requested! (\$TOXENV not set)"
