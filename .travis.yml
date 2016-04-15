@@ -11,3 +11,6 @@ script:
   - tox -v
 after_success:
   - coveralls
+branches:
+  except:
+    - /^[0-9]/
