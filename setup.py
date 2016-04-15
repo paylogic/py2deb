@@ -1,53 +1,90 @@
 #!/usr/bin/env python
 
-"""
-Setup script for the `py2deb` package.
-"""
+"""Setup script for the `py2deb` package."""
 
 # Author: Peter Odding <peter.odding@paylogic.com>
-# Last Change: September 24, 2015
+# Last Change: April 15, 2016
 # URL: https://py2deb.readthedocs.org
 
 # Standard library modules.
+import codecs
 import os
+import re
 import sys
 
-# We use setuptools to support entry points, `python setup.py test', etc.
-import setuptools
+# De-facto standard solution for Python packaging.
+from setuptools import find_packages, setup
 
-# Find the directory where the source distribution was unpacked.
-source_directory = os.path.dirname(os.path.abspath(__file__))
 
-# Add the source distribution directory to Python's module search path.
-sys.path.append(source_directory)
+def get_absolute_path(*args):
+    """Transform relative pathnames into absolute pathnames."""
+    return os.path.join(os.path.dirname(os.path.abspath(__file__)), *args)
 
-# Find the current version.
-from py2deb import __version__ as version_string
 
-# Fill in the long description (for the benefit of PyPi)
-# with the contents of README.rst (rendered by GitHub).
-with open(os.path.join(source_directory, 'README.rst')) as handle:
-    readme_text = handle.read()
+def get_contents(filename):
+    """Get the contents of a file relative to the source distribution directory."""
+    with codecs.open(get_absolute_path(filename), 'r', 'utf-8') as handle:
+        return handle.read()
 
-# Fill in the "install_requires" field based on requirements.txt.
-with open(os.path.join(source_directory, 'requirements.txt')) as handle:
-    requirements = [line.strip() for line in handle if not line.startswith('#')]
 
-# Check if `importlib' is required as an external dependency. We're only
-# concerned about Python 2.6 because py2deb doesn't support Python 3.0.
-if sys.version_info[0:2] < (2, 7):
-    requirements.append('importlib')
+def get_version(filename):
+    """Extract the version number from a Python module."""
+    contents = get_contents(filename)
+    metadata = dict(re.findall('__([a-z]+)__ = [\'"]([^\'"]+)', contents))
+    return metadata['version']
 
-setuptools.setup(
+
+def get_requirements(*args):
+    """Get requirements from pip requirement files."""
+    requirements = set()
+    with open(get_absolute_path(*args)) as handle:
+        for line in handle:
+            # Strip comments.
+            line = re.sub(r'^#.*|\s#.*', '', line)
+            # Ignore empty lines
+            if line and not line.isspace():
+                requirements.add(re.sub(r'\s+', '', line))
+    return sorted(requirements)
+
+
+def have_environment_marker_support():
+    """
+    Check whether setuptools has support for PEP-426 environment markers.
+
+    Based on the ``setup.py`` script of the ``pytest`` package:
+    https://bitbucket.org/pytest-dev/pytest/src/default/setup.py
+    """
+    try:
+        from pkg_resources import parse_version
+        from setuptools import __version__
+        return parse_version(__version__) >= parse_version('0.7.2')
+    except Exception:
+        return False
+
+
+# Conditional importlib dependency for Python 2.6 and 3.0 when creating a source distribution.
+install_requires = get_requirements('requirements.txt')
+if 'bdist_wheel' not in sys.argv:
+    if sys.version_info[:2] <= (2, 6) or sys.version_info[:2] == (3, 0):
+        install_requires.append('importlib')
+
+# Conditional importlib dependency for Python 2.6 and 3.0 when creating a wheel distribution.
+extras_require = {}
+if have_environment_marker_support():
+    extras_require[':python_version == "2.6" or python_version == "3.0"'] = ['importlib']
+
+
+setup(
     name='py2deb',
-    version=version_string,
+    version=get_version('py2deb/__init__.py'),
     description='Python to Debian package converter',
-    long_description=readme_text,
+    long_description=get_contents('README.rst'),
     url='https://py2deb.readthedocs.org',
     author='Peter Odding & Arjan Verwer (Paylogic International)',
     author_email='peter.odding@paylogic.com',
-    packages=setuptools.find_packages(),
+    packages=find_packages(),
     test_suite='py2deb.tests',
     entry_points={'console_scripts': ['py2deb = py2deb.cli:main']},
-    install_requires=requirements,
+    install_requires=install_requires,
+    extras_require=extras_require,
     include_package_data=True)
