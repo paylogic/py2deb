@@ -1,7 +1,7 @@
 # Automated tests for the `py2deb' package.
 #
 # Author: Peter Odding <peter.odding@paylogic.com>
-# Last Change: January 19, 2016
+# Last Change: April 15, 2016
 # URL: https://py2deb.readthedocs.org
 
 """
@@ -485,12 +485,14 @@ class PackageConverterTestCase(unittest.TestCase):
         archives = glob.glob('%s/*.deb' % directory)
         logger.debug("Found generated archive(s): %s", archives)
         # Make sure the expected dependencies have been converted.
-        assert sorted(parse_filename(a).name for a in archives) == sorted([
+        converted_dependencies = set(parse_filename(a).name for a in archives)
+        expected_dependencies = set([
             'pip-accel',
             'pip-accel-coloredlogs-renamed',
             'pip-accel-humanfriendly',
             'pip-accel-pip',
         ])
+        assert expected_dependencies.issubset(converted_dependencies)
         # Use deb-pkg-tools to inspect pip-accel.
         pathname = find_package_archive(archives, 'pip-accel')
         metadata, contents = inspect_package(pathname)
