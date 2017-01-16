@@ -4,7 +4,7 @@
 #  - Arjan Verwer
 #  - Peter Odding <peter.odding@paylogic.com>
 # Last Change: September 24, 2015
-# URL: https://py2deb.readthedocs.org
+# URL: https://py2deb.readthedocs.io
 
 """
 The :py:mod:`py2deb.package` module contains the low level conversion logic.

@@ -3,8 +3,8 @@
 # Authors:
 #  - Arjan Verwer
 #  - Peter Odding <peter.odding@paylogic.com>
-# Last Change: January 16, 2017
-# URL: https://py2deb.readthedocs.org
+# Last Change: January 17, 2017
+# URL: https://py2deb.readthedocs.io
 
 """
 The :py:mod:`py2deb.converter` module contains the high level conversion logic.

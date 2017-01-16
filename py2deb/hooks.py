@@ -2,7 +2,7 @@
 #
 # Author: Peter Odding <peter.odding@paylogic.com>
 # Last Change: April 12, 2015
-# URL: https://py2deb.readthedocs.org
+# URL: https://py2deb.readthedocs.io
 
 """
 The :py:mod:`py2deb.hooks` module contains post-installation and pre-removal hooks.

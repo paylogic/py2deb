@@ -4,7 +4,7 @@
 
 # Author: Peter Odding <peter.odding@paylogic.com>
 # Last Change: April 15, 2016
-# URL: https://py2deb.readthedocs.org
+# URL: https://py2deb.readthedocs.io
 
 # Standard library modules.
 import codecs
@@ -79,7 +79,7 @@ setup(
     version=get_version('py2deb/__init__.py'),
     description='Python to Debian package converter',
     long_description=get_contents('README.rst'),
-    url='https://py2deb.readthedocs.org',
+    url='https://py2deb.readthedocs.io',
     author='Peter Odding & Arjan Verwer (Paylogic International)',
     author_email='peter.odding@paylogic.com',
     packages=find_packages(),

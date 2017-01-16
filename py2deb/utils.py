@@ -4,7 +4,7 @@
 #  - Arjan Verwer
 #  - Peter Odding <peter.odding@paylogic.com>
 # Last Change: September 4, 2015
-# URL: https://py2deb.readthedocs.org
+# URL: https://py2deb.readthedocs.io
 
 """
 The :py:mod:`py2deb.utils` module contains miscellaneous code.

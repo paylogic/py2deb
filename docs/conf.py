@@ -65,10 +65,10 @@ pygments_style = 'sphinx'
 # Refer to the Python standard library.
 # From: http://twistedmatrix.com/trac/ticket/4582.
 intersphinx_mapping = {
-    'debpkgtools': ('http://deb-pkg-tools.readthedocs.org/en/latest', None),
-    'executor': ('http://executor.readthedocs.org/en/latest', None),
-    'humanfriendly': ('http://humanfriendly.readthedocs.org/en/latest', None),
-    'pipaccel': ('http://pip-accel.readthedocs.org/en/latest', None),
+    'debpkgtools': ('http://deb-pkg-tools.readthedocs.io/en/latest', None),
+    'executor': ('http://executor.readthedocs.io/en/latest', None),
+    'humanfriendly': ('http://humanfriendly.readthedocs.io/en/latest', None),
+    'pipaccel': ('http://pip-accel.readthedocs.io/en/latest', None),
     'python': ('http://docs.python.org', None),
     'setuptools': ('https://pythonhosted.org/setuptools/', None),
 }

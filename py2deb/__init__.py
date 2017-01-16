@@ -4,7 +4,7 @@
 #  - Arjan Verwer
 #  - Peter Odding <peter.odding@paylogic.com>
 # Last Change: April 15, 2016
-# URL: https://py2deb.readthedocs.org
+# URL: https://py2deb.readthedocs.io
 
 """
 The top level :py:mod:`py2deb` module contains only a version number.

@@ -209,11 +209,11 @@ This software is licensed under the `MIT license`_.
 
 .. External references:
 .. _deb-pkg-tools: https://pypi.python.org/pypi/deb-pkg-tools
-.. _detailed comparison: https://py2deb.readthedocs.org/en/latest/comparisons.html
+.. _detailed comparison: https://py2deb.readthedocs.io/en/latest/comparisons.html
 .. _dh-virtualenv: https://github.com/spotify/dh-virtualenv
 .. _fpm: https://github.com/jordansissel/fpm
 .. _GitHub project page: https://github.com/paylogic/py2deb
-.. _hosted on Read The Docs: https://py2deb.readthedocs.org
+.. _hosted on Read The Docs: https://py2deb.readthedocs.io
 .. _Lintian: http://en.wikipedia.org/wiki/Lintian
 .. _MIT license: http://en.wikipedia.org/wiki/MIT_License
 .. _PEP-440: https://www.python.org/dev/peps/pep-0440/

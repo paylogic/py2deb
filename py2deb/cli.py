@@ -2,7 +2,7 @@
 #
 # Author: Peter Odding <peter.odding@paylogic.com>
 # Last Change: January 19, 2016
-# URL: https://py2deb.readthedocs.org
+# URL: https://py2deb.readthedocs.io
 
 """
 Usage: py2deb [OPTIONS] ...
