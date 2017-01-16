@@ -3,7 +3,7 @@
 # Authors:
 #  - Arjan Verwer
 #  - Peter Odding <peter.odding@paylogic.com>
-# Last Change: September 24, 2015
+# Last Change: January 16, 2017
 # URL: https://py2deb.readthedocs.org
 
 """
@@ -489,7 +489,7 @@ class PackageConverter(object):
 
         Here's an example of what's returned:
 
-        >>> from py2deb import PackageConverter
+        >>> from py2deb.converter import PackageConverter
         >>> converter = PackageConverter()
         >>> archives, relationships = converter.convert(['py2deb'])
         >>> print(archives)
@@ -575,7 +575,7 @@ class PackageConverter(object):
 
         Examples:
 
-        >>> from py2deb import PackageConverter
+        >>> from py2deb.converter import PackageConverter
         >>> converter = PackageConverter()
         >>> converter.transform_name('example')
         'python-example'
