@@ -83,7 +83,7 @@ If you want to pass command line options to pip (e.g. because you want to use a 
 
 .. code-block:: sh
 
-   $ py2deb -r /tmp -- -r requirements.txt
+  $ py2deb -r /tmp -- -r requirements.txt
 
 So the "--" marker separates the py2deb options from the pip options.
 
@@ -103,27 +103,22 @@ So the "--" marker separates the py2deb options from the pip options.
    automatically loaded if they exist. This happens before environment
    variables and command line options are processed.
    
-   Can also be set using the environment variable ``$PY2DEB_CONFIG``.
-   "
+   Can also be set using the environment variable ``$PY2DEB_CONFIG``."
    "``-r``, ``--repository=DIRECTORY``","Change the directory where \*.deb archives are stored. Defaults to
    the system wide temporary directory (which is usually /tmp). If
    this directory doesn't exist py2deb refuses to run.
    
-   Can also be set using the environment variable ``$PY2DEB_REPOSITORY``.
-   "
+   Can also be set using the environment variable ``$PY2DEB_REPOSITORY``."
    ``--name-prefix=PREFIX``,"Set the name prefix used during the name conversion from Python to
    Debian packages. Defaults to ""python"". The name prefix and package
    names are always delimited by a dash.
    
-   Can also be set using the environment variable ``$PY2DEB_NAME_PREFIX``.
-   "
+   Can also be set using the environment variable ``$PY2DEB_NAME_PREFIX``."
    ``--no-name-prefix=PYTHON_PACKAGE_NAME``,"Exclude a Python package from having the name prefix applied
    during the package name conversion. This is useful to avoid
-   awkward repetitions.
-   "
+   awkward repetitions."
    "``--rename=PYTHON_PACKAGE_NAME,DEBIAN_PACKAGE_NAME``","Override the package name conversion algorithm for the given pair
-   of package names. Useful if you don't agree with the algorithm :-)
-   "
+   of package names. Useful if you don't agree with the algorithm :-)"
    ``--install-prefix=DIRECTORY``,"Override the default system wide installation prefix. By setting
    this to anything other than ""/usr"" or ""/usr/local"" you change the
    way py2deb works. It will build packages with a file system layout
@@ -132,31 +127,25 @@ So the "--" marker separates the py2deb options from the pip options.
    modifying Python's module search path. Refer to the documentation
    for details.
    
-   Can also be set using the environment variable ``$PY2DEB_INSTALL_PREFIX``.
-   "
+   Can also be set using the environment variable ``$PY2DEB_INSTALL_PREFIX``."
    "``--install-alternative=LINK,PATH``","Use Debian's ""update-alternatives"" system to add an executable
    that's installed in a custom installation prefix (see above) to
    the system wide executable search path. Refer to the documentation
-   for details.
-   "
+   for details."
    ``--python-callback=EXPRESSION``,"Set a Python callback to be called during the conversion process. Refer to
    the documentation for details about the use of this feature and the syntax
    of ``EXPRESSION``.
    
-   Can also be set using the environment variable ``$PY2DEB_CALLBACK``.
-   "
+   Can also be set using the environment variable ``$PY2DEB_CALLBACK``."
    ``--report-dependencies=FILENAME``,"Add the Debian relationships needed to depend on the converted
    package(s) to the given control file. If the control file already
    contains relationships the additional relationships will be added
-   to the control file; they won't overwrite existing relationships.
-   "
+   to the control file; they won't overwrite existing relationships."
    "``-y``, ``--yes``","Instruct pip-accel to automatically install build time dependencies
    where possible. Refer to the pip-accel documentation for details.
    
-   Can also be set using the environment variable ``$PY2DEB_AUTO_INSTALL``.
-   "
-   "``-v``, ``--verbose``","Make more noise :-).
-   "
+   Can also be set using the environment variable ``$PY2DEB_AUTO_INSTALL``."
+   "``-v``, ``--verbose``",Make more noise :-).
    "``-h``, ``--help``","Show this message and exit.
    "
 

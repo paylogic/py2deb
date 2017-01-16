@@ -27,6 +27,12 @@ Here are the relevant Python modules that make up py2deb:
 .. automodule:: py2deb
    :members:
 
+:py:mod:`py2deb.cli` - Command line interface
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. automodule:: py2deb.cli
+   :members:
+
 :py:mod:`py2deb.converter` - Package converter
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 

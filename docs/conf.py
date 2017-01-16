@@ -20,7 +20,11 @@ extensions = [
     'sphinx.ext.doctest',
     'sphinx.ext.intersphinx',
     'sphinx.ext.viewcode',
+    'humanfriendly.sphinx',
 ]
+
+# Configuration for the `autodoc' extension.
+autodoc_member_order = 'bysource'
 
 # Paths that contain templates, relative to this directory.
 templates_path = ['templates']
@@ -65,11 +69,11 @@ pygments_style = 'sphinx'
 # Refer to the Python standard library.
 # From: http://twistedmatrix.com/trac/ticket/4582.
 intersphinx_mapping = {
-    'debpkgtools': ('http://deb-pkg-tools.readthedocs.io/en/latest', None),
-    'executor': ('http://executor.readthedocs.io/en/latest', None),
-    'humanfriendly': ('http://humanfriendly.readthedocs.io/en/latest', None),
-    'pipaccel': ('http://pip-accel.readthedocs.io/en/latest', None),
-    'python': ('http://docs.python.org', None),
+    'debpkgtools': ('https://deb-pkg-tools.readthedocs.io/en/latest', None),
+    'executor': ('https://executor.readthedocs.io/en/latest', None),
+    'humanfriendly': ('https://humanfriendly.readthedocs.io/en/latest', None),
+    'pipaccel': ('https://pip-accel.readthedocs.io/en/latest', None),
+    'python': ('https://docs.python.org/2', None),
     'setuptools': ('https://pythonhosted.org/setuptools/', None),
 }
 
@@ -77,22 +81,7 @@ intersphinx_mapping = {
 
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
-html_theme = 'default'
-
-# Add any paths that contain custom static files (such as style sheets) here,
-# relative to this directory. They are copied after the builtin static files,
-# so a file named "default.css" will overwrite the builtin "default.css".
-html_static_path = []
+html_theme = 'classic'
 
 # Output file base name for HTML help builder.
 htmlhelp_basename = 'py2debdoc'
-
-
-def setup(app):
-    """
-    Configure the autodoc extension not to skip ``__init__()`` members.
-
-    Based on http://stackoverflow.com/a/5599712/788200.
-    """
-    app.connect('autodoc-skip-member', (lambda app, what, name, obj, skip, options:
-                                        False if name == '__init__' else skip))
