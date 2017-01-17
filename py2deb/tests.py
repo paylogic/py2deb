@@ -1,7 +1,7 @@
 # Automated tests for the `py2deb' package.
 #
 # Author: Peter Odding <peter.odding@paylogic.com>
-# Last Change: April 15, 2016
+# Last Change: January 17, 2017
 # URL: https://py2deb.readthedocs.io
 
 """
@@ -372,6 +372,31 @@ class PackageConverterTestCase(unittest.TestCase):
             # Make sure a dependency on libc was added (this shows that
             # dpkg-shlibdeps was run successfully).
             assert 'libc6' in metadata['Depends'].names
+
+    def test_conversion_of_binary_package_with_executable(self):
+        """
+        Convert a package that includes a binary executable file.
+
+        Converts ``uwsgi==2.0.14`` and sanity checks the result. The goal of
+        this test is to verify that pydeb preserves binary executables instead
+        of truncating them as it did until `issue 9`_ was reported.
+
+        .. _issue 9: https://github.com/paylogic/py2deb/issues/9
+        """
+        with TemporaryDirectory() as directory:
+            # Run the conversion command.
+            converter = self.create_isolated_converter()
+            converter.set_repository(directory)
+            converter.set_install_prefix('/usr/lib/py2deb/uwsgi')
+            archives, relationships = converter.convert(['uwsgi==2.0.14'])
+            # Find the generated *.deb archive.
+            pathname = find_package_archive(archives, 'python-uwsgi')
+            # Use deb-pkg-tools to inspect the package metadata.
+            metadata, contents = inspect_package(pathname)
+            logger.debug("Contents of generated package: %s", dict(contents))
+            # Find the binary executable file.
+            executable = find_file(contents, '/usr/lib/py2deb/uwsgi/bin/uwsgi')
+            assert executable.size > 0
 
     def test_install_requires_version_munging(self):
         """
