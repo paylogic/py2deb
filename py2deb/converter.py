@@ -7,11 +7,11 @@
 # URL: https://py2deb.readthedocs.io
 
 """
-The :py:mod:`py2deb.converter` module contains the high level conversion logic.
+The :mod:`py2deb.converter` module contains the high level conversion logic.
 
-This module defines the :py:class:`PackageConverter` class which provides the
+This module defines the :class:`PackageConverter` class which provides the
 intended way for external Python code to interface with `py2deb`. The separation
-between the :py:class:`PackageConverter` and :py:class:`.PackageToConvert`
+between the :class:`PackageConverter` and :class:`.PackageToConvert`
 classes is somewhat crude (because neither class can work without the other)
 but the idea is to separate the high level conversion logic from the low level
 conversion logic.
@@ -59,10 +59,10 @@ class PackageConverter(object):
 
     .. attribute:: alternatives
 
-       A :py:class:`set` of tuples with two strings each (the strings passed to
-       :py:func:`install_alternative()`). Used by
-       :py:func:`~py2deb.hooks.create_alternatives()` and
-       :py:func:`~py2deb.hooks.cleanup_alternatives()` during installation and
+       A :class:`set` of tuples with two strings each (the strings passed to
+       :func:`install_alternative()`). Used by
+       :func:`~py2deb.hooks.create_alternatives()` and
+       :func:`~py2deb.hooks.cleanup_alternatives()` during installation and
        removal of the generated package.
     """
 
@@ -71,10 +71,10 @@ class PackageConverter(object):
         Initialize a Python to Debian package converter.
 
         :param load_configuration_files: When ``True`` (the default)
-                                         :py:func:`load_default_configuration_files()`
+                                         :func:`load_default_configuration_files()`
                                          is called automatically.
         :param load_environment_variables: When ``True`` (the default)
-                                         :py:func:`load_environment_variables()`
+                                         :func:`load_environment_variables()`
                                          is called automatically.
         """
         self.alternatives = set()
@@ -96,7 +96,7 @@ class PackageConverter(object):
         Set pathname of directory where `py2deb` stores converted packages.
 
         :param directory: The pathname of a directory (a string).
-        :raises: :py:exc:`~exceptions.ValueError` when the directory doesn't
+        :raises: :exc:`~exceptions.ValueError` when the directory doesn't
                  exist.
         """
         directory = os.path.abspath(directory)
@@ -110,7 +110,7 @@ class PackageConverter(object):
         Set package name prefix to use during package conversion.
 
         :param prefix: The name prefix to use (a string).
-        :raises: :py:exc:`~exceptions.ValueError` when no name prefix is
+        :raises: :exc:`~exceptions.ValueError` when no name prefix is
                  provided (e.g. an empty string).
         """
         if not prefix:
@@ -125,7 +125,7 @@ class PackageConverter(object):
                                     as found on PyPI (a string).
         :param debian_package_name: The name of the converted
                                     Debian package (a string).
-        :raises: :py:exc:`~exceptions.ValueError` when a package name is not
+        :raises: :exc:`~exceptions.ValueError` when a package name is not
                  provided (e.g. an empty string).
         """
         if not python_package_name:
@@ -143,7 +143,7 @@ class PackageConverter(object):
 
         :param directory: The pathname of the directory where the converted
                           packages should be installed (a string).
-        :raises: :py:exc:`~exceptions.ValueError` when no installation prefix is
+        :raises: :exc:`~exceptions.ValueError` when no installation prefix is
                  provided (e.g. an empty string).
         """
         if not directory:
@@ -155,7 +155,7 @@ class PackageConverter(object):
         Enable or disable automatic installation of build time dependencies.
 
         :param enabled: Any value, evaluated using
-                        :py:func:`~humanfriendly.coerce_boolean()`.
+                        :func:`~humanfriendly.coerce_boolean()`.
         """
         self.pip_accel.config.auto_install = coerce_boolean(enabled)
 
@@ -164,7 +164,7 @@ class PackageConverter(object):
         Enable or disable automatic Lintian_ checks after package building.
 
         :param enabled: Any value, evaluated using
-                        :py:func:`~humanfriendly.coerce_boolean()`.
+                        :func:`~humanfriendly.coerce_boolean()`.
 
         .. _Lintian: http://lintian.debian.org/
         """
@@ -184,7 +184,7 @@ class PackageConverter(object):
         :param path: The alternative being introduced for the master link (a
                      string). This is the third argument passed to
                      ``update-alternatives --install``.
-        :raises: :py:exc:`~exceptions.ValueError` when one of the paths is not
+        :raises: :exc:`~exceptions.ValueError` when one of the paths is not
                  provided (e.g. an empty string).
 
         If this is a bit vague, consider the following example:
@@ -219,7 +219,7 @@ class PackageConverter(object):
         :param python_package_name: The name of a Python package
                                     as found on PyPI (a string).
         :param command: The shell command to execute (a string).
-        :raises: :py:exc:`~exceptions.ValueError` when the package name or
+        :raises: :exc:`~exceptions.ValueError` when the package name or
                  command is not provided (e.g. an empty string).
 
         The shell command is executed in the directory containing the Python
@@ -366,12 +366,12 @@ class PackageConverter(object):
 
         :param configuration_file: The pathname of a configuration file (a
                                    string).
-        :raises: :py:exc:`~exceptions.Exception` when the configuration file
+        :raises: :exc:`~exceptions.Exception` when the configuration file
                  cannot be loaded.
 
         Below is an example of the available options, I assume that the mapping
         between the configuration options and the setters of
-        :py:class:`PackageConverter` is fairly obvious (it should be :-).
+        :class:`PackageConverter` is fairly obvious (it should be :-).
 
         .. code-block:: ini
 
@@ -405,11 +405,11 @@ class PackageConverter(object):
 
         **rename**:
           Gives an override for the package name conversion algorithm (refer to
-          :py:func:`rename_package()` for details).
+          :func:`rename_package()` for details).
 
         **script**:
           Set a shell command to be executed during the conversion process
-          (refer to :py:func:`set_conversion_command()` for details).
+          (refer to :func:`set_conversion_command()` for details).
         """
         # Load the configuration file.
         parser = configparser.RawConfigParser()
@@ -462,7 +462,7 @@ class PackageConverter(object):
         - ``/etc/py2deb.ini``
         - ``~/.py2deb.ini``
 
-        :raises: :py:exc:`~exceptions.Exception` when a configuration file
+        :raises: :exc:`~exceptions.Exception` when a configuration file
                  exists but cannot be loaded.
         """
         for location in ('/etc/py2deb.ini', os.path.expanduser('~/.py2deb.ini')):
@@ -483,7 +483,7 @@ class PackageConverter(object):
                   2. A list of strings containing the Debian package
                      relationship(s) required to depend on the converted
                      package(s).
-        :raises: :py:exc:`~deb_pkg_tools.checks.DuplicateFilesFound` if two
+        :raises: :exc:`~deb_pkg_tools.checks.DuplicateFilesFound` if two
                  converted package archives contain the same files (certainly
                  not what you want within a set of dependencies).
 
@@ -542,18 +542,18 @@ class PackageConverter(object):
 
     def get_source_distributions(self, pip_install_arguments):
         """
-        Use :py:mod:`pip_accel` to download and unpack Python source distributions.
+        Use :mod:`pip_accel` to download and unpack Python source distributions.
 
         Retries several times if a download fails (so it doesn't fail
         immediately when a package index server returns a transient error).
 
         :param pip_install_arguments: The command line arguments to the ``pip
                                       install`` command.
-        :returns: A generator of :py:class:`.PackageToConvert` objects.
+        :returns: A generator of :class:`.PackageToConvert` objects.
         :raises: When downloading fails even after several retries this
-                 function raises :py:exc:`pip.exceptions.DistributionNotFound`.
+                 function raises :exc:`pip.exceptions.DistributionNotFound`.
                  This function can also raise other exceptions raised by pip
-                 because it uses :py:mod:`pip_accel` to call pip (as a Python
+                 because it uses :mod:`pip_accel` to call pip (as a Python
                  API).
         """
         # We depend on `pip install --ignore-installed ...' so we can guarantee
@@ -694,7 +694,7 @@ class PackageConverter(object):
         Find the Debian architecture of the current environment.
 
         This logic was originally implemented in py2deb but has since been
-        moved to :py:func:`deb_pkg_tools.utils.find_debian_architecture()`.
+        moved to :func:`deb_pkg_tools.utils.find_debian_architecture()`.
         This property remains as a convenient shortcut.
         """
         return find_debian_architecture()

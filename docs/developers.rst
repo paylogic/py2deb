@@ -21,44 +21,44 @@ Here are the relevant Python modules that make up py2deb:
 .. contents::
    :local:
 
-:py:mod:`py2deb` - Project metadata
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+:mod:`py2deb` - Project metadata
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. automodule:: py2deb
    :members:
 
-:py:mod:`py2deb.cli` - Command line interface
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+:mod:`py2deb.cli` - Command line interface
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. automodule:: py2deb.cli
    :members:
 
-:py:mod:`py2deb.converter` - Package converter
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+:mod:`py2deb.converter` - Package converter
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. automodule:: py2deb.converter
    :members:
 
-:py:mod:`py2deb.package` - Package conversion model
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+:mod:`py2deb.package` - Package conversion model
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. automodule:: py2deb.package
    :members:
 
-:py:mod:`py2deb.utils` - Utility classes/functions
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+:mod:`py2deb.utils` - Utility classes/functions
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. automodule:: py2deb.utils
    :members:
 
-:py:mod:`py2deb.hooks` - Maintainer scripts
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+:mod:`py2deb.hooks` - Maintainer scripts
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. automodule:: py2deb.hooks
    :members:
 
-:py:mod:`py2deb.tests` - The test suite
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+:mod:`py2deb.tests` - Test suite
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. automodule:: py2deb.tests
    :members:

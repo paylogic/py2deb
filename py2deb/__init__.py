@@ -7,7 +7,7 @@
 # URL: https://py2deb.readthedocs.io
 
 """
-The top level :py:mod:`py2deb` module contains only a version number.
+The top level :mod:`py2deb` module contains only a version number.
 
 .. data:: __version__
 

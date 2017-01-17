@@ -7,7 +7,7 @@
 # URL: https://py2deb.readthedocs.io
 
 """
-The :py:mod:`py2deb.utils` module contains miscellaneous code.
+The :mod:`py2deb.utils` module contains miscellaneous code.
 """
 
 # Standard library modules.
@@ -34,13 +34,13 @@ class PackageRepository(object):
     """
     Very simply abstraction for a directory containing ``*.deb`` archives.
 
-    Used by :py:class:`py2deb.converter.PackageConverter` to recognize which
+    Used by :class:`py2deb.converter.PackageConverter` to recognize which
     Python packages have previously been converted (and so can be skipped).
     """
 
     def __init__(self, directory):
         """
-        Initialize a :py:class:`PackageRepository` object.
+        Initialize a :class:`PackageRepository` object.
 
         :param directory: The pathname of the directory containing ``*.deb``
                           archives (a string).
@@ -53,7 +53,7 @@ class PackageRepository(object):
         Find archive(s) in package repository / directory.
 
         :returns: A sorted list of package archives, same as the return value
-                  of :py:func:`deb_pkg_tools.package.find_package_archives()`.
+                  of :func:`deb_pkg_tools.package.find_package_archives()`.
 
         An example:
 
@@ -102,7 +102,7 @@ class PackageRepository(object):
         :param package: The name of the package (a string).
         :param version: The version of the package (a string).
         :param architecture: The architecture of the package (a string).
-        :returns: A :py:class:`deb_pkg_tools.package.PackageFile` object
+        :returns: A :class:`deb_pkg_tools.package.PackageFile` object
                   or ``None``.
         """
         for archive in self.archives:
@@ -129,7 +129,7 @@ class TemporaryDirectory(object):
         Initialize context manager that manages creation & cleanup of temporary directory.
 
         :param options: Any keyword arguments are passed on to
-                        :py:func:`tempfile.mkdtemp()`.
+                        :func:`tempfile.mkdtemp()`.
         """
         self.options = options
 
@@ -214,7 +214,7 @@ def package_names_match(a, b):
     """
     Check whether two Python package names are equal.
 
-    Uses :py:func:`normalize_package_name()` to normalize both names before
+    Uses :func:`normalize_package_name()` to normalize both names before
     comparing them for equality. This makes sure differences in case and dashes
     versus underscores are ignored.
 

@@ -5,11 +5,11 @@
 # URL: https://py2deb.readthedocs.io
 
 """
-The :py:mod:`py2deb.tests` module contains the automated tests for `py2deb`.
+The :mod:`py2deb.tests` module contains the automated tests for `py2deb`.
 
 The makefile in the py2deb git repository uses pytest_ to run the test suite
 because of pytest's great error reporting. Nevertheless the test suite is
-written to be compatible with the :py:mod:`unittest` module (part of Python's
+written to be compatible with the :mod:`unittest` module (part of Python's
 standard library) so that the test suite can be run without additional external
 dependencies.
 
@@ -76,7 +76,7 @@ def setUpModule():
        pip-accel binary cache are located. Isolating the pip-accel binary cache
        from the user's system is meant to ensure that the tests are as
        independent from the user's system as possible. The function
-       :py:func:`tearDownModule` is responsible for cleaning up the temporary
+       :func:`tearDownModule` is responsible for cleaning up the temporary
        directory after the test suite finishes.
     """
     # Initialize verbose logging to the terminal.
@@ -91,7 +91,7 @@ def setUpModule():
 
 def tearDownModule():
     """
-    Clean up temporary directories created by :py:func:`setUpModule()`.
+    Clean up temporary directories created by :func:`setUpModule()`.
     """
     for directory in TEMPORARY_DIRECTORIES:
         shutil.rmtree(directory)
@@ -102,7 +102,7 @@ def create_temporary_directory():
     Create a temporary directory for the test suite to use.
 
     The created temporary directory will be cleaned up by
-    :py:func:`tearDownModule()` when the test suite is being torn down.
+    :func:`tearDownModule()` when the test suite is being torn down.
 
     :returns: The pathname of the created temporary directory (a string).
     """
@@ -114,7 +114,7 @@ def create_temporary_directory():
 class PackageConverterTestCase(unittest.TestCase):
 
     """
-    :py:mod:`unittest` compatible container for the test suite of `py2deb`.
+    :mod:`unittest` compatible container for the test suite of `py2deb`.
     """
 
     def create_isolated_converter(self):
@@ -124,7 +124,7 @@ class PackageConverterTestCase(unittest.TestCase):
 
     def test_argument_validation(self):
         """
-        Test argument validation done by setters of :py:class:`py2deb.converter.PackageConverter`.
+        Test argument validation done by setters of :class:`py2deb.converter.PackageConverter`.
         """
         converter = self.create_isolated_converter()
         self.assertRaises(ValueError, converter.set_repository, '/foo/bar/baz')
@@ -219,7 +219,7 @@ class PackageConverterTestCase(unittest.TestCase):
         Convert a simple Python package that requires a custom conversion command.
 
         Converts Fabric and sanity checks the result. For details please refer
-        to :py:func:`py2deb.converter.PackageConverter.set_conversion_command()`.
+        to :func:`py2deb.converter.PackageConverter.set_conversion_command()`.
         """
         if sys.version_info[0] == 3:
             logger.warning("Skipping Fabric conversion test! (Fabric is not Python 3.x compatible)")
@@ -444,7 +444,7 @@ class PackageConverterTestCase(unittest.TestCase):
         """
         Convert a group of packages based on the settings in a configuration file.
 
-        Repeats the same test as :py:func:`test_conversion_of_isolated_packages()`
+        Repeats the same test as :func:`test_conversion_of_isolated_packages()`
         but instead of using command line options the conversion process is
         configured using a configuration file.
         """
@@ -478,8 +478,8 @@ class PackageConverterTestCase(unittest.TestCase):
         """
         Check a group of packages converted with a custom name and installation prefix.
 
-        Check the results of :py:func:`test_conversion_of_isolated_packages()` and
-        :py:func:`test_conversion_with_configuration_file()`.
+        Check the results of :func:`test_conversion_of_isolated_packages()` and
+        :func:`test_conversion_with_configuration_file()`.
         """
         # Find the generated Debian package archives.
         archives = glob.glob('%s/*.deb' % directory)
@@ -557,7 +557,7 @@ class PackageConverterTestCase(unittest.TestCase):
                 "Result of Python callback not visible?!"
 
     def test_find_installed_files(self):
-        """Test the :py:func:`py2deb.hooks.find_installed_files()` function."""
+        """Test the :func:`py2deb.hooks.find_installed_files()` function."""
         assert '/usr/bin/dpkg' in find_installed_files('dpkg'), \
             "find_installed_files() returned unexpected output for the 'dpkg' package!"
 
@@ -565,8 +565,8 @@ class PackageConverterTestCase(unittest.TestCase):
         """
         Test byte code generation and cleanup.
 
-        This tests the :py:func:`~py2deb.hooks.generate_bytecode_files()` and
-        :py:func:`~py2deb.hooks.cleanup_bytecode_files()` functions.
+        This tests the :func:`~py2deb.hooks.generate_bytecode_files()` and
+        :func:`~py2deb.hooks.cleanup_bytecode_files()` functions.
         """
         with TemporaryDirectory() as directory:
             # Generate a Python file.
@@ -605,8 +605,8 @@ class PackageConverterTestCase(unittest.TestCase):
         """
         Test namespace package initialization and cleanup.
 
-        This tests the :py:func:`~py2deb.hooks.initialize_namespaces()` and
-        :py:func:`~py2deb.hooks.cleanup_namespaces()` functions.
+        This tests the :func:`~py2deb.hooks.initialize_namespaces()` and
+        :func:`~py2deb.hooks.cleanup_namespaces()` functions.
         """
         with TemporaryDirectory() as directory:
             package_name = 'namespace-package-test'
@@ -630,13 +630,13 @@ class PackageConverterTestCase(unittest.TestCase):
             assert not os.path.isdir(os.path.join(directory, 'foo'))
 
     def test_post_install_hook(self):
-        """Test the :py:func:`~py2deb.hooks.post_installation_hook()` function."""
+        """Test the :func:`~py2deb.hooks.post_installation_hook()` function."""
         with TemporaryDirectory() as directory:
             self.run_post_install_hook(directory)
             self.check_test_namespaces(directory)
 
     def test_pre_removal_hook(self):
-        """Test the :py:func:`~py2deb.hooks.pre_removal_hook()` function."""
+        """Test the :func:`~py2deb.hooks.pre_removal_hook()` function."""
         with TemporaryDirectory() as directory:
             self.run_post_install_hook(directory)
             pre_removal_hook(package_name='prerm-test-package',
@@ -646,7 +646,7 @@ class PackageConverterTestCase(unittest.TestCase):
             assert not os.path.isdir(os.path.join(directory, 'foo'))
 
     def run_post_install_hook(self, directory):
-        """Helper for :py:func:`test_post_install_hook()` and :py:func:`test_pre_removal_hook()`."""
+        """Helper for :func:`test_post_install_hook()` and :func:`test_pre_removal_hook()`."""
         post_installation_hook(package_name='postinst-test-package',
                                alternatives=set(),
                                modules_directory=directory,
@@ -669,7 +669,7 @@ def py2deb(*arguments):
     We want the test suite to cover as much of `py2deb` as possible, so
     including the command line interface, however we don't want to run `py2deb`
     as a subprocess because that would break test coverage measurements. This
-    explains the purpose of the :py:func:`py2deb()` function.
+    explains the purpose of the :func:`py2deb()` function.
 
     :param arguments: The command line arguments to pass to `py2deb` (one or more strings).
     """
@@ -686,7 +686,7 @@ def find_package_archive(available_archives, package_name):
     :param package_name: The name of the package whose archive file we're
                          interested in (a string).
     :returns: The pathname of the package archive (a string).
-    :raises: :py:exc:`exceptions.AssertionError` if zero or more than one
+    :raises: :exc:`exceptions.AssertionError` if zero or more than one
              package archive is found.
     """
     matches = []
@@ -702,12 +702,12 @@ def find_file(contents, pattern):
     Find the file matching the given filename pattern.
 
     Searches the dictionary of Debian package archive entries reported by
-    :py:func:`deb_pkg_tools.package.inspect_package()`.
+    :func:`deb_pkg_tools.package.inspect_package()`.
 
     :param contents: The dictionary of package archive entries.
-    :param pattern: The filename pattern to match (:py:mod:`fnmatch` syntax).
+    :param pattern: The filename pattern to match (:mod:`fnmatch` syntax).
     :returns: The metadata of the matched file.
-    :raises: :py:exc:`exceptions.AssertionError` if zero or more than one
+    :raises: :exc:`exceptions.AssertionError` if zero or more than one
              archive entry is found.
     """
     matches = []
