@@ -4,77 +4,73 @@
 # Last Change: January 17, 2017
 # URL: https://github.com/paylogic/py2deb
 
-PROJECT_NAME = py2deb
+PACKAGE_NAME = py2deb
 WORKON_HOME ?= $(HOME)/.virtualenvs
-
-# Most people prefer $(CURDIR)/.env but I really don't, so if ~/.virtualenvs
-# exists (i.e. an explicit choice was made by the user, that is to say me :-)
-# we use that, otherwise we fall back to $(CURDIR)/.env.
-ifeq ($(shell test -d $(WORKON_HOME) && echo yes || echo no),yes)
-	VIRTUAL_ENV = $(WORKON_HOME)/$(PROJECT_NAME)
-else
-	VIRTUAL_ENV = $(CURDIR)/.env
-endif
-
-ACTIVATE = . "$(VIRTUAL_ENV)/bin/activate"
+VIRTUAL_ENV ?= $(WORKON_HOME)/$(PACKAGE_NAME)
+PATH := $(VIRTUAL_ENV)/bin:$(PATH)
+MAKE := $(MAKE) --no-print-directory
+SHELL = bash
 
 default:
-	@echo 'Makefile for $(PROJECT_NAME)'
+	@echo "Makefile for $(PACKAGE_NAME)"
 	@echo
 	@echo 'Usage:'
 	@echo
 	@echo '    make install    install the package in a virtual environment'
-	@echo '    make check      check PEP-8 and PEP-257 compliance'
-	@echo '    make test       run the test suite'
-	@echo '    make coverage   run the tests, report coverage'
-	@echo '    make readme     update usage instructions embedded in readme'
+	@echo '    make reset      recreate the virtual environment'
+	@echo '    make check      check coding style (PEP-8, PEP-257)'
+	@echo '    make test       run the test suite, report coverage'
+	@echo '    make tox        run the tests on all Python versions'
+	@echo '    make readme     update usage in readme'
 	@echo '    make docs       update documentation using Sphinx'
 	@echo '    make publish    publish changes to GitHub/PyPI'
-	@echo '    make clean      cleanup temporary files'
-	@echo '    make reset      recreate the virtual environment'
+	@echo '    make clean      cleanup all temporary files'
 	@echo
 
 install:
-	test -x "$(VIRTUAL_ENV)/bin/python" || virtualenv "$(VIRTUAL_ENV)"
-	test -x "$(VIRTUAL_ENV)/bin/pip-accel" || ($(ACTIVATE) && pip install pip-accel)
-	$(ACTIVATE) && pip-accel install --requirement=requirements.txt
-	$(ACTIVATE) && pip uninstall --yes $(PROJECT_NAME) || true
-	$(ACTIVATE) && pip install --no-deps --editable .
+	@test -d "$(VIRTUAL_ENV)" || mkdir -p "$(VIRTUAL_ENV)"
+	@test -x "$(VIRTUAL_ENV)/bin/python" || virtualenv --quiet "$(VIRTUAL_ENV)"
+	@test -x "$(VIRTUAL_ENV)/bin/pip" || easy_install pip
+	@test -x "$(VIRTUAL_ENV)/bin/pip-accel" || pip install --quiet pip-accel
+	@pip-accel install --quiet --requirement=requirements.txt
+	@pip uninstall --yes $(PACKAGE_NAME) &>/dev/null || true
+	@pip install --quiet --no-deps --ignore-installed .
+
+reset:
+	$(MAKE) clean
+	rm -Rf "$(VIRTUAL_ENV)"
+	$(MAKE) install
+
+check: install
+	@pip-accel install --upgrade --quiet --requirement=requirements-checks.txt && flake8
+
+test: install
+	@pip-accel install --quiet --requirement=requirements-tests.txt
+	@py.test --cov
+	@coverage html
+	@coverage report --fail-under=90 &>/dev/null
+
+tox: install
+	@pip-accel install --quiet tox && tox
+
+readme: install
+	@pip-accel install --quiet cogapp && cog.py -r README.rst
+
+docs: readme
+	@pip-accel install --quiet sphinx
+	@cd docs && sphinx-build -nb html -d build/doctrees . build/html
+
+publish: install
+	git push origin && git push --tags origin
+	$(MAKE) clean
+	pip-accel install --quiet twine wheel
+	python setup.py sdist bdist_wheel
+	twine upload dist/*
+	$(MAKE) clean
 
 clean:
-	rm -Rf *.egg *.egg-info .coverage build dist docs/build htmlcov
-	find -depth -type d -name __pycache__ -exec rm -Rf {} \;
-	find -type f -name '*.pyc' -delete
+	@rm -Rf *.egg .cache .coverage .tox build dist docs/build htmlcov
+	@find -depth -type d -name __pycache__ -exec rm -Rf {} \;
+	@find -type f -name '*.pyc' -delete
 
-reset: clean
-	rm -Rf "$(VIRTUAL_ENV)"
-	make --no-print-directory install
-
-check:
-	@test -x "$(VIRTUAL_ENV)/bin/pep8" || ($(ACTIVATE) && pip-accel install pep8)
-	@test -x "$(VIRTUAL_ENV)/bin/pep257" || ($(ACTIVATE) && pip-accel install pep257)
-	@$(ACTIVATE) && pep8 --max-line-length=120 setup.py docs/conf.py py2deb
-	@$(ACTIVATE) && pep257 --ignore=D200 setup.py docs/conf.py py2deb
-
-test: check install
-	@test -x "$(VIRTUAL_ENV)/bin/py.test" || ($(ACTIVATE) && pip-accel install pytest)
-	$(ACTIVATE) && py.test --capture=no --exitfirst py2deb/tests.py
-
-coverage: check install
-	@test -x "$(VIRTUAL_ENV)/bin/coverage" || ($(ACTIVATE) && pip-accel install coverage)
-	$(ACTIVATE) && coverage run setup.py test
-	$(ACTIVATE) && coverage html
-
-readme:
-	test -x "$(VIRTUAL_ENV)/bin/cog.py" || ($(ACTIVATE) && pip-accel install cogapp)
-	$(ACTIVATE) && cog.py -r README.rst
-
-docs: check install readme
-	@test -x "$(VIRTUAL_ENV)/bin/sphinx-build" || ($(ACTIVATE) && pip-accel install sphinx)
-	$(ACTIVATE) && cd docs && sphinx-build -nb html -d build/doctrees . build/html
-
-publish: check
-	git push origin && git push --tags origin
-	make clean && python setup.py sdist upload
-
-.PHONY: default install clean reset test coverage docs publish
+.PHONY: default install reset check test tox readme docs publish clean
