@@ -293,4 +293,7 @@ def embed_install_prefix(handle, install_prefix):
         lines.insert(insertion_point, ('import sys; sys.path.insert(0, %r)\n' % install_prefix).encode('UTF-8'))
         # Turn the modified contents back into a file-like object.
         handle = BytesIO(b''.join(lines))
+    else:
+        # Reset the file pointer of handle, so its contents can be read again later.
+        handle.seek(0)
     return handle
