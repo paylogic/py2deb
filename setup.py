@@ -1,10 +1,23 @@
 #!/usr/bin/env python
 
-"""Setup script for the `py2deb` package."""
+# Setup script for the `py2deb' package.
 
 # Author: Peter Odding <peter.odding@paylogic.com>
-# Last Change: April 15, 2016
+# Last Change: January 17, 2017
 # URL: https://py2deb.readthedocs.io
+
+"""
+Setup script for the `py2deb` package.
+
+**python setup.py install**
+  Install from the working directory into the current Python environment.
+
+**python setup.py sdist**
+  Build a source distribution archive.
+
+**python setup.py bdist_wheel**
+  Build a wheel distribution archive.
+"""
 
 # Standard library modules.
 import codecs
@@ -16,22 +29,40 @@ import sys
 from setuptools import find_packages, setup
 
 
-def get_absolute_path(*args):
-    """Transform relative pathnames into absolute pathnames."""
-    return os.path.join(os.path.dirname(os.path.abspath(__file__)), *args)
-
-
-def get_contents(filename):
+def get_contents(*args):
     """Get the contents of a file relative to the source distribution directory."""
-    with codecs.open(get_absolute_path(filename), 'r', 'utf-8') as handle:
+    with codecs.open(get_absolute_path(*args), 'r', 'UTF-8') as handle:
         return handle.read()
 
 
-def get_version(filename):
+def get_version(*args):
     """Extract the version number from a Python module."""
-    contents = get_contents(filename)
+    contents = get_contents(*args)
     metadata = dict(re.findall('__([a-z]+)__ = [\'"]([^\'"]+)', contents))
     return metadata['version']
+
+
+def get_install_requires():
+    """Get the conditional dependencies for source distributions."""
+    install_requires = get_requirements('requirements.txt')
+    if 'bdist_wheel' not in sys.argv:
+        if sys.version_info[:2] <= (2, 6) or sys.version_info[:2] == (3, 0):
+            install_requires.append('importlib')
+    return sorted(install_requires)
+
+
+def get_extras_require():
+    """Get the conditional dependencies for wheel distributions."""
+    extras_require = {}
+    if have_environment_marker_support():
+        expression = ':python_version == "2.6" or python_version == "3.0"'
+        extras_require[expression] = ['importlib']
+    return extras_require
+
+
+def get_absolute_path(*args):
+    """Transform relative pathnames into absolute pathnames."""
+    return os.path.join(os.path.dirname(os.path.abspath(__file__)), *args)
 
 
 def get_requirements(*args):
@@ -62,29 +93,40 @@ def have_environment_marker_support():
         return False
 
 
-# Conditional importlib dependency for Python 2.6 and 3.0 when creating a source distribution.
-install_requires = get_requirements('requirements.txt')
-if 'bdist_wheel' not in sys.argv:
-    if sys.version_info[:2] <= (2, 6) or sys.version_info[:2] == (3, 0):
-        install_requires.append('importlib')
-
-# Conditional importlib dependency for Python 2.6 and 3.0 when creating a wheel distribution.
-extras_require = {}
-if have_environment_marker_support():
-    extras_require[':python_version == "2.6" or python_version == "3.0"'] = ['importlib']
-
-
 setup(
     name='py2deb',
-    version=get_version('py2deb/__init__.py'),
-    description='Python to Debian package converter',
+    version=get_version('py2deb', '__init__.py'),
+    description="Python to Debian package converter",
     long_description=get_contents('README.rst'),
     url='https://py2deb.readthedocs.io',
-    author='Peter Odding & Arjan Verwer (Paylogic International)',
+    author="Peter Odding & Arjan Verwer (Paylogic International)",
     author_email='peter.odding@paylogic.com',
     packages=find_packages(),
+    entry_points=dict(console_scripts=[
+        'py2deb = py2deb.cli:main',
+    ]),
+    install_requires=get_install_requires(),
+    extras_require=get_extras_require(),
     test_suite='py2deb.tests',
-    entry_points={'console_scripts': ['py2deb = py2deb.cli:main']},
-    install_requires=install_requires,
-    extras_require=extras_require,
-    include_package_data=True)
+    include_package_data=True,
+    classifiers=[
+        'Development Status :: 5 - Production/Stable',
+        'Intended Audience :: Developers',
+        'Intended Audience :: Information Technology',
+        'Intended Audience :: System Administrators',
+        'License :: OSI Approved :: MIT License',
+        'Operating System :: POSIX :: Linux',
+        'Programming Language :: Python',
+        'Programming Language :: Python :: 2',
+        'Programming Language :: Python :: 2.6',
+        'Programming Language :: Python :: 2.7',
+        'Programming Language :: Python :: 3',
+        'Programming Language :: Python :: 3.4',
+        'Programming Language :: Python :: 3.5',
+        'Topic :: Software Development :: Build Tools',
+        'Topic :: Software Development :: Libraries :: Python Modules',
+        'Topic :: System :: Archiving :: Packaging',
+        'Topic :: System :: Installation/Setup',
+        'Topic :: System :: Software Distribution',
+        'Topic :: Utilities',
+    ])
