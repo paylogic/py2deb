@@ -3,7 +3,7 @@
 # Authors:
 #  - Arjan Verwer
 #  - Peter Odding <peter.odding@paylogic.com>
-# Last Change: April 15, 2016
+# Last Change: January 17, 2017
 # URL: https://py2deb.readthedocs.io
 
 """
@@ -15,4 +15,4 @@ The top level :mod:`py2deb` module contains only a version number.
 """
 
 # Semi-standard module versioning.
-__version__ = '0.24.3'
+__version__ = '0.24.4'
