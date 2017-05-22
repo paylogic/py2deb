@@ -7,9 +7,12 @@ env:
   - TOXENV=py35
 install:
   - ./.travis.sh --install
-  - pip install tox coveralls
+  - make install
+  - pip-accel install coveralls tox
+  - pip-accel install -r requirements-checks.txt
 script:
-  - tox -v
+  - make check
+  - make tox
 after_success:
   - coveralls
 branches:

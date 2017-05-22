@@ -1,7 +1,7 @@
 # Makefile for py2deb.
 #
 # Author: Peter Odding <peter.odding@paylogic.com>
-# Last Change: January 17, 2017
+# Last Change: May 22, 2017
 # URL: https://github.com/paylogic/py2deb
 
 PACKAGE_NAME = py2deb
@@ -42,7 +42,7 @@ reset:
 	$(MAKE) install
 
 check: install
-	@pip-accel install --upgrade --quiet --requirement=requirements-checks.txt && flake8
+	@scripts/check-code-style.sh
 
 test: install
 	@pip-accel install --quiet --requirement=requirements-tests.txt
