@@ -425,6 +425,35 @@ class PackageConverterTestCase(unittest.TestCase):
                 assert not metadata['Depends'].matches('python-humanfriendly', '1.30.0'), \
                     "py2deb failed to rewrite version of dependency!"
 
+    def test_conversion_with_system_package(self):
+        """Convert a package and map one of its requirements to a system package."""
+        with TemporaryDirectory() as repository_directory:
+            with TemporaryDirectory() as distribution_directory:
+                # Create a temporary (and rather trivial :-) Python package.
+                with open(os.path.join(distribution_directory, 'setup.py'), 'w') as handle:
+                    handle.write(dedent('''
+                        from setuptools import setup
+                        setup(
+                            name='system-package-conversion-test',
+                            version='1.0',
+                            install_requires=['dbus-python'],
+                        )
+                    '''))
+                # Run the conversion command.
+                converter = self.create_isolated_converter()
+                converter.set_repository(repository_directory)
+                converter.use_system_package('dbus-python', 'python-dbus')
+                archives, relationships = converter.convert([distribution_directory])
+                # Make sure only one archive was generated.
+                assert len(archives) == 1
+                # Use deb-pkg-tools to inspect the package metadata.
+                metadata, contents = inspect_package(archives[0])
+                logger.debug("Metadata of generated package: %s", dict(metadata))
+                logger.debug("Contents of generated package: %s", dict(contents))
+                # Inspect the converted package's dependency.
+                assert metadata['Depends'].matches('python-dbus'), \
+                    "py2deb failed to rewrite dependency name!"
+
     def test_conversion_of_isolated_packages(self):
         """
         Convert a group of packages with a custom name and installation prefix.

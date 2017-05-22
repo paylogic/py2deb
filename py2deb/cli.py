@@ -46,6 +46,13 @@ Supported options:
 
     Can also be set using the environment variable $PY2DEB_REPOSITORY.
 
+  --use-system-package=PYTHON_PACKAGE_NAME,DEBIAN_PACKAGE_NAME
+
+    Exclude a Python package (the name before the comma) from conversion and
+    replace references to the Python package with a specific Debian package
+    name. This allows you to use system packages for specific Python
+    requirements.
+
   --name-prefix=PREFIX
 
     Set the name prefix used during the name conversion from Python to
@@ -142,9 +149,9 @@ def main():
         converter = PackageConverter()
         # Parse and validate the command line options.
         options, arguments = getopt.getopt(sys.argv[1:], 'c:r:yvh', [
-            'config=', 'repository=', 'name-prefix=', 'no-name-prefix=',
-            'rename=', 'install-prefix=', 'install-alternative=',
-            'python-callback=', 'report-dependencies=',
+            'config=', 'repository=', 'use-system-package=', 'name-prefix=',
+            'no-name-prefix=', 'rename=', 'install-prefix=',
+            'install-alternative=', 'python-callback=', 'report-dependencies=',
             'yes', 'verbose', 'help',
         ])
         control_file_to_update = None
@@ -153,6 +160,9 @@ def main():
                 converter.load_configuration_file(value)
             elif option in ('-r', '--repository'):
                 converter.set_repository(value)
+            elif option == '--use-system-package':
+                python_package_name, _, debian_package_name = value.partition(',')
+                converter.use_system_package(python_package_name, debian_package_name)
             elif option == '--name-prefix':
                 converter.set_name_prefix(value)
             elif option == '--no-name-prefix':

@@ -3,7 +3,7 @@
 # Authors:
 #  - Arjan Verwer
 #  - Peter Odding <peter.odding@paylogic.com>
-# Last Change: January 17, 2017
+# Last Change: May 22, 2017
 # URL: https://py2deb.readthedocs.io
 
 """
@@ -81,6 +81,7 @@ class PackageConverter(object):
         self.install_prefix = '/usr'
         self.lintian_enabled = True
         self.name_mapping = {}
+        self.system_packages = {}
         self.name_prefix = 'python'
         self.pip_accel = PipAccelerator(PipAccelConfig())
         self.python_callback = None
@@ -117,9 +118,30 @@ class PackageConverter(object):
             raise ValueError("Please provide a nonempty name prefix!")
         self.name_prefix = prefix
 
+    def use_system_package(self, python_package_name, debian_package_name):
+        """
+        Exclude a Python package from conversion.
+
+        :param python_package_name: The name of a Python package
+                                    as found on PyPI (a string).
+        :param debian_package_name: The name of the Debian package that should
+                                    be used to fulfill the dependency (a string).
+        :raises: :exc:`~exceptions.ValueError` when a package name is not
+                 provided (e.g. an empty string).
+
+         References to the Python package are replaced with a specific Debian
+         package name. This allows you to use system packages for specific
+         Python requirements.
+        """
+        if not python_package_name:
+            raise ValueError("Please provide a nonempty Python package name!")
+        if not debian_package_name:
+            raise ValueError("Please provide a nonempty Debian package name!")
+        self.system_packages[python_package_name.lower()] = debian_package_name.lower()
+
     def rename_package(self, python_package_name, debian_package_name):
         """
-        Override package name conversion algorithm for given pair of names.
+        Override the package name conversion algorithm for the given pair of names.
 
         :param python_package_name: The name of a Python package
                                     as found on PyPI (a string).
@@ -562,7 +584,8 @@ class PackageConverter(object):
         # see them (a poorly defined concept to begin with).
         arguments = ['--ignore-installed'] + list(pip_install_arguments)
         for requirement in self.pip_accel.get_requirements(arguments):
-            yield PackageToConvert(self, requirement)
+            if requirement.name.lower() not in self.system_packages:
+                yield PackageToConvert(self, requirement)
 
     def transform_name(self, python_package_name, *extras):
         """
@@ -587,8 +610,14 @@ class PackageConverter(object):
         'some-web-app-raven-flask'
 
         """
-        # Check for an override by the caller.
-        debian_package_name = self.name_mapping.get(python_package_name.lower())
+        key = python_package_name.lower()
+        # Check for a system package override by the caller.
+        debian_package_name = self.system_packages.get(key)
+        if debian_package_name:
+            # We don't modify the names of system packages.
+            return debian_package_name
+        # Check for a package rename override by the caller.
+        debian_package_name = self.name_mapping.get(key)
         if not debian_package_name:
             # No override. Make something up :-).
             with_name_prefix = '%s-%s' % (self.name_prefix, python_package_name)
