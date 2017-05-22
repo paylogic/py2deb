@@ -1,7 +1,7 @@
 # Automated tests for the `py2deb' package.
 #
 # Author: Peter Odding <peter.odding@paylogic.com>
-# Last Change: January 17, 2017
+# Last Change: May 22, 2017
 # URL: https://py2deb.readthedocs.io
 
 """
@@ -90,9 +90,7 @@ def setUpModule():
 
 
 def tearDownModule():
-    """
-    Clean up temporary directories created by :func:`setUpModule()`.
-    """
+    """Clean up temporary directories created by :func:`setUpModule()`."""
     for directory in TEMPORARY_DIRECTORIES:
         shutil.rmtree(directory)
 
@@ -113,9 +111,7 @@ def create_temporary_directory():
 
 class PackageConverterTestCase(unittest.TestCase):
 
-    """
-    :mod:`unittest` compatible container for the test suite of `py2deb`.
-    """
+    """:mod:`unittest` compatible container for the test suite of `py2deb`."""
 
     def create_isolated_converter(self):
         """Instantiate an isolated package converter."""
@@ -123,9 +119,7 @@ class PackageConverterTestCase(unittest.TestCase):
                                 load_environment_variables=False)
 
     def test_argument_validation(self):
-        """
-        Test argument validation done by setters of :class:`py2deb.converter.PackageConverter`.
-        """
+        """Test argument validation done by setters of :class:`py2deb.converter.PackageConverter`."""
         converter = self.create_isolated_converter()
         self.assertRaises(ValueError, converter.set_repository, '/foo/bar/baz')
         self.assertRaises(ValueError, converter.set_name_prefix, '')
@@ -145,9 +139,7 @@ class PackageConverterTestCase(unittest.TestCase):
             del os.environ['PY2DEB_CONFIG']
 
     def test_version_reformatting(self):
-        """
-        Test reformatting of Python version strings.
-        """
+        """Test reformatting of Python version strings."""
         assert normalize_package_version('1.5_42') == '1.5-42'
         assert normalize_package_version('1.5-whatever') == '1.5-whatever-1'
 

@@ -1,7 +1,7 @@
 # py2deb: Python to Debian package converter.
 #
 # Author: Peter Odding <peter.odding@paylogic.com>
-# Last Change: April 12, 2015
+# Last Change: May 22, 2017
 # URL: https://py2deb.readthedocs.io
 
 """
@@ -325,9 +325,7 @@ def touch(filename):
 
 class NameSpaceReferenceCount(dict):
 
-    """
-    Persistent reference counting for initialization of namespace packages.
-    """
+    """Persistent reference counting for initialization of namespace packages."""
 
     def __init__(self, modules_directory):
         """

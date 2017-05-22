@@ -3,7 +3,7 @@
 # Authors:
 #  - Arjan Verwer
 #  - Peter Odding <peter.odding@paylogic.com>
-# Last Change: September 24, 2015
+# Last Change: May 22, 2017
 # URL: https://py2deb.readthedocs.io
 
 """
@@ -70,9 +70,7 @@ class PackageToConvert(object):
         self.requirement = requirement
 
     def __str__(self):
-        """
-        The name, version and extras of the package encoded in a human readable string.
-        """
+        """The name, version and extras of the package encoded in a human readable string."""
         version = [self.python_version]
         extras = self.requirement.pip_requirement.extras
         if extras:
@@ -81,23 +79,17 @@ class PackageToConvert(object):
 
     @property
     def python_name(self):
-        """
-        The name of the Python package (a string).
-        """
+        """The name of the Python package (a string)."""
         return self.requirement.name
 
     @cached_property
     def debian_name(self):
-        """
-        The name of the converted Debian package (a string).
-        """
+        """The name of the converted Debian package (a string)."""
         return self.converter.transform_name(self.python_name, *self.requirement.pip_requirement.extras)
 
     @property
     def python_version(self):
-        """
-        The version of the Python package (a string).
-        """
+        """The version of the Python package (a string)."""
         return self.requirement.version
 
     @cached_property

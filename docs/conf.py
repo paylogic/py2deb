@@ -44,7 +44,7 @@ copyright = u'2017, Paylogic International (Arjan Verwer & Peter Odding)'
 # built documents.
 
 # Find the package version and make it the release.
-from py2deb import __version__ as py2deb_version
+from py2deb import __version__ as py2deb_version  # noqa
 
 # The short X.Y version.
 version = '.'.join(py2deb_version.split('.')[:2])

@@ -3,12 +3,10 @@
 # Authors:
 #  - Arjan Verwer
 #  - Peter Odding <peter.odding@paylogic.com>
-# Last Change: September 4, 2015
+# Last Change: May 22, 2017
 # URL: https://py2deb.readthedocs.io
 
-"""
-The :mod:`py2deb.utils` module contains miscellaneous code.
-"""
+"""The :mod:`py2deb.utils` module contains miscellaneous code."""
 
 # Standard library modules.
 import logging
@@ -134,17 +132,13 @@ class TemporaryDirectory(object):
         self.options = options
 
     def __enter__(self):
-        """
-        Create the temporary directory.
-        """
+        """Create the temporary directory."""
         self.temporary_directory = tempfile.mkdtemp(**self.options)
         logger.debug("Created temporary directory: %s", self.temporary_directory)
         return self.temporary_directory
 
     def __exit__(self, exc_type, exc_value, traceback):
-        """
-        Destroy the temporary directory.
-        """
+        """Destroy the temporary directory."""
         logger.debug("Cleaning up temporary directory: %s", self.temporary_directory)
         shutil.rmtree(self.temporary_directory)
         del self.temporary_directory

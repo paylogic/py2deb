@@ -1,7 +1,7 @@
 # Command line interface for the `py2deb' program.
 #
 # Author: Peter Odding <peter.odding@paylogic.com>
-# Last Change: January 19, 2016
+# Last Change: May 22, 2017
 # URL: https://py2deb.readthedocs.io
 
 """
@@ -134,9 +134,7 @@ logger = logging.getLogger(__name__)
 
 
 def main():
-    """
-    Command line interface for the ``py2deb`` program.
-    """
+    """Command line interface for the ``py2deb`` program."""
     # Configure terminal output.
     coloredlogs.install()
     try:
