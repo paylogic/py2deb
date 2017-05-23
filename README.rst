@@ -109,6 +109,10 @@ So the "--" marker separates the py2deb options from the pip options.
    this directory doesn't exist py2deb refuses to run.
    
    Can also be set using the environment variable ``$PY2DEB_REPOSITORY``."
+   "``--use-system-package=PYTHON_PACKAGE_NAME,DEBIAN_PACKAGE_NAME``","Exclude a Python package (the name before the comma) from conversion and
+   replace references to the Python package with a specific Debian package
+   name. This allows you to use system packages for specific Python
+   requirements."
    ``--name-prefix=PREFIX``,"Set the name prefix used during the name conversion from Python to
    Debian packages. Defaults to ""python"". The name prefix and package
    names are always delimited by a dash.
