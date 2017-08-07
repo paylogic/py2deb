@@ -3,7 +3,7 @@
 # Authors:
 #  - Arjan Verwer
 #  - Peter Odding <peter.odding@paylogic.com>
-# Last Change: May 22, 2017
+# Last Change: August 7, 2017
 # URL: https://py2deb.readthedocs.io
 
 """
@@ -129,9 +129,9 @@ class PackageConverter(object):
         :raises: :exc:`~exceptions.ValueError` when a package name is not
                  provided (e.g. an empty string).
 
-         References to the Python package are replaced with a specific Debian
-         package name. This allows you to use system packages for specific
-         Python requirements.
+        References to the Python package are replaced with a specific Debian
+        package name. This allows you to use system packages for specific
+        Python requirements.
         """
         if not python_package_name:
             raise ValueError("Please provide a nonempty Python package name!")
