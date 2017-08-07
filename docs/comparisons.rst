@@ -205,9 +205,6 @@ Here are some notable differences between `fpm` and `py2deb`:
   while `py2deb` has a very specialized use case for which it is actually
   specialized (`py2deb` is smarter about Python to Debian package conversion).
 
-- `fpm` converts a single Python package to a single Debian package while
-  `py2deb` converts complete dependency sets.
-
 - With `py2deb` it is very easy to convert packages using a custom name and
   installation prefix, allowing conversion of large/complex requirement sets
   that would inevitably conflict with Debian packages from official
