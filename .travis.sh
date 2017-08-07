@@ -54,7 +54,7 @@ main () {
 
 install_with_deadsnakes_ppa () {
   msg "Installing deadsnakes PPA .."
-  sudo add-apt-repository --yes ppa:fkrull/deadsnakes
+  sudo add-apt-repository --yes ppa:deadsnakes/ppa
   install_with_apt_get "$@"
 }
 
