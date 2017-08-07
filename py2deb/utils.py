@@ -3,7 +3,7 @@
 # Authors:
 #  - Arjan Verwer
 #  - Peter Odding <peter.odding@paylogic.com>
-# Last Change: May 22, 2017
+# Last Change: August 8, 2017
 # URL: https://py2deb.readthedocs.io
 
 """The :mod:`py2deb.utils` module contains miscellaneous code."""
@@ -184,14 +184,24 @@ def normalize_package_version(python_package_version):
     Reformats Python package versions to comply with the Debian policy manual.
     All characters except alphanumerics, dot (``.``) and plus (``+``) are
     replaced with dashes (``-``).
+
+    The PEP 440 pre-release identifiers 'a', 'b', 'c' and 'rc' are prefixed by
+    a tilde (``~``) to replicate the intended ordering in Debian versions, also
+    the identifier 'c' is translated into 'rc'. Refer to `issue #8
+    <https://github.com/paylogic/py2deb/issues/8>`_ for details.
     """
-    sanitized_version = re.sub('[^a-z0-9.+]+', '-', python_package_version.lower()).strip('-')
-    components = sanitized_version.split('-')
+    # Lowercase and remove invalid characters from the version string.
+    version = re.sub('[^a-z0-9.+]+', '-', python_package_version.lower()).strip('-')
+    # Translate the PEP 440 pre-release identifier 'c' to 'rc'.
+    version = re.sub(r'(\d)c(\d)', r'\1rc\2', version)
+    # Replicate the intended ordering of PEP 440 pre-release versions (a, b, rc).
+    version = re.sub(r'(\d)(a|b|rc)(\d)', r'\1~\2\3', version)
     # Make sure the "Debian revision" contains a digit.
+    components = version.split('-')
     if len(components) > 1 and not re.search('[0-9]', components[-1]):
         components.append('1')
-        sanitized_version = '-'.join(components)
-    return sanitized_version
+        version = '-'.join(components)
+    return version
 
 
 def tokenize_version(version_number):
