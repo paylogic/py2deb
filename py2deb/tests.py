@@ -1,7 +1,7 @@
 # Automated tests for the `py2deb' package.
 #
 # Author: Peter Odding <peter.odding@paylogic.com>
-# Last Change: August 7, 2017
+# Last Change: February 24, 2018
 # URL: https://py2deb.readthedocs.io
 
 """
@@ -321,6 +321,25 @@ class PackageConverterTestCase(unittest.TestCase):
             assert relationships == ['python-raven-flask (= 3.6.0)']
             # Check that a package with the extra in the filename was generated.
             assert find_package_archive(archives, 'python-raven-flask')
+
+    def test_conversion_of_environment_markers(self):
+        """
+        Convert a package with installation requirements using environment markers.
+
+        Converts ``weasyprint==0.42`` and sanity checks that the ``cairosvg``
+        dependency is present.
+        """
+        with TemporaryDirectory() as directory:
+            # Run the conversion command.
+            converter = self.create_isolated_converter()
+            converter.set_repository(directory)
+            archives, relationships = converter.convert(['weasyprint==0.42'])
+            # Check that the dependency is present.
+            pathname = find_package_archive(archives, 'python-weasyprint')
+            metadata, contents = inspect_package(pathname)
+            # Make sure the dependency on cairosvg was added (this confirms
+            # that environment markers have been evaluated).
+            assert 'python-cairosvg' in metadata['Depends'].names
 
     def test_namespace_package_parsing(self):
         """Test parsing of ``namespace_package.txt`` files."""
