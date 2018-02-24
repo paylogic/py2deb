@@ -264,7 +264,6 @@ class PackageToConvert(object):
         """
         requirements = []
         try:
-            assert False
             dist = self.requirement.pip_requirement.get_dist()
             extras = self.requirement.pip_requirement.extras
             requirements.extend(dist.requires(extras))
