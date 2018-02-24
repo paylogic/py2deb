@@ -354,6 +354,17 @@ class PackageConverterTestCase(TestCase):
             # that environment markers have been evaluated).
             assert 'python-cairosvg' in metadata['Depends'].names
 
+    def test_python_requirements_fallback(self):
+        """Test the fall-back implementation of the ``python_requirements`` property."""
+        with TemporaryDirectory() as directory:
+            # Run the conversion command.
+            converter = self.create_isolated_converter()
+            converter.set_repository(directory)
+            packages = list(converter.get_source_distributions(['coloredlogs==6.0']))
+            coloredlogs_package = next(p for p in packages if p.python_name == 'coloredlogs')
+            assert any(p.key == 'humanfriendly' for p in coloredlogs_package.python_requirements)
+            assert any(p.key == 'humanfriendly' for p in coloredlogs_package.python_requirements_fallback)
+
     def test_namespace_package_parsing(self):
         """Test parsing of ``namespace_package.txt`` files."""
         converter = self.create_isolated_converter()

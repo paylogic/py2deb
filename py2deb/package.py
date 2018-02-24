@@ -262,27 +262,33 @@ class PackageToConvert(object):
         implementation (as a precautionary measure to avoid unexpected side
         effects of the new implementation).
         """
-        requirements = []
         try:
             dist = self.requirement.pip_requirement.get_dist()
             extras = self.requirement.pip_requirement.extras
-            requirements.extend(dist.requires(extras))
+            requirements = list(dist.requires(extras))
         except Exception:
             logger.warning("Failed to determine installation requirements of %s "
                            "using pkg-resources, falling back to old implementation.",
                            self, exc_info=True)
-            filename = self.find_egg_info_file('requires.txt')
-            if filename:
-                selected_extras = set(extra.lower() for extra in self.requirement.pip_requirement.extras)
-                current_extra = None
-                with open(filename) as handle:
-                    for line in handle:
-                        line = line.strip()
-                        if line.startswith('['):
-                            current_extra = line.strip('[]').lower()
-                        elif line and (current_extra is None or current_extra in selected_extras):
-                            requirements.append(Requirement.parse(line))
+            requirements = self.python_requirements_fallback
         logger.debug("Python requirements of %s: %r", self, requirements)
+        return requirements
+
+    @cached_property
+    def python_requirements_fallback(self):
+        """Fall-back implementation of :attr:`python_requirements`."""
+        requirements = []
+        filename = self.find_egg_info_file('requires.txt')
+        if filename:
+            selected_extras = set(extra.lower() for extra in self.requirement.pip_requirement.extras)
+            current_extra = None
+            with open(filename) as handle:
+                for line in handle:
+                    line = line.strip()
+                    if line.startswith('['):
+                        current_extra = line.strip('[]').lower()
+                    elif line and (current_extra is None or current_extra in selected_extras):
+                        requirements.append(Requirement.parse(line))
         return requirements
 
     @cached_property
