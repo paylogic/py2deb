@@ -87,6 +87,14 @@ class PackageToConvert(object):
         """The name of the converted Debian package (a string)."""
         return self.converter.transform_name(self.python_name, *self.requirement.pip_requirement.extras)
 
+    @cached_property
+    def debian_provides(self):
+        """The package is assumed to provide the basename named package if extra's are given."""
+        if self.requirement.pip_requirement.extras:
+            return self.converter.transform_name(self.python_name)
+        else:
+            return ''
+
     @property
     def python_version(self):
         """The version of the Python package (a string)."""
@@ -416,6 +424,7 @@ class PackageToConvert(object):
                                                          description=self.debian_description,
                                                          architecture=architecture,
                                                          depends=dependencies,
+                                                         provides=self.debian_provides,
                                                          priority='optional',
                                                          section='python'))
 
