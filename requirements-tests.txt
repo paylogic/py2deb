@@ -2,6 +2,3 @@
 coverage >= 4.2
 pytest >= 3.0.4
 pytest-cov >= 2.4.0
-
-# Make sure tox (also used on Travis CI) respects our constraints.
---constraint=constraints.txt
