@@ -24,7 +24,7 @@ relationships.
 The `py2deb` package is currently tested on Python 2.6, 2.7, 3.4, 3.5 and 3.6
 (although Python 3.x support isn't being used extensively yet, so you may run
 into some sharp edges). For usage instructions please refer to the
-documentation `hosted on Read The Docs`_.
+documentation hosted on `Read The Docs`_.
 
 .. contents:: :local:
 
@@ -62,7 +62,7 @@ Usage
 
 There are two ways to use the `py2deb` package: As the command line program
 ``py2deb`` and as a Python API. For details about the Python API please refer
-to the API documentation `hosted on Read the Docs`_. The command line interface
+to the API documentation hosted on `Read the Docs`_. The command line interface
 is described below.
 
 Command line
@@ -77,9 +77,17 @@ Command line
 
 **Usage:** `py2deb [OPTIONS] ...`
 
-Convert Python packages to Debian packages according to the given command line options (see below). The command line arguments are the same as accepted by the "pip install" command because py2deb invokes pip during the conversion process. This means you can name the package(s) to convert on the command line but you can also use "requirement files" if you prefer.
+Convert Python packages to Debian packages according to the given
+command line options (see below). The command line arguments are the
+same as accepted by the "pip install" command because py2deb invokes
+pip during the conversion process. This means you can name the
+package(s) to convert on the command line but you can also use
+"requirement files" if you prefer.
 
-If you want to pass command line options to pip (e.g. because you want to use a custom index URL or a requirements file) then you will need to tell py2deb where the options for py2deb stop and the options for pip begin. In such cases you can use the following syntax:
+If you want to pass command line options to pip (e.g. because you want
+to use a custom index URL or a requirements file) then you will need
+to tell py2deb where the options for py2deb stop and the options for
+pip begin. In such cases you can use the following syntax:
 
 .. code-block:: sh
 
@@ -150,8 +158,7 @@ So the "--" marker separates the py2deb options from the pip options.
    
    Can also be set using the environment variable ``$PY2DEB_AUTO_INSTALL``."
    "``-v``, ``--verbose``",Make more noise :-).
-   "``-h``, ``--help``","Show this message and exit.
-   "
+   "``-h``, ``--help``",Show this message and exit.
 
 .. [[[end]]]
 
@@ -205,8 +212,7 @@ This software is licensed under the `MIT license`_.
 .. _detailed comparison: https://py2deb.readthedocs.io/en/latest/comparisons.html
 .. _dh-virtualenv: https://github.com/spotify/dh-virtualenv
 .. _fpm: https://github.com/jordansissel/fpm
-.. _GitHub project page: https://github.com/paylogic/py2deb
-.. _Read The Docs: https://py2deb.readthedocs.io
+.. _GitHub: https://github.com/paylogic/py2deb
 .. _Lintian: http://en.wikipedia.org/wiki/Lintian
 .. _MIT license: http://en.wikipedia.org/wiki/MIT_License
 .. _PEP-440: https://www.python.org/dev/peps/pep-0440/
@@ -215,6 +221,7 @@ This software is licensed under the `MIT license`_.
 .. _PyPI: https://pypi.org/project/py2deb
 .. _python-imaging: https://packages.debian.org/search?keywords=python-imaging
 .. _python-pil: https://packages.debian.org/search?keywords=python-pil
+.. _Read The Docs: https://py2deb.readthedocs.io
 .. _requirement files: http://www.pip-installer.org/en/latest/cookbook.html#requirements-files
 .. _stdeb: https://pypi.org/project/stdeb
 .. _this question on Reddit: https://www.reddit.com/r/Python/comments/2x7s17/py2deb_python_to_debian_package_converter/coxyyzu
