@@ -74,14 +74,11 @@ intersphinx_mapping = {
     'humanfriendly': ('https://humanfriendly.readthedocs.io/en/latest', None),
     'pipaccel': ('https://pip-accel.readthedocs.io/en/latest', None),
     'python': ('https://docs.python.org/2', None),
-    'setuptools': ('https://pythonhosted.org/setuptools/', None),
+    'setuptools': ('https://setuptools.readthedocs.io/en/latest', None),
 }
 
 # -- Options for HTML output ---------------------------------------------------
 
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
-html_theme = 'classic'
-
-# Output file base name for HTML help builder.
-htmlhelp_basename = 'py2debdoc'
+html_theme = 'nature'

@@ -1,40 +1,39 @@
-Documentation for py2deb
-========================
+py2deb: Python to Debian package converter
+==========================================
 
-The py2deb program converts Python packages to Debian binary packages. This is
-the documentation for version |release| of py2deb. The documentation consists
-of two parts:
+Welcome to the documentation of py2deb version |release|!
+The following sections are available:
 
-- The documentation for users of the ``py2deb`` program
-- The documentation for developers who wish to extend and/or embed the
-  functionality of ``py2deb``
+.. contents::
+   :local:
 
-Introduction & usage
---------------------
+User documentation
+------------------
 
-The first part of the documentation is the readme which is targeted at users of
-the ``py2deb`` program. Here are the topics discussed in the readme:
+The readme is the best place to start reading, it's targeted at all users and
+documents the command line interface:
 
 .. toctree::
-   :maxdepth: 2
+   readme.rst
 
-   users.rst
-
-Additionally the following topic may be of interest:
+The comparison between py2deb and similar tools can help to determine if py2deb
+can be useful for you.
 
 .. toctree::
-   :maxdepth: 2
-
    comparisons.rst
 
-Internal API documentation
---------------------------
+API documentation
+-----------------
 
-The second part of the documentation is targeted at developers who wish to
-extend and/or embed the functionality of ``py2deb``. Here are the contents
-of the API documentation:
+The following API documentation is automatically generated from the source code:
 
 .. toctree::
-   :maxdepth: 3
+   api.rst
 
-   developers.rst
+Change log
+----------
+
+The change log lists notable changes to the project:
+
+.. toctree::
+   changelog.rst

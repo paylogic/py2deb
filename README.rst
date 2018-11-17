@@ -188,10 +188,9 @@ fairly `detailed comparison`_ with each of these projects.
 Contact
 -------
 
-If you have questions, bug reports, suggestions, etc. please create an issue on
-the `GitHub project page`_. The latest version of `py2deb` will always be
-available on GitHub. The internal API documentation is `hosted on Read The
-Docs`_.
+The latest version of `py2deb` is available on PyPI_ and GitHub_. The
+documentation is hosted on `Read the Docs`_ and includes a changelog_. For
+questions, bug reports, suggestions, etc. please create an issue on GitHub_.
 
 License
 -------
@@ -201,12 +200,13 @@ This software is licensed under the `MIT license`_.
 © 2018 Peter Odding, Arjan Verwer and Paylogic International.
 
 .. External references:
+.. _changelog: https://py2deb.readthedocs.io/en/latest/changelog.html
 .. _deb-pkg-tools: https://pypi.python.org/pypi/deb-pkg-tools
 .. _detailed comparison: https://py2deb.readthedocs.io/en/latest/comparisons.html
 .. _dh-virtualenv: https://github.com/spotify/dh-virtualenv
 .. _fpm: https://github.com/jordansissel/fpm
 .. _GitHub project page: https://github.com/paylogic/py2deb
-.. _hosted on Read The Docs: https://py2deb.readthedocs.io
+.. _Read The Docs: https://py2deb.readthedocs.io
 .. _Lintian: http://en.wikipedia.org/wiki/Lintian
 .. _MIT license: http://en.wikipedia.org/wiki/MIT_License
 .. _PEP-440: https://www.python.org/dev/peps/pep-0440/
