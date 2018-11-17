@@ -327,9 +327,15 @@ class PackageConverterTestCase(TestCase):
             # Run the conversion command.
             converter = self.create_isolated_converter()
             converter.set_repository(directory)
-            archives, relationships = converter.convert(['raven[flask]==3.6.0'])
+            archives, relationships = converter.convert([
+                # Flask 1.0 drops Python 2.6 compatibility so we explicitly
+                # include an older version to prevent raven[flask] from pulling
+                # in the latest version of flask, causing this test to fail.
+                'flask==0.12.4',
+                'raven[flask]==3.6.0',
+            ])
             # Check that a relationship with the extra in the package name was generated.
-            assert relationships == ['python-raven-flask (= 3.6.0)']
+            assert 'python-raven-flask (= 3.6.0)' in relationships
             # Check that a package with the extra in the filename was generated.
             assert find_package_archive(archives, 'python-raven-flask')
 
