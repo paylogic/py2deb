@@ -24,6 +24,10 @@ pytest < 3.3 ; python_version < '2.7'
 # https://github.com/eliben/pycparser/blob/master/CHANGES
 pycparser < 2.19 ; python_version < '2.7'
 
+# tox 3.0.0 drops Python 2.6 compatibility:
+# https://tox.readthedocs.io/en/latest/changelog.html#v3-0-0-2018-04-02
+tox < 3.0.0
+
 # virtualenv release 16.0.0 drops Python 2.6 compatibility:
 # https://virtualenv.pypa.io/en/latest/changes/
 # Gotcha: Because we use 'tox' running on Python 2.7 to create a Python 2.6
