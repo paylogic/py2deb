@@ -3,7 +3,7 @@
 # Authors:
 #  - Arjan Verwer
 #  - Peter Odding <peter.odding@paylogic.com>
-# Last Change: August 8, 2017
+# Last Change: November 17, 2018
 # URL: https://py2deb.readthedocs.io
 
 """The :mod:`py2deb.utils` module contains miscellaneous code."""
@@ -16,7 +16,7 @@ import sys
 import tempfile
 
 # External dependencies.
-from cached_property import cached_property
+from property_manager import PropertyManager, cached_property, required_property
 from deb_pkg_tools.package import find_package_archives
 from six import BytesIO
 
@@ -27,7 +27,7 @@ integer_pattern = re.compile('([0-9]+)')
 """Compiled regular expression to match a consecutive run of digits."""
 
 
-class PackageRepository(object):
+class PackageRepository(PropertyManager):
 
     """
     Very simply abstraction for a directory containing ``*.deb`` archives.
@@ -40,18 +40,17 @@ class PackageRepository(object):
         """
         Initialize a :class:`PackageRepository` object.
 
-        :param directory: The pathname of the directory containing ``*.deb``
-                          archives (a string).
+        :param directory: The pathname of a directory containing ``*.deb`` archives (a string).
         """
-        self.directory = directory
+        super(PackageRepository, self).__init__(directory=directory)
 
     @cached_property
     def archives(self):
         """
-        Find archive(s) in package repository / directory.
+        A sorted list of package archives in :attr:`directory`.
 
-        :returns: A sorted list of package archives, same as the return value
-                  of :func:`deb_pkg_tools.package.find_package_archives()`.
+        The value of :attr:`archives` is computed using
+        :func:`deb_pkg_tools.package.find_package_archives()`.
 
         An example:
 
@@ -86,6 +85,10 @@ class PackageRepository(object):
         """
         return find_package_archives(self.directory)
 
+    @required_property
+    def directory(self):
+        """The pathname of a directory containing ``*.deb`` archives (a string)."""
+
     def get_package(self, package, version, architecture):
         """
         Find a package in the repository.
@@ -104,7 +107,7 @@ class PackageRepository(object):
                   or ``None``.
         """
         for archive in self.archives:
-            if (archive.name == package and archive.version == version and archive.architecture == architecture):
+            if archive.name == package and archive.version == version and archive.architecture == architecture:
                 return archive
 
 

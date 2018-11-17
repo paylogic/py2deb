@@ -21,6 +21,7 @@ extensions = [
     'sphinx.ext.intersphinx',
     'sphinx.ext.viewcode',
     'humanfriendly.sphinx',
+    'property_manager.sphinx',
 ]
 
 # Configuration for the `autodoc' extension.
@@ -73,6 +74,7 @@ intersphinx_mapping = {
     'executor': ('https://executor.readthedocs.io/en/latest', None),
     'humanfriendly': ('https://humanfriendly.readthedocs.io/en/latest', None),
     'pipaccel': ('https://pip-accel.readthedocs.io/en/latest', None),
+    'propertymanager': ('https://property-manager.readthedocs.io/en/latest', None),
     'python': ('https://docs.python.org/2', None),
     'setuptools': ('https://setuptools.readthedocs.io/en/latest', None),
 }

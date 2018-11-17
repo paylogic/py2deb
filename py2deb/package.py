@@ -3,7 +3,7 @@
 # Authors:
 #  - Arjan Verwer
 #  - Peter Odding <peter.odding@paylogic.com>
-# Last Change: February 24, 2018
+# Last Change: November 17, 2018
 # URL: https://py2deb.readthedocs.io
 
 """
@@ -25,7 +25,7 @@ import re
 import time
 
 # External dependencies.
-from cached_property import cached_property
+from property_manager import PropertyManager, cached_property
 from deb_pkg_tools.control import merge_control_fields, unparse_control_fields
 from deb_pkg_tools.package import build_package
 from executor import execute
@@ -47,7 +47,7 @@ logger = logging.getLogger(__name__)
 KNOWN_INSTALL_PREFIXES = ('/usr', '/usr/local')
 
 
-class PackageToConvert(object):
+class PackageToConvert(PropertyManager):
 
     """
     Abstraction for Python packages to be converted to Debian packages.

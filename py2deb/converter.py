@@ -3,7 +3,7 @@
 # Authors:
 #  - Arjan Verwer
 #  - Peter Odding <peter.odding@paylogic.com>
-# Last Change: November 15, 2018
+# Last Change: November 17, 2018
 # URL: https://py2deb.readthedocs.io
 
 """
@@ -26,7 +26,7 @@ import shutil
 import tempfile
 
 # External dependencies.
-from cached_property import cached_property
+from property_manager import PropertyManager, cached_property, lazy_property, mutable_property, set_property
 from deb_pkg_tools.cache import get_default_cache
 from deb_pkg_tools.checks import check_duplicate_files
 from deb_pkg_tools.utils import find_debian_architecture
@@ -52,21 +52,11 @@ machine architecture labels used in the Debian packaging system.
 """
 
 
-class PackageConverter(object):
+class PackageConverter(PropertyManager):
 
-    """
-    The external interface of `py2deb`, the Python to Debian package converter.
+    """The external interface of `py2deb`, the Python to Debian package converter."""
 
-    .. attribute:: alternatives
-
-       A :class:`set` of tuples with two strings each (the strings passed to
-       :func:`install_alternative()`). Used by
-       :func:`~py2deb.hooks.create_alternatives()` and
-       :func:`~py2deb.hooks.cleanup_alternatives()` during installation and
-       removal of the generated package.
-    """
-
-    def __init__(self, load_configuration_files=True, load_environment_variables=True):
+    def __init__(self, load_configuration_files=True, load_environment_variables=True, **options):
         """
         Initialize a Python to Debian package converter.
 
@@ -76,121 +66,278 @@ class PackageConverter(object):
         :param load_environment_variables: When ``True`` (the default)
                                          :func:`load_environment_variables()`
                                          is called automatically.
+        :param options: Any keyword arguments are passed on to the initializer
+                        of the :class:`~property_manager.PropertyManager` class.
         """
-        self.alternatives = set()
-        self.install_prefix = '/usr'
-        self.lintian_enabled = True
-        self.name_mapping = {}
-        self.system_packages = {}
-        self.name_prefix = 'python'
+        # Initialize our superclass.
+        super(PackageConverter, self).__init__(**options)
+        # Initialize our internal state.
         self.pip_accel = PipAccelerator(PipAccelConfig())
-        self.python_callback = None
-        self.repository = PackageRepository(tempfile.gettempdir())
-        self.scripts = {}
         if load_configuration_files:
             self.load_default_configuration_files()
         if load_environment_variables:
             self.load_environment_variables()
 
-    def set_repository(self, directory):
+    @lazy_property
+    def alternatives(self):
         """
-        Set pathname of directory where `py2deb` stores converted packages.
+        The update-alternatives_ configuration (a set of tuples).
 
-        :param directory: The pathname of a directory (a string).
-        :raises: :exc:`~exceptions.ValueError` when the directory doesn't
-                 exist.
+        The value of this property is a set of :class:`set` of tuples with two
+        strings each (the strings passed to :func:`install_alternative()`).
+        It's used by :func:`~py2deb.hooks.create_alternatives()` and
+        :func:`~py2deb.hooks.cleanup_alternatives()` during installation and
+        removal of the generated package.
         """
-        directory = os.path.abspath(directory)
+        return set()
+
+    @cached_property
+    def debian_architecture(self):
+        """
+        The Debian architecture of the current environment (a string).
+
+        This logic was originally implemented in py2deb but has since been
+        moved to :func:`deb_pkg_tools.utils.find_debian_architecture()`.
+        This property remains as a convenient shortcut.
+        """
+        return find_debian_architecture()
+
+    @mutable_property
+    def install_prefix(self):
+        """
+        The installation prefix for converted packages (a string, defaults to ``/usr``).
+
+        To generate system wide packages one of the installation prefixes
+        ``/usr`` or ``/usr/local`` should be used. Setting this property to any
+        other value will create packages using a "custom installation prefix"
+        that's not included in :data:`sys.path` by default.
+
+        The installation prefix directory doesn't have to exist on the system
+        where the package is converted and will be automatically created on the
+        system where the package is installed.
+
+        .. versionadded:: 1.2
+
+           Before his property became part of the documented and public API in
+           release 1.2 the setter :func:`set_install_prefix()` was the only
+           documented way to configure the installation prefix. The use of this
+           setter is no longer required but still allowed.
+        """
+        return '/usr'
+
+    @mutable_property
+    def lintian_enabled(self):
+        """
+        :data:`True` to enable Lintian_, :data:`False` to disable it (defaults to :data:`True`).
+
+        If this is :data:`True` then Lintian_ will automatically be run after
+        each package is converted to sanity check the result. Any problems
+        found by Lintian are information intended for the operator, that is to
+        say they don't cause py2deb to fail.
+        """
+        return True
+
+    @lintian_enabled.setter
+    def lintian_enabled(self, value):
+        """Automatically coerce :attr:`lintian_enabled` to a boolean value."""
+        set_property(self, 'lintian_enabled', coerce_boolean(value))
+
+    @lazy_property
+    def name_mapping(self):
+        """
+        Mapping of Python package names to Debian package names (a dictionary).
+
+        The :attr:`name_mapping` property enables renaming of packages during
+        the conversion process. The keys as well as the values of the
+        dictionary are expected to be lowercased strings.
+
+        .. versionadded:: 1.2
+
+           Before his property became part of the documented and public API in
+           release 1.2 the :func:`rename_package()` method was the only
+           documented way to configure the name mapping. The use of this setter
+           is no longer required but still allowed.
+        """
+        return {}
+
+    @mutable_property
+    def name_prefix(self):
+        """
+        The name prefix for converted packages (a string, defaults to 'python').
+
+        When the default name prefix is used, converted packages may conflict
+        with system wide packages provided by Debian / Ubuntu. If this starts
+        to bite then consider using a custom name and installation prefix.
+
+        .. versionadded:: 1.2
+
+           Before his property became part of the documented and public API in
+           release 1.2 the setter :func:`set_name_prefix()` was the only
+           documented way to configure the name prefix. The use of this setter
+           is no longer required but still allowed.
+        """
+        return 'python'
+
+    @mutable_property
+    def python_callback(self):
+        """
+        An optional Python callback to be called during the conversion process (defaults to :data:`None`).
+
+        You can set the value of :attr:`python_callback` to one of the following:
+
+        1. A callable object (to be provided by Python API callers).
+
+        2. A string containing the pathname of a Python script and the name of
+           a callable, separated by a colon. The Python script will be loaded
+           using :keyword:`exec`.
+
+        3. A string containing the "dotted path" of a Python module and the
+           name of a callable, separated by a colon. The Python module will be
+           loaded using :func:`importlib.import_module()`.
+
+        4. Any value that evaluates to :data:`False` will clear an existing
+           callback (if any).
+
+        The callback will be called at the very last step before the binary
+        package's metadata and contents are packaged as a ``*.deb`` archive.
+        This allows arbitrary manipulation of resulting binary packages, e.g.
+        changing package metadata or files to be packaged. An example use case:
+
+        - Consider a dependency set (group of related packages) that has
+          previously been converted and deployed.
+
+        - A new version of the dependency set switches from Python package A to
+          Python package B, where the two Python packages contain conflicting
+          files (installed in the same location). This could happen when
+          switching to a project's fork.
+
+        - A deployment of the new dependency set will conflict with existing
+          installations due to "unrelated" packages (in the eyes of ``apt`` and
+          ``dpkg``) installing the same files.
+
+        - By injecting a custom Python callback the user can mark package B as
+          "replacing" and "breaking" package A. Refer to `section 7.6`_ of the
+          Debian policy manual for details about the required binary control
+          fields (hint: ``Replaces:`` and ``Breaks:``).
+
+        .. warning:: The callback is responsible for not making changes that
+                     would break the installation of the converted dependency
+                     set!
+
+        :raises: The following exceptions can be raised when you set this property:
+
+                 - :exc:`~exceptions.ValueError` when you set this to something
+                   that's not callable and cannot be converted to a callable.
+
+                 - :exc:`~exceptions.ImportError` when the expression contains
+                   a dotted path that cannot be imported.
+
+        .. versionadded:: 1.2
+
+           Before his property became part of the documented and public API in
+           release 1.2 the setter :func:`set_python_callback()` was the only
+           documented way to configure the callback. The use of this setter is
+           no longer required but still allowed.
+
+        .. _section 7.6: https://www.debian.org/doc/debian-policy/ch-relationships.html#s-replaces
+        """
+
+    @python_callback.setter
+    def python_callback(self, value):
+        """Automatically coerce :attr:`python_callback` to a callable value."""
+        if value:
+            # Python callers get to pass a callable directly.
+            if not callable(value):
+                expression = value
+                # Otherwise we expect a string to parse (from a command line
+                # argument, environment variable or configuration file).
+                callback_path, _, callback_name = expression.partition(':')
+                if os.path.isfile(callback_path):
+                    # Callback specified as Python script.
+                    script_name = os.path.basename(callback_path)
+                    if script_name.endswith('.py'):
+                        script_name, _ = os.path.splitext(script_name)
+                    environment = dict(__file__=callback_path, __name__=script_name)
+                    logger.debug("Loading Python callback from pathname: %s", callback_path)
+                    with open(callback_path) as handle:
+                        exec(handle.read(), environment)
+                    value = environment.get(callback_name)
+                else:
+                    # Callback specified as `dotted path'.
+                    logger.debug("Loading Python callback from dotted path: %s", callback_path)
+                    module = importlib.import_module(callback_path)
+                    value = getattr(module, callback_name, None)
+                if not callable(value):
+                    raise ValueError(compact("""
+                        The Python callback expression {expr} didn't result in
+                        a valid callable! (result: {value})
+                    """, expr=expression, value=value))
+        else:
+            value = None
+        set_property(self, 'python_callback', value)
+
+    @mutable_property(cached=True)
+    def repository(self):
+        """
+        The directory where py2deb stores generated ``*.deb`` archives (a :class:`.PackageRepository` object).
+
+        By default the system wide temporary files directory is used as the
+        repository directory (usually this is ``/tmp``) but it's expected that
+        most callers will want to change this.
+
+        .. versionadded:: 1.2
+
+           Before his property became part of the documented and public API in
+           release 1.2 the :func:`set_repository()` method was the only
+           documented interface. The use of this method is no longer required
+           but still allowed.
+        """
+        return PackageRepository(tempfile.gettempdir())
+
+    @repository.setter
+    def repository(self, value):
+        """Automatically coerce :attr:`repository` values."""
+        directory = os.path.abspath(value)
         if not os.path.isdir(directory):
             msg = "Repository directory doesn't exist! (%s)"
             raise ValueError(msg % directory)
-        self.repository = PackageRepository(directory)
+        set_property(self, 'repository', PackageRepository(directory))
 
-    def set_name_prefix(self, prefix):
+    @lazy_property
+    def scripts(self):
         """
-        Set package name prefix to use during package conversion.
+        Mapping of Python package names to shell commands (a dictionary).
 
-        :param prefix: The name prefix to use (a string).
-        :raises: :exc:`~exceptions.ValueError` when no name prefix is
-                 provided (e.g. an empty string).
+        The keys of this dictionary are expected to be lowercased strings.
+
+        .. versionadded:: 1.2
+
+           Before his property became part of the documented and public API in
+           release 1.2 the :func:`set_conversion_command()` method was the only
+           documented interface. The use of this method is no longer required
+           but still allowed.
         """
-        if not prefix:
-            raise ValueError("Please provide a nonempty name prefix!")
-        self.name_prefix = prefix
+        return {}
 
-    def use_system_package(self, python_package_name, debian_package_name):
+    @lazy_property
+    def system_packages(self):
         """
-        Exclude a Python package from conversion.
+        Mapping of Python package names to Debian package names (a dictionary).
 
-        :param python_package_name: The name of a Python package
-                                    as found on PyPI (a string).
-        :param debian_package_name: The name of the Debian package that should
-                                    be used to fulfill the dependency (a string).
-        :raises: :exc:`~exceptions.ValueError` when a package name is not
-                 provided (e.g. an empty string).
+        The :attr:`system_packages` property enables Python packages in a
+        requirement set to be excluded from the package conversion process. Any
+        references to excluded packages are replaced with a reference to the
+        corresponding system package. The keys as well as the values of the
+        dictionary are expected to be lowercased strings.
 
-        References to the Python package are replaced with a specific Debian
-        package name. This allows you to use system packages for specific
-        Python requirements.
+        .. versionadded:: 1.2
+
+           Before his property became part of the documented and public API in
+           release 1.2 the :func:`use_system_package()` method was the only
+           documented way to configure the use of system packages. The use of
+           this method is no longer required but still allowed.
         """
-        if not python_package_name:
-            raise ValueError("Please provide a nonempty Python package name!")
-        if not debian_package_name:
-            raise ValueError("Please provide a nonempty Debian package name!")
-        self.system_packages[python_package_name.lower()] = debian_package_name.lower()
-
-    def rename_package(self, python_package_name, debian_package_name):
-        """
-        Override the package name conversion algorithm for the given pair of names.
-
-        :param python_package_name: The name of a Python package
-                                    as found on PyPI (a string).
-        :param debian_package_name: The name of the converted
-                                    Debian package (a string).
-        :raises: :exc:`~exceptions.ValueError` when a package name is not
-                 provided (e.g. an empty string).
-        """
-        if not python_package_name:
-            raise ValueError("Please provide a nonempty Python package name!")
-        if not debian_package_name:
-            raise ValueError("Please provide a nonempty Debian package name!")
-        self.name_mapping[python_package_name.lower()] = debian_package_name.lower()
-
-    def set_install_prefix(self, directory):
-        """
-        Set installation prefix to use during package conversion.
-
-        The installation directory doesn't have to exist on the system where
-        the package is converted.
-
-        :param directory: The pathname of the directory where the converted
-                          packages should be installed (a string).
-        :raises: :exc:`~exceptions.ValueError` when no installation prefix is
-                 provided (e.g. an empty string).
-        """
-        if not directory:
-            raise ValueError("Please provide a nonempty installation prefix!")
-        self.install_prefix = directory
-
-    def set_auto_install(self, enabled):
-        """
-        Enable or disable automatic installation of build time dependencies.
-
-        :param enabled: Any value, evaluated using
-                        :func:`~humanfriendly.coerce_boolean()`.
-        """
-        self.pip_accel.config.auto_install = coerce_boolean(enabled)
-
-    def set_lintian_enabled(self, enabled):
-        """
-        Enable or disable automatic Lintian_ checks after package building.
-
-        :param enabled: Any value, evaluated using
-                        :func:`~humanfriendly.coerce_boolean()`.
-
-        .. _Lintian: http://lintian.debian.org/
-        """
-        self.lintian_enabled = coerce_boolean(enabled)
+        return {}
 
     def install_alternative(self, link, path):
         r"""
@@ -201,8 +348,7 @@ class PackageConverter(object):
         search path using a symbolic link.
 
         :param link: The generic name for the master link (a string). This is
-                     the first argument passed to ``update-alternatives
-                     --install``.
+                     the first argument passed to ``update-alternatives --install``.
         :param path: The alternative being introduced for the master link (a
                      string). This is the third argument passed to
                      ``update-alternatives --install``.
@@ -222,7 +368,7 @@ class PackageConverter(object):
         This example will convert `py2deb` and its dependencies using a custom
         name prefix and a custom installation prefix which means the ``py2deb``
         program is not available on the default executable search path. This is
-        why ``update-alternatives`` is used to create a symbolic link
+        why update-alternatives_ is used to create a symbolic link
         ``/usr/bin/py2deb`` which points to the program inside the custom
         installation prefix.
 
@@ -233,6 +379,32 @@ class PackageConverter(object):
         if not path:
             raise ValueError("Please provide a nonempty name for the alternative being introduced!")
         self.alternatives.add((link, path))
+
+    def rename_package(self, python_package_name, debian_package_name):
+        """
+        Override the package name conversion algorithm for the given pair of names.
+
+        :param python_package_name: The name of a Python package
+                                    as found on PyPI (a string).
+        :param debian_package_name: The name of the converted
+                                    Debian package (a string).
+        :raises: :exc:`~exceptions.ValueError` when a package name is not
+                 provided (e.g. an empty string).
+        """
+        if not python_package_name:
+            raise ValueError("Please provide a nonempty Python package name!")
+        if not debian_package_name:
+            raise ValueError("Please provide a nonempty Debian package name!")
+        self.name_mapping[python_package_name.lower()] = debian_package_name.lower()
+
+    def set_auto_install(self, enabled):
+        """
+        Enable or disable automatic installation of build time dependencies.
+
+        :param enabled: Any value, evaluated using
+                        :func:`~humanfriendly.coerce_boolean()`.
+        """
+        self.pip_accel.config.auto_install = coerce_boolean(enabled)
 
     def set_conversion_command(self, python_package_name, command):
         """
@@ -273,90 +445,78 @@ class PackageConverter(object):
             raise ValueError("Please provide a nonempty shell command!")
         self.scripts[python_package_name.lower()] = command
 
+    def set_install_prefix(self, directory):
+        """
+        Set installation prefix to use during package conversion.
+
+        The installation directory doesn't have to exist on the system where
+        the package is converted.
+
+        :param directory: The pathname of the directory where the converted
+                          packages should be installed (a string).
+        :raises: :exc:`~exceptions.ValueError` when no installation prefix is
+                 provided (e.g. an empty string).
+        """
+        if not directory:
+            raise ValueError("Please provide a nonempty installation prefix!")
+        self.install_prefix = directory
+
+    def set_lintian_enabled(self, enabled):
+        """
+        Enable or disable automatic Lintian_ checks after package building.
+
+        :param enabled: Any value, evaluated using :func:`~humanfriendly.coerce_boolean()`.
+
+        .. _Lintian: http://lintian.debian.org/
+        """
+        self.lintian_enabled = enabled
+
+    def set_name_prefix(self, prefix):
+        """
+        Set package name prefix to use during package conversion.
+
+        :param prefix: The name prefix to use (a string).
+        :raises: :exc:`~exceptions.ValueError` when no name prefix is
+                 provided (e.g. an empty string).
+        """
+        if not prefix:
+            raise ValueError("Please provide a nonempty name prefix!")
+        self.name_prefix = prefix
+
     def set_python_callback(self, expression):
+        """Set the value of :attr:`python_callback`."""
+        self.python_callback = expression
+
+    def set_repository(self, directory):
         """
-        Set a Python callback to be called during the conversion process.
+        Set pathname of directory where `py2deb` stores converted packages.
 
-        :param expression: One of the following:
-
-                           1. A callable object (to be provided by Python API callers).
-                           2. A string containing the pathname of a Python
-                              script and the name of a callable, separated by a
-                              colon. The Python script will be loaded using
-                              :keyword:`exec`.
-                           3. A string containing the "dotted path" of a Python
-                              module and the name of a callable, separated by a
-                              colon. The Python module will be loaded using
-                              :func:`importlib.import_module()`.
-                           4. Any value that evaluates to :data:`False` will
-                              clear an existing callback (if any).
-        :raises: :exc:`~exceptions.ValueError` when the given expression does
-                 not result in a valid callable. :exc:`~exceptions.ImportError`
-                 when the expression contains a dotted path that cannot be
-                 imported.
-
-        The callback will be called at the very last step before the binary
-        package's metadata and contents are packaged as a ``*.deb`` archive.
-
-        This allows arbitrary manipulation of resulting binary packages, e.g.
-        changing package metadata or files to be packaged.
-
-        An example use case:
-
-        - Consider a dependency set (group of related packages) that has
-          previously been converted and deployed.
-
-        - A new version of the dependency set switches from Python package A to
-          Python package B, where the two Python packages contain conflicting
-          files (installed in the same location). This could happen when
-          switching to a project's fork.
-
-        - A deployment of the new dependency set will conflict with existing
-          installations due to "unrelated" packages (in the eyes of ``apt`` and
-          ``dpkg``) installing the same files.
-
-        - By injecting a custom Python callback the user can mark package B as
-          "replacing" and "breaking" package A. Refer to `section 7.6`_ of the
-          Debian policy manual for details about the required binary control
-          fields (hint: ``Replaces:`` and ``Breaks:``).
-
-        .. warning:: The callback is responsible for not making changes that
-                     would break the installation of the converted dependency
-                     set!
-
-        .. _section 7.6: https://www.debian.org/doc/debian-policy/ch-relationships.html#s-replaces
+        :param directory: The pathname of a directory (a string).
+        :raises: :exc:`~exceptions.ValueError` when the directory doesn't
+                 exist.
         """
-        if expression:
-            if callable(expression):
-                # Python callers get to pass a callable directly.
-                self.python_callback = expression
-            else:
-                # Otherwise we expect a string to parse (from a command line
-                # argument, environment variable or configuration file).
-                callback_path, _, callback_name = expression.partition(':')
-                if os.path.isfile(callback_path):
-                    # Callback specified as Python script.
-                    script_name = os.path.basename(callback_path)
-                    if script_name.endswith('.py'):
-                        script_name, _ = os.path.splitext(script_name)
-                    environment = dict(__file__=callback_path, __name__=script_name)
-                    logger.debug("Loading Python callback from pathname: %s", callback_path)
-                    with open(callback_path) as handle:
-                        exec(handle.read(), environment)
-                    self.python_callback = environment.get(callback_name)
-                else:
-                    # Callback specified as `dotted path'.
-                    logger.debug("Loading Python callback from dotted path: %s", callback_path)
-                    module = importlib.import_module(callback_path)
-                    self.python_callback = getattr(module, callback_name, None)
-                if not callable(self.python_callback):
-                    raise ValueError(compact("""
-                        The Python callback expression {expr} didn't result in
-                        a valid callable! (result: {value})
-                    """, expr=expression, value=self.python_callback))
-        else:
-            # Clear an existing callback (if any).
-            self.python_callback = None
+        self.repository = directory
+
+    def use_system_package(self, python_package_name, debian_package_name):
+        """
+        Exclude a Python package from conversion.
+
+        :param python_package_name: The name of a Python package
+                                    as found on PyPI (a string).
+        :param debian_package_name: The name of the Debian package that should
+                                    be used to fulfill the dependency (a string).
+        :raises: :exc:`~exceptions.ValueError` when a package name is not
+                 provided (e.g. an empty string).
+
+        References to the Python package are replaced with a specific Debian
+        package name. This allows you to use system packages for specific
+        Python requirements.
+        """
+        if not python_package_name:
+            raise ValueError("Please provide a nonempty Python package name!")
+        if not debian_package_name:
+            raise ValueError("Please provide a nonempty Debian package name!")
+        self.system_packages[python_package_name.lower()] = debian_package_name.lower()
 
     def load_environment_variables(self):
         """
@@ -716,14 +876,3 @@ class PackageConverter(object):
                                    python_requirement_version, modified_version)
                     python_requirement_version = modified_version
         return normalize_package_version(python_requirement_version)
-
-    @cached_property
-    def debian_architecture(self):
-        """
-        Find the Debian architecture of the current environment.
-
-        This logic was originally implemented in py2deb but has since been
-        moved to :func:`deb_pkg_tools.utils.find_debian_architecture()`.
-        This property remains as a convenient shortcut.
-        """
-        return find_debian_architecture()
