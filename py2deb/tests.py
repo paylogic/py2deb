@@ -423,7 +423,7 @@ class PackageConverterTestCase(TestCase):
         """
         Convert a package that includes a binary executable file.
 
-        Converts ``uwsgi==2.0.14`` and sanity checks the result. The goal of
+        Converts ``uwsgi==2.0.17.1`` and sanity checks the result. The goal of
         this test is to verify that pydeb preserves binary executables instead
         of truncating them as it did until `issue 9`_ was reported.
 
@@ -434,7 +434,7 @@ class PackageConverterTestCase(TestCase):
             converter = self.create_isolated_converter()
             converter.set_repository(directory)
             converter.set_install_prefix('/usr/lib/py2deb/uwsgi')
-            archives, relationships = converter.convert(['uwsgi==2.0.14'])
+            archives, relationships = converter.convert(['uwsgi==2.0.17.1'])
             # Find the generated *.deb archive.
             pathname = find_package_archive(archives, 'python-uwsgi')
             # Use deb-pkg-tools to inspect the package metadata.
