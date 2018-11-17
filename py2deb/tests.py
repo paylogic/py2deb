@@ -188,7 +188,7 @@ class PackageConverterTestCase(TestCase):
                 # Check that the control file was patched.
                 control_fields = load_control_file(control_file)
                 assert control_fields['Depends'].matches('vim')
-                assert control_fields['Depends'].matches('python-coloredlogs', '0.5')
+                assert control_fields['Depends'].matches(fix_name_prefix('python-coloredlogs'), '0.5')
                 # Find the generated Debian package archive.
                 archives = glob.glob('%s/*.deb' % directory)
                 logger.debug("Found generated archive(s): %s", archives)
@@ -205,7 +205,7 @@ class PackageConverterTestCase(TestCase):
                 logger.debug("Metadata of generated package: %s", dict(metadata))
                 logger.debug("Contents of generated package: %s", dict(contents))
                 # Check the package metadata.
-                assert metadata['Package'] == 'python-coloredlogs'
+                assert metadata['Package'] == fix_name_prefix('python-coloredlogs')
                 assert metadata['Version'].startswith('0.5')
                 assert metadata['Architecture'] == 'all'
                 # There should be exactly one dependency: some version of Python.
@@ -241,7 +241,7 @@ class PackageConverterTestCase(TestCase):
             # Find the generated Debian package archive.
             archives = glob.glob('%s/*.deb' % directory)
             logger.debug("Found generated archive(s): %s", archives)
-            pathname = find_package_archive(archives, 'python-fabric')
+            pathname = find_package_archive(archives, fix_name_prefix('python-fabric'))
             # Use deb-pkg-tools to inspect the generated package.
             metadata, contents = inspect_package(pathname)
             # Check for the two *.py files that should be installed by the package.
@@ -288,7 +288,7 @@ class PackageConverterTestCase(TestCase):
             logger.debug("Found generated archive(s): %s", archives)
             # Make sure the expected dependencies have been converted.
             converted_dependencies = set(parse_filename(a).name for a in archives)
-            expected_dependencies = set([
+            expected_dependencies = set(fix_name_prefix(p) for p in [
                 'python-cached-property',
                 'python-chardet',
                 'python-coloredlogs',
@@ -300,7 +300,7 @@ class PackageConverterTestCase(TestCase):
             ])
             assert expected_dependencies.issubset(converted_dependencies)
             # Use deb-pkg-tools to inspect ... deb-pkg-tools :-)
-            pathname = find_package_archive(archives, 'python-deb-pkg-tools')
+            pathname = find_package_archive(archives, fix_name_prefix('python-deb-pkg-tools'))
             metadata, contents = inspect_package(pathname)
             logger.debug("Metadata of generated package: %s", dict(metadata))
             logger.debug("Contents of generated package: %s", dict(contents))
@@ -309,10 +309,10 @@ class PackageConverterTestCase(TestCase):
                 logger.debug("Checking configured dependency %s ..", configured_dependency)
                 assert metadata['Depends'].matches(configured_dependency) is not None
             # Make sure the dependencies defined in `setup.py' have been preserved.
-            expected_dependencies = [
+            expected_dependencies = [fix_name_prefix(p) for p in [
                 'python-chardet', 'python-coloredlogs', 'python-debian',
                 'python-executor', 'python-humanfriendly'
-            ]
+            ]]
             for python_dependency in expected_dependencies:
                 logger.debug("Checking Python dependency %s ..", python_dependency)
                 assert metadata['Depends'].matches(python_dependency) is not None
@@ -335,9 +335,10 @@ class PackageConverterTestCase(TestCase):
                 'raven[flask]==3.6.0',
             ])
             # Check that a relationship with the extra in the package name was generated.
-            assert 'python-raven-flask (= 3.6.0)' in relationships
+            expression = '%s (= 3.6.0)' % fix_name_prefix('python-raven-flask')
+            assert expression in relationships
             # Check that a package with the extra in the filename was generated.
-            assert find_package_archive(archives, 'python-raven-flask')
+            assert find_package_archive(archives, fix_name_prefix('python-raven-flask'))
 
     def test_conversion_of_environment_markers(self):
         """
@@ -354,11 +355,11 @@ class PackageConverterTestCase(TestCase):
             converter.set_repository(directory)
             archives, relationships = converter.convert(['weasyprint==0.42'])
             # Check that the dependency is present.
-            pathname = find_package_archive(archives, 'python-weasyprint')
+            pathname = find_package_archive(archives, fix_name_prefix('python-weasyprint'))
             metadata, contents = inspect_package(pathname)
             # Make sure the dependency on cairosvg was added (this confirms
             # that environment markers have been evaluated).
-            assert 'python-cairosvg' in metadata['Depends'].names
+            assert fix_name_prefix('python-cairosvg') in metadata['Depends'].names
 
     def test_python_requirements_fallback(self):
         """Test the fall-back implementation of the ``python_requirements`` property."""
@@ -406,7 +407,7 @@ class PackageConverterTestCase(TestCase):
             converter.set_repository(directory)
             archives, relationships = converter.convert(['setproctitle==1.1.8'])
             # Find the generated *.deb archive.
-            pathname = find_package_archive(archives, 'python-setproctitle')
+            pathname = find_package_archive(archives, fix_name_prefix('python-setproctitle'))
             # Use deb-pkg-tools to inspect the package metadata.
             metadata, contents = inspect_package(pathname)
             logger.debug("Metadata of generated package: %s", dict(metadata))
@@ -436,7 +437,7 @@ class PackageConverterTestCase(TestCase):
             converter.set_install_prefix('/usr/lib/py2deb/uwsgi')
             archives, relationships = converter.convert(['uwsgi==2.0.17.1'])
             # Find the generated *.deb archive.
-            pathname = find_package_archive(archives, 'python-uwsgi')
+            pathname = find_package_archive(archives, fix_name_prefix('python-uwsgi'))
             # Use deb-pkg-tools to inspect the package metadata.
             metadata, contents = inspect_package(pathname)
             logger.debug("Contents of generated package: %s", dict(contents))
@@ -468,15 +469,15 @@ class PackageConverterTestCase(TestCase):
                 converter.set_repository(repository_directory)
                 archives, relationships = converter.convert([distribution_directory])
                 # Find the generated *.deb archive.
-                pathname = find_package_archive(archives, 'python-install-requires-munging-test')
+                pathname = find_package_archive(archives, fix_name_prefix('python-install-requires-munging-test'))
                 # Use deb-pkg-tools to inspect the package metadata.
                 metadata, contents = inspect_package(pathname)
                 logger.debug("Metadata of generated package: %s", dict(metadata))
                 logger.debug("Contents of generated package: %s", dict(contents))
                 # Inspect the converted package's dependency.
-                assert metadata['Depends'].matches('python-humanfriendly', '1.30'), \
+                assert metadata['Depends'].matches(fix_name_prefix('python-humanfriendly'), '1.30'), \
                     "py2deb failed to rewrite version of dependency!"
-                assert not metadata['Depends'].matches('python-humanfriendly', '1.30.0'), \
+                assert not metadata['Depends'].matches(fix_name_prefix('python-humanfriendly'), '1.30.0'), \
                     "py2deb failed to rewrite version of dependency!"
 
     def test_conversion_with_system_package(self):
@@ -496,7 +497,7 @@ class PackageConverterTestCase(TestCase):
                 # Run the conversion command.
                 converter = self.create_isolated_converter()
                 converter.set_repository(repository_directory)
-                converter.use_system_package('dbus-python', 'python-dbus')
+                converter.use_system_package('dbus-python', fix_name_prefix('python-dbus'))
                 archives, relationships = converter.convert([distribution_directory])
                 # Make sure only one archive was generated.
                 assert len(archives) == 1
@@ -505,7 +506,7 @@ class PackageConverterTestCase(TestCase):
                 logger.debug("Metadata of generated package: %s", dict(metadata))
                 logger.debug("Contents of generated package: %s", dict(contents))
                 # Inspect the converted package's dependency.
-                assert metadata['Depends'].matches('python-dbus'), \
+                assert metadata['Depends'].matches(fix_name_prefix('python-dbus')), \
                     "py2deb failed to rewrite dependency name!"
 
     def test_conversion_of_isolated_packages(self):
@@ -802,6 +803,13 @@ def find_file(contents, pattern):
             matches.append(metadata)
     assert len(matches) == 1, "Expected to match exactly one archive entry!"
     return matches[0]
+
+
+def fix_name_prefix(name):
+    """Change the name prefix of a Debian package to match the current Python major version."""
+    tokens = name.split('-')
+    prefix = 'python3' if sys.version_info[0] == 3 else 'python'
+    return '-'.join([prefix] + tokens[1:])
 
 
 def python_callback_fn(converter, package, build_directory):

@@ -23,6 +23,7 @@ import logging
 import os
 import re
 import shutil
+import sys
 import tempfile
 
 # External dependencies.
@@ -163,7 +164,7 @@ class PackageConverter(PropertyManager):
     @mutable_property
     def name_prefix(self):
         """
-        The name prefix for converted packages (a string, defaults to 'python').
+        The name prefix for converted packages (a string, defaults to 'python' or 'python3').
 
         When the default name prefix is used, converted packages may conflict
         with system wide packages provided by Debian / Ubuntu. If this starts
@@ -175,8 +176,12 @@ class PackageConverter(PropertyManager):
            release 1.2 the setter :func:`set_name_prefix()` was the only
            documented way to configure the name prefix. The use of this setter
            is no longer required but still allowed.
+
+           Starting from release 1.2 the name prefix defaults to 'python3' when
+           running on any version of Python 3. Before that release the default
+           name prefix 'python' was (erroneously) used.
         """
-        return 'python'
+        return 'python3' if sys.version_info[0] == 3 else 'python'
 
     @mutable_property
     def python_callback(self):
