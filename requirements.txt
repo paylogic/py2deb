@@ -3,7 +3,7 @@
 cached-property >= 0.1.5
 coloredlogs >= 0.5
 deb-pkg-tools >= 5.2
-executor >= 1.2
+executor >= 21.0
 humanfriendly >= 4.4
 pip-accel >= 0.25
 pkginfo >= 1.1
