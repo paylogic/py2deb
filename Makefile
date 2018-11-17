@@ -32,7 +32,7 @@ install:
 	@test -x "$(VIRTUAL_ENV)/bin/python" || virtualenv --quiet "$(VIRTUAL_ENV)"
 	@test -x "$(VIRTUAL_ENV)/bin/pip" || easy_install pip
 	@test -x "$(VIRTUAL_ENV)/bin/pip-accel" || pip install --quiet pip-accel
-	@pip-accel install --quiet --requirement=requirements.txt
+	@pip-accel install --quiet --constraint=constraints.txt --requirement=requirements.txt
 	@pip uninstall --yes $(PACKAGE_NAME) &>/dev/null || true
 	@pip install --quiet --no-deps --ignore-installed .
 
@@ -52,7 +52,7 @@ test: install
 	@coverage report --fail-under=90 &>/dev/null
 
 tox: install
-	@pip-accel install --quiet tox && tox
+	@pip-accel install --quiet --constraint=constraints.txt tox && tox
 
 readme: install
 	@pip-accel install --quiet cogapp && cog.py -r README.rst
