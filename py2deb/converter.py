@@ -3,7 +3,7 @@
 # Authors:
 #  - Arjan Verwer
 #  - Peter Odding <peter.odding@paylogic.com>
-# Last Change: August 7, 2017
+# Last Change: November 15, 2018
 # URL: https://py2deb.readthedocs.io
 
 """
@@ -264,8 +264,8 @@ class PackageConverter(object):
         2. Use the conversion command ``rm -rf paramiko`` to convert Fabric
            (yes this is somewhat brute force :-).
 
-        .. _Fabric: https://pypi.python.org/pypi/Fabric
-        .. _Paramiko: https://pypi.python.org/pypi/paramiko
+        .. _Fabric: https://pypi.org/project/Fabric
+        .. _Paramiko: https://pypi.org/project/paramiko
         """
         if not python_package_name:
             raise ValueError("Please provide a nonempty Python package name!")

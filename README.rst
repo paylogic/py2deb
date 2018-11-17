@@ -201,7 +201,7 @@ This software is licensed under the `MIT license`_.
 
 .. External references:
 .. _changelog: https://py2deb.readthedocs.io/en/latest/changelog.html
-.. _deb-pkg-tools: https://pypi.python.org/pypi/deb-pkg-tools
+.. _deb-pkg-tools: https://pypi.org/project/deb-pkg-tools
 .. _detailed comparison: https://py2deb.readthedocs.io/en/latest/comparisons.html
 .. _dh-virtualenv: https://github.com/spotify/dh-virtualenv
 .. _fpm: https://github.com/jordansissel/fpm
@@ -212,9 +212,9 @@ This software is licensed under the `MIT license`_.
 .. _PEP-440: https://www.python.org/dev/peps/pep-0440/
 .. _Pillow: https://python-pillow.github.io/
 .. _pip-accel: https://github.com/paylogic/pip-accel
-.. _PyPI: https://pypi.python.org/pypi/py2deb
+.. _PyPI: https://pypi.org/project/py2deb
 .. _python-imaging: https://packages.debian.org/search?keywords=python-imaging
 .. _python-pil: https://packages.debian.org/search?keywords=python-pil
 .. _requirement files: http://www.pip-installer.org/en/latest/cookbook.html#requirements-files
-.. _stdeb: https://pypi.python.org/pypi/stdeb
+.. _stdeb: https://pypi.org/project/stdeb
 .. _this question on Reddit: https://www.reddit.com/r/Python/comments/2x7s17/py2deb_python_to_debian_package_converter/coxyyzu

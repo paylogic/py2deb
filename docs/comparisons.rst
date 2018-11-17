@@ -217,7 +217,7 @@ Here are some notable differences between `fpm` and `py2deb`:
   otherwise the package couldn't have been built and converted) but it's
   essential when the converted packages will be deployed to other systems.
 
-.. _deb-pkg-tools: https://pypi.python.org/pypi/deb-pkg-tools
+.. _deb-pkg-tools: https://pypi.org/project/deb-pkg-tools
 .. _dh-virtualenv: https://github.com/spotify/dh-virtualenv
 .. _fpm: https://github.com/jordansissel/fpm
 .. _pip requirements file: https://pip.pypa.io/en/latest/user_guide.html#requirements-files
