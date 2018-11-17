@@ -28,7 +28,7 @@ pycparser < 2.19 ; python_version < '2.7'
 # https://virtualenv.pypa.io/en/latest/changes/
 # Gotcha: Because we use 'tox' running on Python 2.7 to create a Python 2.6
 # virtual environment, we can't constrain to python_version < '2.7'!
-virtualenv < 16.0.0 ; python_version < '2.7'
+virtualenv < 16.0.0
 
 # wheel 0.30.0 drops Python 2.6 compatibility:
 # https://pypi.org/project/wheel
