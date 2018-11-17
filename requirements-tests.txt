@@ -1,11 +1,5 @@
-coverage >= 4.2, < 4.3.2
-pytest >= 3.0.4 ; python_version > '2.6'
+--constraint=constraints.txt
+
+coverage >= 4.2
+pytest >= 3.0.4
 pytest-cov >= 2.4.0
-
-# pytest release 3.3 drops Python 2.6 compatibility:
-# https://docs.pytest.org/en/latest/changelog.html#pytest-3-3-0-2017-11-23
-pytest < 3.3 ; python_version < '2.7'
-
-# wheel 0.30.0 drops Python 2.6 compatibility:
-# https://pypi.python.org/pypi/wheel
-wheel < 0.30.0 ; python_version < '2.7'
