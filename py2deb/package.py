@@ -27,7 +27,7 @@ import time
 # External dependencies.
 from property_manager import PropertyManager, cached_property
 from deb_pkg_tools.control import merge_control_fields, unparse_control_fields
-from deb_pkg_tools.package import build_package
+from deb_pkg_tools.package import build_package, find_object_files, find_system_dependencies, strip_object_files
 from executor import execute
 from humanfriendly import concatenate, pluralize
 from pkg_resources import Requirement
@@ -404,14 +404,16 @@ class PackageToConvert(PropertyManager):
             dependencies = [python_version()] + self.debian_dependencies
 
             # Check if the converted package contains any compiled *.so files.
-            shared_object_files = self.find_shared_object_files(build_directory)
-            if shared_object_files:
+            object_files = find_object_files(build_directory)
+            if object_files:
+                # Strip debugging symbols from the object files.
+                strip_object_files(object_files)
                 # Determine system dependencies by analyzing the linkage of the
                 # *.so file(s) found in the converted package.
-                dependencies += self.find_system_dependencies(shared_object_files)
+                dependencies += find_system_dependencies(object_files)
 
             # Make up some control file fields ... :-)
-            architecture = self.determine_package_architecture(shared_object_files)
+            architecture = self.determine_package_architecture(object_files)
             control_fields = unparse_control_fields(dict(package=self.debian_name,
                                                          version=self.debian_version,
                                                          maintainer=self.debian_maintainer,
@@ -517,60 +519,6 @@ class PackageToConvert(PropertyManager):
                 # https://wiki.debian.org/Python#Deviations_from_upstream.
                 member.name = member.name.replace('/site-packages/', '/dist-packages/')
             yield member, handle
-
-    def find_shared_object_files(self, directory):
-        """
-        Search directory tree of converted package for shared object files.
-
-        Runs ``strip --strip-unneeded`` on all ``*.so`` files found.
-
-        :param directory: The directory to search (a string).
-        :returns: A list with pathnames of ``*.so`` files.
-        """
-        shared_object_files = []
-        for root, dirs, files in os.walk(directory):
-            for filename in files:
-                if filename.endswith('.so'):
-                    pathname = os.path.join(root, filename)
-                    shared_object_files.append(pathname)
-                    execute('strip', '--strip-unneeded', pathname, logger=logger)
-        if shared_object_files:
-            logger.debug("Found one or more shared object files: %s", shared_object_files)
-        return shared_object_files
-
-    def find_system_dependencies(self, shared_object_files):
-        """
-        (Ab)use dpkg-shlibdeps_ to find dependencies on system libraries.
-
-        :param shared_object_files: The pathnames of the ``*.so`` file(s) contained
-                                    in the package (a list of strings).
-        :returns: A list of strings in the format of the entries on the
-                  ``Depends:`` line of a binary package control file.
-
-        .. _dpkg-shlibdeps: https://www.debian.org/doc/debian-policy/ch-sharedlibs.html#s-dpkg-shlibdeps
-        """
-        logger.debug("Abusing `dpkg-shlibdeps' to find dependencies on shared libraries ..")
-        # Create a fake source package, because `dpkg-shlibdeps' expects this...
-        with TemporaryDirectory(prefix='py2deb-dpkg-shlibdeps-') as fake_source_directory:
-            # Create the debian/ directory expected in the source package directory.
-            os.mkdir(os.path.join(fake_source_directory, 'debian'))
-            # Create an empty debian/control file because `dpkg-shlibdeps' requires
-            # this (even though it is apparently fine for the file to be empty ;-).
-            open(os.path.join(fake_source_directory, 'debian', 'control'), 'w').close()
-            # Run `dpkg-shlibdeps' inside the fake source package directory, but
-            # let it analyze the *.so files from the actual build directory.
-            command = ['dpkg-shlibdeps', '-O', '--warnings=0'] + shared_object_files
-            output = execute(*command, directory=fake_source_directory, capture=True, logger=logger)
-            expected_prefix = 'shlibs:Depends='
-            if not output.startswith(expected_prefix):
-                msg = ("The output of dpkg-shlibdeps doesn't match the"
-                       " expected format! (expected prefix: %r, output: %r)")
-                logger.warning(msg, expected_prefix, output)
-                return []
-            output = output[len(expected_prefix):]
-            dependencies = sorted(dependency.strip() for dependency in output.split(','))
-            logger.debug("Dependencies reported by dpkg-shlibdeps: %s", dependencies)
-            return dependencies
 
     def determine_package_architecture(self, has_shared_object_files):
         """
