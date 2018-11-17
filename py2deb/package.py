@@ -349,9 +349,11 @@ class PackageToConvert(object):
         :returns: The pathname of the found archive (a string) or ``None`` if
                   no existing archive is found.
         """
-        return (self.converter.repository.get_package(self.debian_name, self.debian_version, 'all') or
-                self.converter.repository.get_package(self.debian_name, self.debian_version,
-                                                      self.converter.debian_architecture))
+        return self.converter.repository.get_package(
+            self.debian_name, self.debian_version, "all"
+        ) or self.converter.repository.get_package(
+            self.debian_name, self.debian_version, self.converter.debian_architecture
+        )
 
     def convert(self):
         """
