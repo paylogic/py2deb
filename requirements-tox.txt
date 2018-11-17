@@ -1,3 +1,0 @@
---requirement=requirements.txt
---requirement=requirements-tests.txt
---constraint=constraints.txt
