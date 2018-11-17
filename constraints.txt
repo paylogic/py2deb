@@ -24,6 +24,14 @@ pytest < 3.3 ; python_version < '2.7'
 # https://github.com/eliben/pycparser/blob/master/CHANGES
 pycparser < 2.19 ; python_version < '2.7'
 
+# A build failure [1] alerted me to the fact that python-debian has dropped
+# Python 2.6 support. Couldn't find a changelog so not sure if this is
+# intentional, but some trial and error confirmed that 0.1.32 works whereas
+# 0.1.33 does not.
+#
+# [1] https://travis-ci.org/paylogic/py2deb/jobs/456368291
+python-debian < 0.1.33 ; python_version < '2.7'
+
 # tox 3.0.0 drops Python 2.6 compatibility:
 # https://tox.readthedocs.io/en/latest/changelog.html#v3-0-0-2018-04-02
 tox < 3.0.0
