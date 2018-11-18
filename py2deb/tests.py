@@ -237,7 +237,7 @@ class PackageConverterTestCase(TestCase):
             converter = self.create_isolated_converter()
             converter.set_repository(directory)
             converter.set_conversion_command('Fabric', 'rm -Rf paramiko')
-            converter.convert(['Fabric==0.9.0'])
+            converter.convert(['--no-deps', 'Fabric==0.9.0'])
             # Find the generated Debian package archive.
             archives = glob.glob('%s/*.deb' % directory)
             logger.debug("Found generated archive(s): %s", archives)
@@ -263,9 +263,11 @@ class PackageConverterTestCase(TestCase):
         with TemporaryDirectory() as directory:
             converter = self.create_isolated_converter()
             converter.set_repository(directory)
-            self.assertRaises(DuplicateFilesFound,
-                              converter.convert,
-                              ['Fabric==0.9.0', 'Paramiko==1.14.0'])
+            self.assertRaises(
+                DuplicateFilesFound,
+                converter.convert,
+                ['--no-deps', 'Fabric==0.9.0', 'Paramiko==1.14.0'],
+            )
 
     def test_conversion_of_package_with_dependencies(self):
         """
