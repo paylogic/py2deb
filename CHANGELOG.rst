@@ -14,25 +14,28 @@ to `semantic versioning`_.
 Unreleased changes
 ------------------
 
-- Use 'python3' as the default name prefix on Python 3 (**backwards
-  incompatible**).
+- Bug fix: Use 'python3' as the default name prefix when running on Python 3
+  (**backwards incompatible**).
 
   The old behavior of using the 'python' name prefix on Python 3 was definitely
   wrong and quite likely could lead to serious breakage, but even so this
   change is of course backwards incompatible.
 
+- Bug fix: Don't raise an exception from ``transform_version()`` when a partial
+  requirement set is converted using pip's ``--no-deps`` command line option
+  (this is a valid use case that should be supported).
+
 - Move the finding of shared object files and the dpkg-shlibdeps_ integration
-  to deb-pkg-tools_ (**backwards incompatible**).
+  to deb-pkg-tools_ (backwards incompatible).
 
   This functionality originated in py2deb but since then I'd wanted to reuse it
   outside of py2deb several times and so I eventually reimplemented it in
   deb-pkg-tools_. Switching to that implementation now made sense (in order to
   reduce code duplication and simplify the py2deb code base).
 
-  Strictly speaking this is backwards incompatible because the two methods have
-  been removed, but this can only affect those who inherit and extend the
-  ``PackageToConvert`` class, which I don't expect anyone to have actually done
-  🙂.
+  Strictly speaking this is backwards incompatible because methods have been
+  removed but this only affects those who extend ``PackageToConvert`` which I
+  don't expect anyone to have actually done 🙂.
 
 - Configured `Travis CI`_ to run the test suite on Python 3.7, documented
   support for Python 3.7.
