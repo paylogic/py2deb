@@ -38,7 +38,12 @@ from humanfriendly.testing import TestCase, run_cli
 # Modules included in our package.
 from py2deb.cli import main
 from py2deb.converter import PackageConverter
-from py2deb.utils import TemporaryDirectory, normalize_package_version, python_version
+from py2deb.utils import (
+    TemporaryDirectory,
+    default_name_prefix,
+    normalize_package_version,
+    python_version,
+)
 from py2deb.hooks import (
     cleanup_bytecode_files,
     cleanup_namespaces,
@@ -842,10 +847,10 @@ def find_file(contents, pattern):
 
 
 def fix_name_prefix(name):
-    """Change the name prefix of a Debian package to match the current Python major version."""
+    """Change the name prefix of a Debian package to match the current Python version."""
     tokens = name.split('-')
-    prefix = 'python3' if sys.version_info[0] == 3 else 'python'
-    return '-'.join([prefix] + tokens[1:])
+    tokens[0] = default_name_prefix()
+    return '-'.join(tokens)
 
 
 def python_callback_fn(converter, package, build_directory):

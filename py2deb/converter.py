@@ -23,7 +23,6 @@ import logging
 import os
 import re
 import shutil
-import sys
 import tempfile
 
 # External dependencies.
@@ -37,8 +36,15 @@ from pip_accel.config import Config as PipAccelConfig
 from six.moves import configparser
 
 # Modules included in our package.
-from py2deb.utils import (compact_repeating_words, normalize_package_name, normalize_package_version,
-                          package_names_match, PackageRepository, tokenize_version)
+from py2deb.utils import (
+    PackageRepository,
+    compact_repeating_words,
+    default_name_prefix,
+    normalize_package_name,
+    normalize_package_version,
+    package_names_match,
+    tokenize_version,
+)
 from py2deb.package import PackageToConvert
 
 # Initialize a logger.
@@ -117,12 +123,12 @@ class PackageConverter(PropertyManager):
         where the package is converted and will be automatically created on the
         system where the package is installed.
 
-        .. versionadded:: 1.2
+        .. versionadded:: 2.0
 
            Before his property became part of the documented and public API in
-           release 1.2 the setter :func:`set_install_prefix()` was the only
-           documented way to configure the installation prefix. The use of this
-           setter is no longer required but still allowed.
+           release 2.0 the setter :func:`set_install_prefix()` was the only
+           documented interface. The use of this setter is no longer required
+           but still allowed.
         """
         return '/usr'
 
@@ -166,36 +172,45 @@ class PackageConverter(PropertyManager):
         the conversion process. The keys as well as the values of the
         dictionary are expected to be lowercased strings.
 
-        .. versionadded:: 1.2
+        .. versionadded:: 2.0
 
            Before his property became part of the documented and public API in
-           release 1.2 the :func:`rename_package()` method was the only
-           documented way to configure the name mapping. The use of this setter
-           is no longer required but still allowed.
+           release 2.0 the :func:`rename_package()` method was the only
+           documented interface. The use of this setter is no longer required
+           but still allowed.
         """
         return {}
 
     @mutable_property
     def name_prefix(self):
         """
-        The name prefix for converted packages (a string, defaults to 'python' or 'python3').
+        The name prefix for converted packages (a string).
 
-        When the default name prefix is used, converted packages may conflict
-        with system wide packages provided by Debian / Ubuntu. If this starts
-        to bite then consider using a custom name and installation prefix.
+        The default value of :ref:`name_prefix` depends on
+        the Python interpreter that's used to run py2deb:
 
-        .. versionadded:: 1.2
+        - On PyPy_ the default name prefix is ``pypy``.
+        - On Python 2 the default name prefix is ``python``.
+        - On Python 3 the default name prefix is ``python3``.
+
+        When one of these default name prefixes is used, converted packages may
+        conflict with system wide packages provided by Debian / Ubuntu. If this
+        starts to bite then consider changing the name and installation prefix.
+
+        .. versionadded:: 2.0
 
            Before his property became part of the documented and public API in
-           release 1.2 the setter :func:`set_name_prefix()` was the only
-           documented way to configure the name prefix. The use of this setter
-           is no longer required but still allowed.
+           release 2.0 the setter :func:`set_name_prefix()` was the only
+           documented interface. The use of this setter is no longer required
+           but still allowed.
 
-           Starting from release 1.2 the name prefix defaults to 'python3' when
-           running on any version of Python 3. Before that release the default
-           name prefix 'python' was (erroneously) used.
+           Release 2.0 introduced the alternative default name prefixes
+           ``pypy`` and ``python3``. Before that release the default name
+           prefix ``python`` was (erroneously) used for all interpreters.
+
+        .. _PyPy: https://en.wikipedia.org/wiki/PyPy
         """
-        return 'python3' if sys.version_info[0] == 3 else 'python'
+        return default_name_prefix()
 
     @mutable_property
     def python_callback(self):
@@ -251,10 +266,10 @@ class PackageConverter(PropertyManager):
                  - :exc:`~exceptions.ImportError` when the expression contains
                    a dotted path that cannot be imported.
 
-        .. versionadded:: 1.2
+        .. versionadded:: 2.0
 
            Before his property became part of the documented and public API in
-           release 1.2 the setter :func:`set_python_callback()` was the only
+           release 2.0 the setter :func:`set_python_callback()` was the only
            documented way to configure the callback. The use of this setter is
            no longer required but still allowed.
 
@@ -304,10 +319,10 @@ class PackageConverter(PropertyManager):
         repository directory (usually this is ``/tmp``) but it's expected that
         most callers will want to change this.
 
-        .. versionadded:: 1.2
+        .. versionadded:: 2.0
 
            Before his property became part of the documented and public API in
-           release 1.2 the :func:`set_repository()` method was the only
+           release 2.0 the :func:`set_repository()` method was the only
            documented interface. The use of this method is no longer required
            but still allowed.
         """
@@ -329,10 +344,10 @@ class PackageConverter(PropertyManager):
 
         The keys of this dictionary are expected to be lowercased strings.
 
-        .. versionadded:: 1.2
+        .. versionadded:: 2.0
 
            Before his property became part of the documented and public API in
-           release 1.2 the :func:`set_conversion_command()` method was the only
+           release 2.0 the :func:`set_conversion_command()` method was the only
            documented interface. The use of this method is no longer required
            but still allowed.
         """
@@ -349,12 +364,12 @@ class PackageConverter(PropertyManager):
         corresponding system package. The keys as well as the values of the
         dictionary are expected to be lowercased strings.
 
-        .. versionadded:: 1.2
+        .. versionadded:: 2.0
 
            Before his property became part of the documented and public API in
-           release 1.2 the :func:`use_system_package()` method was the only
-           documented way to configure the use of system packages. The use of
-           this method is no longer required but still allowed.
+           release 2.0 the :func:`use_system_package()` method was the only
+           documented interface. The use of this method is no longer required
+           but still allowed.
         """
         return {}
 

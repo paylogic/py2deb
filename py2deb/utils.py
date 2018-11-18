@@ -164,6 +164,20 @@ class TemporaryDirectory(object):
         del self.temporary_directory
 
 
+def default_name_prefix():
+    """
+    Get the default package name prefix for the Python version we're running.
+
+    :returns: One of the strings ``python``, ``python3`` or ``pypy``.
+    """
+    if platform.python_implementation() == 'PyPy':
+        return 'pypy'
+    elif sys.version_info[0] == 3:
+        return 'python3'
+    else:
+        return 'python'
+
+
 def detect_python_script(handle):
     """
     Detect whether a file-like object contains an executable Python script.
