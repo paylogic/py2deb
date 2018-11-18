@@ -451,7 +451,7 @@ class PackageConverterTestCase(TestCase):
             # Verify that the installed package can be imported.
             interpreter = '/usr/bin/%s' % python_version()
             output = execute(interpreter, '-c', '; '.join([
-                'import setproctitle'
+                'import setproctitle',
                 'print(setproctitle.__version__)',
             ]), capture=True)
             assert output == version
