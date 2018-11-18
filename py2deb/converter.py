@@ -38,7 +38,7 @@ from six.moves import configparser
 # Modules included in our package.
 from py2deb.utils import (
     PackageRepository,
-    compact_repeating_words,
+    convert_package_name,
     default_name_prefix,
     normalize_package_name,
     normalize_package_version,
@@ -814,15 +814,11 @@ class PackageConverter(PropertyManager):
         debian_package_name = self.name_mapping.get(key)
         if not debian_package_name:
             # No override. Make something up :-).
-            with_name_prefix = '%s-%s' % (self.name_prefix, python_package_name)
-            normalized_words = normalize_package_name(with_name_prefix).split('-')
-            debian_package_name = '-'.join(compact_repeating_words(normalized_words))
-        # If a requirement includes extras this changes the dependencies of the
-        # package. Because Debian doesn't have this concept we encode the names
-        # of the extras in the name of the package.
-        if extras:
-            sorted_extras = sorted(extra.lower() for extra in extras)
-            debian_package_name = '%s-%s' % (debian_package_name, '-'.join(sorted_extras))
+            debian_package_name = convert_package_name(
+                python_package_name=python_package_name,
+                name_prefix=self.name_prefix,
+                extras=extras,
+            )
         # Always normalize the package name (even if it was given to us by the caller).
         return normalize_package_name(debian_package_name)
 

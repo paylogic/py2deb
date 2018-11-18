@@ -193,6 +193,34 @@ def compact_repeating_words(words):
         last_word = word
 
 
+def convert_package_name(python_package_name, name_prefix=None, extras=()):
+    """
+    Convert a Python package name to a Debian package name.
+
+    :param python_package_name: The name of a Python package as found on PyPI (a string).
+    :param name_prefix: The name prefix to apply (a string or :data:`None`, in
+                        which case the result of :func:`default_name_prefix()`
+                        is used instead).
+    :returns: A Debian package name (a string).
+    """
+    # Apply the name prefix.
+    if not name_prefix:
+        name_prefix = default_name_prefix()
+    debian_package_name = '%s-%s' % (name_prefix, python_package_name)
+    # Normalize casing and special characters.
+    debian_package_name = normalize_package_name(debian_package_name)
+    # Compact repeating words (to avoid package names like 'python-python-debian').
+    debian_package_name = '-'.join(compact_repeating_words(debian_package_name.split('-')))
+    # If a requirement includes extras this changes the dependencies of the
+    # package. Because Debian doesn't have this concept we encode the names of
+    # the extras in the name of the package.
+    if extras:
+        words = [debian_package_name]
+        words.extend(sorted(extra.lower() for extra in extras))
+        debian_package_name = '-'.join(words)
+    return debian_package_name
+
+
 def default_name_prefix():
     """
     Get the default package name prefix for the Python version we're running.
