@@ -1,7 +1,7 @@
 # Automated tests for the `py2deb' package.
 #
 # Author: Peter Odding <peter.odding@paylogic.com>
-# Last Change: November 17, 2018
+# Last Change: November 18, 2018
 # URL: https://py2deb.readthedocs.io
 
 """
@@ -38,7 +38,7 @@ from humanfriendly.testing import TestCase, run_cli
 # Modules included in our package.
 from py2deb.cli import main
 from py2deb.converter import PackageConverter
-from py2deb.utils import normalize_package_version, TemporaryDirectory
+from py2deb.utils import TemporaryDirectory, normalize_package_version, python_version
 from py2deb.hooks import (
     cleanup_bytecode_files,
     cleanup_namespaces,
@@ -209,16 +209,16 @@ class PackageConverterTestCase(TestCase):
                 assert metadata['Version'].startswith('0.5')
                 assert metadata['Architecture'] == 'all'
                 # There should be exactly one dependency: some version of Python.
-                assert metadata['Depends'].matches('python%i.%i' % sys.version_info[:2])
+                assert metadata['Depends'].matches(python_version())
                 # Don't care about the format here as long as essential information is retained.
                 assert 'Peter Odding' in metadata['Maintainer']
                 assert 'peter@peterodding.com' in metadata['Maintainer']
                 # Check the package contents.
                 # Check for the two *.py files that should be installed by the package.
-                assert find_file(contents, '/usr/lib/python*/dist-packages/coloredlogs/__init__.py')
-                assert find_file(contents, '/usr/lib/python*/dist-packages/coloredlogs/converter.py')
+                assert find_file(contents, '/usr/lib/py*/dist-packages/coloredlogs/__init__.py')
+                assert find_file(contents, '/usr/lib/py*/dist-packages/coloredlogs/converter.py')
                 # Make sure the file ownership and permissions are sane.
-                archive_entry = find_file(contents, '/usr/lib/python*/dist-packages/coloredlogs/__init__.py')
+                archive_entry = find_file(contents, '/usr/lib/py*/dist-packages/coloredlogs/__init__.py')
                 assert archive_entry.owner == 'root'
                 assert archive_entry.group == 'root'
                 assert archive_entry.permissions == '-rw-r--r--'

@@ -3,7 +3,7 @@
 # Authors:
 #  - Arjan Verwer
 #  - Peter Odding <peter.odding@paylogic.com>
-# Last Change: November 17, 2018
+# Last Change: November 18, 2018
 # URL: https://py2deb.readthedocs.io
 
 """
@@ -142,6 +142,20 @@ class PackageConverter(PropertyManager):
     def lintian_enabled(self, value):
         """Automatically coerce :attr:`lintian_enabled` to a boolean value."""
         set_property(self, 'lintian_enabled', coerce_boolean(value))
+
+    @lazy_property
+    def lintian_ignore(self):
+        """A list of strings with Lintian tags to ignore."""
+        return [
+            'binary-without-manpage',
+            'changelog-file-missing-in-native-package',
+            'debian-changelog-file-missing',
+            'embedded-javascript-library',
+            'extra-license-file',
+            'unknown-control-interpreter',
+            'unusual-control-interpreter',
+            'vcs-field-uses-unknown-uri-format',
+        ]
 
     @lazy_property
     def name_mapping(self):

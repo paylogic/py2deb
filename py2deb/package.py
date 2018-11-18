@@ -3,7 +3,7 @@
 # Authors:
 #  - Arjan Verwer
 #  - Peter Odding <peter.odding@paylogic.com>
-# Last Change: November 17, 2018
+# Last Change: November 18, 2018
 # URL: https://py2deb.readthedocs.io
 
 """
@@ -21,22 +21,31 @@ conversion logic.
 import glob
 import logging
 import os
+import platform
 import re
+import sys
 import time
 
 # External dependencies.
-from property_manager import PropertyManager, cached_property
 from deb_pkg_tools.control import merge_control_fields, unparse_control_fields
 from deb_pkg_tools.package import build_package, find_object_files, find_system_dependencies, strip_object_files
 from executor import execute
 from humanfriendly import concatenate, pluralize
 from pkg_resources import Requirement
 from pkginfo import UnpackedSDist
+from property_manager import PropertyManager, cached_property
+from six import BytesIO
 from six.moves import configparser
 
 # Modules included in our package.
-from py2deb.utils import (embed_install_prefix, normalize_package_version, package_names_match,
-                          python_version, TemporaryDirectory)
+from py2deb.utils import (
+    TemporaryDirectory,
+    detect_python_script,
+    embed_install_prefix,
+    normalize_package_version,
+    package_names_match,
+    python_version,
+)
 
 # Initialize a logger.
 logger = logging.getLogger(__name__)
@@ -372,7 +381,7 @@ class PackageToConvert(PropertyManager):
             # Unpack the binary distribution archive provided by pip-accel inside our build directory.
             build_install_prefix = os.path.join(build_directory, self.converter.install_prefix.lstrip('/'))
             self.converter.pip_accel.bdists.install_binary_dist(
-                members=self.transform_binary_dist(),
+                members=self.transform_binary_dist(python_executable),
                 prefix=build_install_prefix,
                 python=python_executable,
                 virtualenv_compatible=False,
@@ -383,7 +392,8 @@ class PackageToConvert(PropertyManager):
             if self.has_custom_install_prefix:
                 build_modules_directory = os.path.join(build_install_prefix, 'lib')
             else:
-                dist_packages_directories = glob.glob(os.path.join(build_install_prefix, 'lib/python*/dist-packages'))
+                # The /py*/ pattern below is intended to match both /pythonX.Y/ and /pypyX.Y/.
+                dist_packages_directories = glob.glob(os.path.join(build_install_prefix, 'lib/py*/dist-packages'))
                 if len(dist_packages_directories) != 1:
                     msg = "Expected to find a single 'dist-packages' directory inside converted package!"
                     raise Exception(msg)
@@ -447,17 +457,15 @@ class PackageToConvert(PropertyManager):
             # messages emitted by Lintian are useless (they merely point out
             # how the internals of py2deb work). Because of this we silence
             # `known to be irrelevant' messages from Lintian using overrides.
-            overrides_directory = os.path.join(build_directory, 'usr', 'share',
-                                               'lintian', 'overrides')
-            overrides_file = os.path.join(overrides_directory, self.debian_name)
-            os.makedirs(overrides_directory)
-            with open(overrides_file, 'w') as handle:
-                for tag in ['debian-changelog-file-missing',
-                            'embedded-javascript-library',
-                            'extra-license-file',
-                            'unknown-control-interpreter',
-                            'vcs-field-uses-unknown-uri-format']:
-                    handle.write('%s: %s\n' % (self.debian_name, tag))
+            if self.converter.lintian_ignore:
+                overrides_directory = os.path.join(
+                    build_directory, 'usr', 'share', 'lintian', 'overrides',
+                )
+                overrides_file = os.path.join(overrides_directory, self.debian_name)
+                os.makedirs(overrides_directory)
+                with open(overrides_file, 'w') as handle:
+                    for tag in self.converter.lintian_ignore:
+                        handle.write('%s: %s\n' % (self.debian_name, tag))
 
             # Find the alternatives relevant to the package we're building.
             alternatives = set((link, path) for link, path in self.converter.alternatives
@@ -491,34 +499,86 @@ class PackageToConvert(PropertyManager):
                                  check_package=self.converter.lintian_enabled,
                                  copy_files=False)
 
-    def transform_binary_dist(self):
+    def transform_binary_dist(self, interpreter):
         """
         Build Python package and transform directory layout.
 
-        Builds the Python package (using :mod:`pip_accel`) and changes the
-        names of the files included in the package to match the layout
-        corresponding to the given conversion options.
-
+        :param interpreter: The absolute pathname of the Python interpreter
+                            that should be referenced by executable scripts in
+                            the binary distribution (a string).
         :returns: An iterable of tuples with two values each:
 
                   1. A :class:`tarfile.TarInfo` object;
                   2. A file-like object.
+
+        Builds the Python package (using :mod:`pip_accel`) and changes the
+        names of the files included in the package to match the layout
+        corresponding to the given conversion options.
         """
+        # Detect whether we're running on PyPy (it needs special handling).
+        if platform.python_implementation() == 'PyPy':
+            on_pypy = True
+            regular_pypy_path = 'lib/pypy%i.%i/site-packages/' % sys.version_info[:2]
+        else:
+            on_pypy = False
         for member, handle in self.converter.pip_accel.bdists.get_binary_dist(self.requirement):
+            is_executable = member.name.startswith('bin/')
+            # Note that at this point the installation prefix has already been
+            # stripped from `member.name' by the get_binary_dist() method.
+            if on_pypy:
+                # Normalize PyPy virtual environment layout:
+                #
+                # 1. cPython uses /lib/pythonX.Y/(dist|site)-packages/
+                # 2. PyPy uses /site-packages/ (a top level directory)
+                #
+                # In this if branch we change 2 to look like 1 so that the
+                # following if/else branches don't need to care about the
+                # difference.
+                member.name = re.sub('^(dist|site)-packages/', regular_pypy_path, member.name)
             if self.has_custom_install_prefix:
                 # Strip the complete /usr/lib/pythonX.Y/site-packages/ prefix
-                # so we can replace it with the custom installation prefix
-                # (at this point /usr/ has been stripped by get_binary_dist()).
-                member.name = re.sub(r'lib/python\d+(\.\d+)*/(dist|site)-packages/', 'lib/', member.name)
+                # so we can replace it with the custom installation prefix.
+                member.name = re.sub(r'lib/(python|pypy)\d+(\.\d+)*/(dist|site)-packages/', 'lib/', member.name)
                 # Rewrite executable Python scripts so they know about the
                 # custom installation prefix.
-                if member.name.startswith('bin/'):
+                if is_executable:
                     handle = embed_install_prefix(handle, os.path.join(self.converter.install_prefix, 'lib'))
             else:
                 # Rewrite /site-packages/ to /dist-packages/. For details see
                 # https://wiki.debian.org/Python#Deviations_from_upstream.
                 member.name = member.name.replace('/site-packages/', '/dist-packages/')
+            # Update the interpreter reference in the first line of executable scripts.
+            if is_executable:
+                handle = self.update_shebang(handle, interpreter)
             yield member, handle
+
+    def update_shebang(self, handle, interpreter):
+        """
+        Update the shebang_ of executable scripts.
+
+        :param handle: A file-like object containing an executable.
+        :param interpreter: The absolute pathname of the Python interpreter
+                            that should be referenced by the script.
+        :returns: A file-like object.
+
+        Normally pip-accel is responsible for updating interpreter references
+        in executable scripts, however there's a bug in pip-accel where it
+        assumes that the string 'python' will appear literally in the shebang
+        (which isn't true when running on PyPy).
+
+        .. note:: Of course this bug should be fixed in pip-accel however that
+                  project is in limbo while I decide whether to reinvigorate or
+                  kill it (the second of which implies needing to make a whole
+                  lot of changes to py2deb).
+
+        .. _shebang: https://en.wikipedia.org/wiki/Shebang_(Unix)
+        """
+        if detect_python_script(handle):
+            lines = handle.readlines()
+            lines[0] = b'#!%s\n' % interpreter
+            handle = BytesIO(b''.join(lines))
+            handle.seek(0)
+        return handle
 
     def determine_package_architecture(self, has_shared_object_files):
         """

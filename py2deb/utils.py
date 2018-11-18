@@ -3,14 +3,17 @@
 # Authors:
 #  - Arjan Verwer
 #  - Peter Odding <peter.odding@paylogic.com>
-# Last Change: November 17, 2018
+# Last Change: November 18, 2018
 # URL: https://py2deb.readthedocs.io
 
 """The :mod:`py2deb.utils` module contains miscellaneous code."""
 
 # Standard library modules.
 import logging
+import os
+import platform
 import re
+import shlex
 import shutil
 import sys
 import tempfile
@@ -25,6 +28,20 @@ logger = logging.getLogger(__name__)
 
 integer_pattern = re.compile('([0-9]+)')
 """Compiled regular expression to match a consecutive run of digits."""
+
+PYTHON_EXECUTABLE_PATTERN = re.compile(r'^(pypy(\d\.\d)?|python(\d(\.\d)?)?m?)$')
+"""
+A compiled regular expression to match Python interpreter executable names.
+
+The following are examples of program names that match this pattern:
+
+- pypy
+- pypy2.7
+- python
+- python2
+- python2.7
+- python3m
+"""
 
 
 class PackageRepository(PropertyManager):
@@ -147,16 +164,71 @@ class TemporaryDirectory(object):
         del self.temporary_directory
 
 
+def detect_python_script(handle):
+    """
+    Detect whether a file-like object contains an executable Python script.
+
+    :param handle: A file-like object (assumed to contain an executable).
+    :returns: :data:`True` if the program name in the shebang_ of the script
+              references a known Python interpreter, :data:`False` otherwise.
+    """
+    command = extract_shebang_command(handle)
+    program = extract_shebang_program(command)
+    return PYTHON_EXECUTABLE_PATTERN.match(program) is not None
+
+
+def extract_shebang_command(handle):
+    """
+    Extract the shebang_ command line from an executable script.
+
+    :param handle: A file-like object (assumed to contain an executable).
+    :returns: The command in the shebang_ line (a string).
+
+    The seek position is expected to be at the start of the file and will be
+    reset afterwards, before this function returns. It is not an error if the
+    executable contains binary data.
+
+    .. _shebang: https://en.wikipedia.org/wiki/Shebang_(Unix)
+    """
+    try:
+        if handle.read(2) == b'#!':
+            data = handle.readline()
+            text = data.decode('UTF-8')
+            return text.strip()
+        else:
+            return ''
+    finally:
+        handle.seek(0)
+
+
+def extract_shebang_program(command):
+    """
+    Extract the program name from a shebang_ command line.
+
+    :param command: The result of :func:`extract_shebang_command()`.
+    :returns: The program name in the shebang_ command line (a string).
+    """
+    tokens = shlex.split(command)
+    if len(tokens) >= 2 and os.path.basename(tokens[0]) == 'env':
+        tokens = tokens[1:]
+    return os.path.basename(tokens[0]) if tokens else ''
+
+
 def python_version():
     """
     Find the version of Python we're running.
 
-    This specifically returns a name matching the format of the names of the
-    Debian packages providing the various available Python versions.
+    This specifically returns a name that matches both of the following:
 
-    :returns: A string like ``python2.6`` or ``python2.7``.
+    - The name of the Debian package providing the current Python version.
+    - The name of the interpreter executable for the current Python version.
+
+    :returns: A string like ``python2.7``, ``python3.7`` or ``pypy``.
     """
-    python_version = 'python%d.%d' % (sys.version_info[0], sys.version_info[1])
+    python_version = (
+        'pypy' if platform.python_implementation() == 'PyPy'
+        else 'python%d.%d' % sys.version_info[:2]
+    )
     logger.debug("Detected Python version: %s", python_version)
     return python_version
 
@@ -269,12 +341,11 @@ def embed_install_prefix(handle, install_prefix):
     :param install_prefix: The pathname of the custom installation prefix (a string).
     :returns: A file-like object containing the modified Python script.
     """
-    lines = handle.readlines()
     # Make sure the first line of the file contains something that looks like a
     # Python hashbang so we don't try to embed Python code in files like shell
-    # scripts :-). Note that the regular expression pattern is very
-    # unrestrictive on purpose.
-    if lines and re.match(b'^#!.*\\bpython', lines[0]):
+    # scripts :-).
+    if detect_python_script(handle):
+        lines = handle.readlines()
         # We need to choose where to inject our line into the Python script.
         # This is trickier than it might seem at first, because of conflicting
         # concerns:

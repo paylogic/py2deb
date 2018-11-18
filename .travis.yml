@@ -10,6 +10,7 @@ matrix:
     - env: TOXENV=py36
     - env: TOXENV=py37
       dist: xenial
+    - env: TOXENV=pypy
 install:
   - scripts/travis.sh
   - make install

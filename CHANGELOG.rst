@@ -14,14 +14,35 @@ to `semantic versioning`_.
 Unreleased changes
 ------------------
 
-- Configured `Travis CI`_ to run the test suite on Python 3.7, documented
-  support for Python 3.7 in ``README.rst`` and ``setup.py``.
+- Use 'python3' as the default name prefix on Python 3 (**backwards
+  incompatible**).
 
-- Simplified the py2deb code base by moving the finding of shared object files
-  and the dpkg-shlibdeps_ integration to deb-pkg-tools_. This functionality
-  originated in py2deb but since then I had wanted to reuse it outside of
-  py2deb and so I reimplemented it in deb-pkg-tools_. Switching to that
-  implementation now made sense (in order to reduce code duplication).
+  The old behavior of using the 'python' name prefix on Python 3 was definitely
+  wrong and quite likely could lead to serious breakage, but even so this
+  change is of course backwards incompatible.
+
+- Move the finding of shared object files and the dpkg-shlibdeps_ integration
+  to deb-pkg-tools_ (**backwards incompatible**).
+
+  This functionality originated in py2deb but since then I'd wanted to reuse it
+  outside of py2deb several times and so I eventually reimplemented it in
+  deb-pkg-tools_. Switching to that implementation now made sense (in order to
+  reduce code duplication and simplify the py2deb code base).
+
+  Strictly speaking this is backwards incompatible because the two methods have
+  been removed, but this can only affect those who inherit and extend the
+  ``PackageToConvert`` class, which I don't expect anyone to have actually done
+  🙂.
+
+- Configured `Travis CI`_ to run the test suite on Python 3.7, documented
+  support for Python 3.7.
+
+- First explicit attempt to implement compatibility with PyPy_, increasing
+  compatibility to the same level as Python 3 compatibility (it mostly seems to
+  work, some rough edges may be experienced).
+
+- Make it possible for callers to change the Lintian overrides embedded in
+  the generated binary packages. Also, update the default overrides.
 
 - Switched from cached-property_ to property-manager_. The py2deb project comes
   from a time (2013) when Python descriptors were still magic to me and so I
@@ -48,6 +69,7 @@ Unreleased changes
 .. _dpkg-shlibdeps: https://manpages.debian.org/dpkg-shlibdeps
 .. _cached-property: https://pypi.org/project/cached-property
 .. _property-manager: https://pypi.org/project/property-manager
+.. _PyPy: http://en.wikipedia.org/wiki/PyPy
 
 `Release 1.1`_ (2018-02-24)
 ---------------------------

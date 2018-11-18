@@ -49,6 +49,10 @@ main () {
       # We need to get Python 3.7 from the deadsnakes PPA.
       install_with_deadsnakes_ppa python3.7 python3.7-dev
       ;;
+    pypy)
+      # Get PyPy from the official PyPy PPA.
+      install_with_pypy_ppa pypy pypy-dev
+      ;;
     *)
       # Make sure .travis.yml and .travis.sh don't get out of sync.
       die "Unsupported Python version requested! (\$TOXENV not set)"
@@ -59,6 +63,12 @@ main () {
 install_with_deadsnakes_ppa () {
   msg "Installing deadsnakes PPA .."
   sudo add-apt-repository --yes ppa:deadsnakes/ppa
+  install_with_apt_get "$@"
+}
+
+install_with_pypy_ppa () {
+  msg "Installing PyPy PPA .."
+  sudo add-apt-repository --yes ppa:pypy/ppa
   install_with_apt_get "$@"
 }
 
