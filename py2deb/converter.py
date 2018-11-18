@@ -848,9 +848,11 @@ class PackageConverter(PropertyManager):
         that would otherwise result in converted packages that cannot be
         installed.
         """
-        matching_packages = [p for p in self.packages_to_convert
-                             if package_names_match(p.python_name, python_requirement_name)]
-        if len(matching_packages) != 1:
+        matching_packages = [
+            pkg for pkg in self.packages_to_convert
+            if package_names_match(pkg.python_name, python_requirement_name)
+        ]
+        if len(matching_packages) > 1:
             # My assumption while writing this code is that this should never
             # happen. This check is to make sure that if it does happen it will
             # be noticed because the last thing I want is for this `hack' to
@@ -862,36 +864,37 @@ class PackageConverter(PropertyManager):
                 whose name can be normalized to {name} but encountered {count}
                 packages instead! (matching packages: {matches})
             """, name=normalized_name, count=num_matches, matches=matching_packages))
-        # Check whether the version number included in the requirement set
-        # matches the version number in a package's requirements.
-        requirement_to_convert = matching_packages[0]
-        if python_requirement_version != requirement_to_convert.python_version:
-            logger.debug("Checking whether to strip trailing zeros from required version ..")
-            # Check whether the version numbers share the same prefix.
-            required_version = tokenize_version(python_requirement_version)
-            included_version = tokenize_version(requirement_to_convert.python_version)
-            common_length = min(len(required_version), len(included_version))
-            required_prefix = required_version[:common_length]
-            included_prefix = included_version[:common_length]
-            prefixes_match = (required_prefix == included_prefix)
-            logger.debug("Prefix of required version: %s", required_prefix)
-            logger.debug("Prefix of included version: %s", included_prefix)
-            logger.debug("Prefixes match? %s", prefixes_match)
-            # Check if 1) only the required version has a suffix and 2) this
-            # suffix consists only of trailing zeros.
-            required_suffix = required_version[common_length:]
-            included_suffix = included_version[common_length:]
-            logger.debug("Suffix of required version: %s", required_suffix)
-            logger.debug("Suffix of included version: %s", included_suffix)
-            if prefixes_match and required_suffix and not included_suffix:
-                # Check whether the suffix of the required version contains
-                # only zeros, i.e. pip considers the version numbers the same
-                # although apt would not agree.
-                if all(re.match('^0+$', t) for t in required_suffix if t.isdigit()):
-                    modified_version = ''.join(required_prefix)
-                    logger.warning("Stripping superfluous trailing zeros from required"
-                                   " version of %s required by %s! (%s -> %s)",
-                                   python_requirement_name, package_to_convert.python_name,
-                                   python_requirement_version, modified_version)
-                    python_requirement_version = modified_version
+        elif matching_packages:
+            # Check whether the version number included in the requirement set
+            # matches the version number in a package's requirements.
+            requirement_to_convert = matching_packages[0]
+            if python_requirement_version != requirement_to_convert.python_version:
+                logger.debug("Checking whether to strip trailing zeros from required version ..")
+                # Check whether the version numbers share the same prefix.
+                required_version = tokenize_version(python_requirement_version)
+                included_version = tokenize_version(requirement_to_convert.python_version)
+                common_length = min(len(required_version), len(included_version))
+                required_prefix = required_version[:common_length]
+                included_prefix = included_version[:common_length]
+                prefixes_match = (required_prefix == included_prefix)
+                logger.debug("Prefix of required version: %s", required_prefix)
+                logger.debug("Prefix of included version: %s", included_prefix)
+                logger.debug("Prefixes match? %s", prefixes_match)
+                # Check if 1) only the required version has a suffix and 2) this
+                # suffix consists only of trailing zeros.
+                required_suffix = required_version[common_length:]
+                included_suffix = included_version[common_length:]
+                logger.debug("Suffix of required version: %s", required_suffix)
+                logger.debug("Suffix of included version: %s", included_suffix)
+                if prefixes_match and required_suffix and not included_suffix:
+                    # Check whether the suffix of the required version contains
+                    # only zeros, i.e. pip considers the version numbers the same
+                    # although apt would not agree.
+                    if all(re.match('^0+$', t) for t in required_suffix if t.isdigit()):
+                        modified_version = ''.join(required_prefix)
+                        logger.warning("Stripping superfluous trailing zeros from required"
+                                       " version of %s required by %s! (%s -> %s)",
+                                       python_requirement_name, package_to_convert.python_name,
+                                       python_requirement_version, modified_version)
+                        python_requirement_version = modified_version
         return normalize_package_version(python_requirement_version)
