@@ -164,6 +164,35 @@ class TemporaryDirectory(object):
         del self.temporary_directory
 
 
+def compact_repeating_words(words):
+    """
+    Remove adjacent repeating words.
+
+    :param words: An iterable of words (strings), assumed to already be
+                  normalized (lowercased).
+    :returns: An iterable of words with adjacent repeating words replaced by a
+              single word.
+
+    This is used to avoid awkward word repetitions in the package name
+    conversion algorithm. Here's an example of what I mean:
+
+    >>> from py2deb import compact_repeating_words
+    >>> name_prefix = 'python'
+    >>> package_name = 'python-mcrypt'
+    >>> combined_words = [name_prefix] + package_name.split('-')
+    >>> print(list(combined_words))
+    ['python', 'python', 'mcrypt']
+    >>> compacted_words = compact_repeating_words(combined_words)
+    >>> print(list(compacted_words))
+    ['python', 'mcrypt']
+    """
+    last_word = None
+    for word in words:
+        if word != last_word:
+            yield word
+        last_word = word
+
+
 def default_name_prefix():
     """
     Get the default package name prefix for the Python version we're running.
@@ -189,6 +218,50 @@ def detect_python_script(handle):
     command = extract_shebang_command(handle)
     program = extract_shebang_program(command)
     return PYTHON_EXECUTABLE_PATTERN.match(program) is not None
+
+
+def embed_install_prefix(handle, install_prefix):
+    """
+    Embed Python snippet that adds custom installation prefix to module search path.
+
+    :param handle: A file-like object containing an executable Python script.
+    :param install_prefix: The pathname of the custom installation prefix (a string).
+    :returns: A file-like object containing the modified Python script.
+    """
+    # Make sure the first line of the file contains something that looks like a
+    # Python hashbang so we don't try to embed Python code in files like shell
+    # scripts :-).
+    if detect_python_script(handle):
+        lines = handle.readlines()
+        # We need to choose where to inject our line into the Python script.
+        # This is trickier than it might seem at first, because of conflicting
+        # concerns:
+        #
+        # 1) We want our line to be the first one to be executed so that any
+        #    later imports respect the custom installation prefix.
+        #
+        # 2) Our line cannot be the very first line because we would break the
+        #    hashbang of the script, without which it won't be executable.
+        #
+        # 3) Python has the somewhat obscure `from __future__ import ...'
+        #    statement which must precede all other statements.
+        #
+        # Our first step is to skip all comments, taking care of point two.
+        insertion_point = 0
+        while insertion_point < len(lines) and lines[insertion_point].startswith(b'#'):
+            insertion_point += 1
+        # The next step is to bump the insertion point if we find any `from
+        # __future__ import ...' statements.
+        for i, line in enumerate(lines):
+            if re.match(b'^\\s*from\\s+__future__\\s+import\\s+', line):
+                insertion_point = i + 1
+        lines.insert(insertion_point, ('import sys; sys.path.insert(0, %r)\n' % install_prefix).encode('UTF-8'))
+        # Turn the modified contents back into a file-like object.
+        handle = BytesIO(b''.join(lines))
+    else:
+        # Reset the file pointer of handle, so its contents can be read again later.
+        handle.seek(0)
+    return handle
 
 
 def extract_shebang_command(handle):
@@ -226,25 +299,6 @@ def extract_shebang_program(command):
     if len(tokens) >= 2 and os.path.basename(tokens[0]) == 'env':
         tokens = tokens[1:]
     return os.path.basename(tokens[0]) if tokens else ''
-
-
-def python_version():
-    """
-    Find the version of Python we're running.
-
-    This specifically returns a name that matches both of the following:
-
-    - The name of the Debian package providing the current Python version.
-    - The name of the interpreter executable for the current Python version.
-
-    :returns: A string like ``python2.7``, ``python3.7`` or ``pypy``.
-    """
-    python_version = (
-        'pypy' if platform.python_implementation() == 'PyPy'
-        else 'python%d.%d' % sys.version_info[:2]
-    )
-    logger.debug("Detected Python version: %s", python_version)
-    return python_version
 
 
 def normalize_package_name(python_package_name):
@@ -293,16 +347,6 @@ def normalize_package_version(python_package_version):
     return version
 
 
-def tokenize_version(version_number):
-    """
-    Tokenize a string containing a version number.
-
-    :param version_number: The string to tokenize.
-    :returns: A list of strings.
-    """
-    return [t for t in integer_pattern.split(version_number) if t]
-
-
 def package_names_match(a, b):
     """
     Check whether two Python package names are equal.
@@ -318,74 +362,30 @@ def package_names_match(a, b):
     return normalize_package_name(a) == normalize_package_name(b)
 
 
-def compact_repeating_words(words):
+def python_version():
     """
-    Remove adjacent repeating words.
+    Find the version of Python we're running.
 
-    :param words: An iterable of words (strings), assumed to already be
-                  normalized (lowercased).
-    :returns: An iterable of words with adjacent repeating words replaced by a
-              single word.
+    This specifically returns a name that matches both of the following:
 
-    This is used to avoid awkward word repetitions in the package name
-    conversion algorithm. Here's an example of what I mean:
+    - The name of the Debian package providing the current Python version.
+    - The name of the interpreter executable for the current Python version.
 
-    >>> from py2deb import compact_repeating_words
-    >>> name_prefix = 'python'
-    >>> package_name = 'python-mcrypt'
-    >>> combined_words = [name_prefix] + package_name.split('-')
-    >>> print(list(combined_words))
-    ['python', 'python', 'mcrypt']
-    >>> compacted_words = compact_repeating_words(combined_words)
-    >>> print(list(compacted_words))
-    ['python', 'mcrypt']
+    :returns: A string like ``python2.7``, ``python3.7`` or ``pypy``.
     """
-    last_word = None
-    for word in words:
-        if word != last_word:
-            yield word
-        last_word = word
+    python_version = (
+        'pypy' if platform.python_implementation() == 'PyPy'
+        else 'python%d.%d' % sys.version_info[:2]
+    )
+    logger.debug("Detected Python version: %s", python_version)
+    return python_version
 
 
-def embed_install_prefix(handle, install_prefix):
+def tokenize_version(version_number):
     """
-    Embed Python snippet that adds custom installation prefix to module search path.
+    Tokenize a string containing a version number.
 
-    :param handle: A file-like object containing an executable Python script.
-    :param install_prefix: The pathname of the custom installation prefix (a string).
-    :returns: A file-like object containing the modified Python script.
+    :param version_number: The string to tokenize.
+    :returns: A list of strings.
     """
-    # Make sure the first line of the file contains something that looks like a
-    # Python hashbang so we don't try to embed Python code in files like shell
-    # scripts :-).
-    if detect_python_script(handle):
-        lines = handle.readlines()
-        # We need to choose where to inject our line into the Python script.
-        # This is trickier than it might seem at first, because of conflicting
-        # concerns:
-        #
-        # 1) We want our line to be the first one to be executed so that any
-        #    later imports respect the custom installation prefix.
-        #
-        # 2) Our line cannot be the very first line because we would break the
-        #    hashbang of the script, without which it won't be executable.
-        #
-        # 3) Python has the somewhat obscure `from __future__ import ...'
-        #    statement which must precede all other statements.
-        #
-        # Our first step is to skip all comments, taking care of point two.
-        insertion_point = 0
-        while insertion_point < len(lines) and lines[insertion_point].startswith(b'#'):
-            insertion_point += 1
-        # The next step is to bump the insertion point if we find any `from
-        # __future__ import ...' statements.
-        for i, line in enumerate(lines):
-            if re.match(b'^\\s*from\\s+__future__\\s+import\\s+', line):
-                insertion_point = i + 1
-        lines.insert(insertion_point, ('import sys; sys.path.insert(0, %r)\n' % install_prefix).encode('UTF-8'))
-        # Turn the modified contents back into a file-like object.
-        handle = BytesIO(b''.join(lines))
-    else:
-        # Reset the file pointer of handle, so its contents can be read again later.
-        handle.seek(0)
-    return handle
+    return [t for t in integer_pattern.split(version_number) if t]
