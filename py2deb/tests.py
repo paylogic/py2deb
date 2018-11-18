@@ -407,6 +407,7 @@ class PackageConverterTestCase(TestCase):
            we can run this test on all supported Python versions.
 
         .. _setproctitle: https://pypi.org/project/setproctitle/
+        .. _dpkg-shlibdeps: https://manpages.debian.org/dpkg-shlibdeps
         """
         with TemporaryDirectory() as directory:
             # Run the conversion command.
@@ -426,6 +427,36 @@ class PackageConverterTestCase(TestCase):
             # Make sure a dependency on libc was added (this shows that
             # dpkg-shlibdeps was run successfully).
             assert 'libc6' in metadata['Depends'].names
+
+    def test_converted_package_installation(self):
+        """
+        Install a converted package on the test system and verify that it works.
+
+        This test only runs on Travis CI, it's a functional test that uses
+        py2deb to convert a Python package to a Debian package, installs
+        that package on the local system and verifies that the system wide
+        Python installation can successfully import the installed package.
+        """
+        if os.environ.get('TRAVIS') != 'true':
+            self.skipTest("This test should only be run on Travis CI! (set $TRAVIS_CI=true to override)")
+        if os.getuid() != 0:
+            self.skipTest("This test requires superuser privileges!")
+        with TemporaryDirectory() as directory:
+            version = '1.1.8'
+            # Run the conversion command.
+            converter = self.create_isolated_converter()
+            converter.set_repository(directory)
+            archives, relationships = converter.convert(['setproctitle==%s' % version])
+            # Find and install the generated *.deb archive.
+            pathname = find_package_archive(archives, fix_name_prefix('python-setproctitle'))
+            execute('dpkg', '--install', pathname, sudo=True)
+            # Verify that the installed package can be imported.
+            interpreter = '/usr/bin/%s' % python_version()
+            output = execute(interpreter, '-c', '; '.join([
+                'import setproctitle'
+                'print(setproctitle.__version__)',
+            ]), capture=True)
+            assert output == version
 
     def test_conversion_of_binary_package_with_executable(self):
         """
