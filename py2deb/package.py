@@ -575,7 +575,7 @@ class PackageToConvert(PropertyManager):
         """
         if detect_python_script(handle):
             lines = handle.readlines()
-            lines[0] = b'#!%s\n' % interpreter.encode('ascii')
+            lines[0] = b'#!' + interpreter.encode('ascii') + '\n'
             handle = BytesIO(b''.join(lines))
             handle.seek(0)
         return handle
