@@ -544,6 +544,18 @@ class PackageToConvert(PropertyManager):
                 if is_executable:
                     handle = embed_install_prefix(handle, os.path.join(self.converter.install_prefix, 'lib'))
             else:
+                if on_pypy:
+                    # Rewrite /usr/lib/pypy2.7/dist-packages to /usr/lib/pypy/dist-packages for two reasons:
+                    #
+                    # 1. /usr/lib/pypy2.7/dist-packages is not included in sys.path by default.
+                    # 2. /usr/lib/pypy/dist-packages is included in sys.path by default and
+                    #    according to /usr/lib/pypy/dist-packages/README "this directory
+                    #    exists so that 3rd party packages can be installed here".
+                    #
+                    # See also the build https://travis-ci.org/paylogic/py2deb/builds/456594190
+                    # which clearly shows that /usr/lib/pypy2.7/dist-packages doesn't work
+                    # (which I've since confirmed in local testing).
+                    member.name = re.sub(r'/pypy\d(\.\d)?/', '/pypy/', member.name)
                 # Rewrite /site-packages/ to /dist-packages/. For details see
                 # https://wiki.debian.org/Python#Deviations_from_upstream.
                 member.name = member.name.replace('/site-packages/', '/dist-packages/')
