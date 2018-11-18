@@ -439,8 +439,6 @@ class PackageConverterTestCase(TestCase):
         """
         if os.environ.get('TRAVIS') != 'true':
             self.skipTest("This test should only be run on Travis CI! (set $TRAVIS_CI=true to override)")
-        if os.getuid() != 0:
-            self.skipTest("This test requires superuser privileges!")
         with TemporaryDirectory() as directory:
             version = '1.1.8'
             # Run the conversion command.
