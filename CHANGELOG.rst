@@ -11,8 +11,8 @@ to `semantic versioning`_.
 .. _Keep a Changelog: http://keepachangelog.com/
 .. _semantic versioning: http://semver.org/
 
-Unreleased changes
-------------------
+`Release 2.0`_ (2018-11-18)
+---------------------------
 
 **New features:**
 
@@ -33,13 +33,13 @@ Unreleased changes
   py2deb (this is **backwards incompatible** although clearly the correct
   behavior):
 
-  - On PyPy_ the default name prefix is ``pypy``.
-  - On Python 2 the default name prefix is ``python``.
-  - On Python 3 the default name prefix is ``python3``.
+  - On PyPy_ the default name prefix is now ``pypy``.
+  - On Python 2 the default name prefix is still ``python``.
+  - On Python 3 the default name prefix is now ``python3``.
 
-  The old behavior of using the 'python' name prefix on Python 3 and PyPy_ was
-  definitely wrong and quite likely could lead to serious breakage, but even so
-  this change is of course backwards incompatible.
+  The old behavior of using the ``python`` name prefix on Python 3 and PyPy_
+  was definitely wrong and quite likely could lead to serious breakage, but
+  even so this change is of course backwards incompatible.
 
 - Don't raise an exception from ``transform_version()`` when a partial
   requirement set is converted using pip's ``--no-deps`` command line option
@@ -80,6 +80,7 @@ Unreleased changes
   and the integration of property-manager_ in py2deb can help to improve the
   project, so this seemed like the logical choice 😇.
 
+.. _Release 2.0: https://github.com/paylogic/py2deb/compare/1.1...2.0
 .. _dpkg-shlibdeps: https://manpages.debian.org/dpkg-shlibdeps
 .. _cached-property: https://pypi.org/project/cached-property
 .. _property-manager: https://pypi.org/project/property-manager

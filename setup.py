@@ -3,7 +3,7 @@
 # Setup script for the `py2deb' package.
 
 # Author: Peter Odding <peter.odding@paylogic.com>
-# Last Change: November 17, 2018
+# Last Change: November 18, 2018
 # URL: https://py2deb.readthedocs.io
 
 """
@@ -101,6 +101,7 @@ setup(
     url='https://py2deb.readthedocs.io',
     author="Peter Odding & Arjan Verwer (Paylogic International)",
     author_email='peter.odding@paylogic.com',
+    license='MIT',
     packages=find_packages(),
     entry_points=dict(console_scripts=[
         'py2deb = py2deb.cli:main',
@@ -125,10 +126,13 @@ setup(
         'Programming Language :: Python :: 3.5',
         'Programming Language :: Python :: 3.6',
         'Programming Language :: Python :: 3.7',
+        'Programming Language :: Python :: Implementation :: CPython',
+        'Programming Language :: Python :: Implementation :: PyPy',
         'Topic :: Software Development :: Build Tools',
         'Topic :: Software Development :: Libraries :: Python Modules',
         'Topic :: System :: Archiving :: Packaging',
         'Topic :: System :: Installation/Setup',
         'Topic :: System :: Software Distribution',
+        'Topic :: System :: Systems Administration',
         'Topic :: Utilities',
     ])

@@ -21,12 +21,12 @@ listing your transitive dependencies in requirement files because `py2deb` will
 translate the version constraints of Python packages into Debian package
 relationships.
 
-The `py2deb` package is currently tested on Python 2.6, 2.7, 3.4, 3.5, 3.6 and
-3.7 (although Python 3 support isn't being used extensively yet, so you may run
-into some sharp edges). For usage instructions please refer to the
-documentation hosted on `Read The Docs`_.
+The `py2deb` package is currently tested on CPython_ 2.6, 2.7, 3.4, 3.5, 3.6
+and 3.7 and PyPy_. For usage instructions please refer to the documentation
+hosted on `Read The Docs`_.
 
-.. contents:: :local:
+.. contents::
+   :local:
 
 Installation
 ------------
@@ -208,6 +208,7 @@ This software is licensed under the `MIT license`_.
 
 .. External references:
 .. _changelog: https://py2deb.readthedocs.io/en/latest/changelog.html
+.. _CPython: https://en.wikipedia.org/wiki/CPython
 .. _deb-pkg-tools: https://pypi.org/project/deb-pkg-tools
 .. _detailed comparison: https://py2deb.readthedocs.io/en/latest/comparisons.html
 .. _dh-virtualenv: https://github.com/spotify/dh-virtualenv
@@ -219,6 +220,7 @@ This software is licensed under the `MIT license`_.
 .. _Pillow: https://python-pillow.github.io/
 .. _pip-accel: https://github.com/paylogic/pip-accel
 .. _PyPI: https://pypi.org/project/py2deb
+.. _PyPy: https://en.wikipedia.org/wiki/PyPy
 .. _python-imaging: https://packages.debian.org/search?keywords=python-imaging
 .. _python-pil: https://packages.debian.org/search?keywords=python-pil
 .. _Read The Docs: https://py2deb.readthedocs.io
