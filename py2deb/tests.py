@@ -1,7 +1,7 @@
 # Automated tests for the `py2deb' package.
 #
 # Author: Peter Odding <peter.odding@paylogic.com>
-# Last Change: November 18, 2018
+# Last Change: December 16, 2018
 # URL: https://py2deb.readthedocs.io
 
 """
@@ -156,11 +156,14 @@ class PackageConverterTestCase(TestCase):
         """Test reformatting of Python version strings."""
         assert normalize_package_version('1.5_42') == '1.5-42'
         assert normalize_package_version('1.5-whatever') == '1.5-whatever-1'
-        # PEP 440 pre-release versions.
+        # PEP 440 pre-release versions (specific handling added in release 1.0).
         assert normalize_package_version('1.0a2') == '1.0~a2'
         assert normalize_package_version('1.0b2') == '1.0~b2'
         assert normalize_package_version('1.0c2') == '1.0~rc2'
         assert normalize_package_version('1.0rc2') == '1.0~rc2'
+        # New versus old behavior (the option to control backwards compatibility was added in release 2.1).
+        assert normalize_package_version('1.0a2', prerelease_workaround=True) == '1.0~a2'
+        assert normalize_package_version('1.0a2', prerelease_workaround=False) == '1.0a2'
 
     def test_conversion_of_simple_package(self):
         """

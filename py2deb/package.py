@@ -3,7 +3,7 @@
 # Authors:
 #  - Arjan Verwer
 #  - Peter Odding <peter.odding@paylogic.com>
-# Last Change: November 18, 2018
+# Last Change: December 16, 2018
 # URL: https://py2deb.readthedocs.io
 
 """
@@ -126,7 +126,9 @@ class PackageToConvert(PropertyManager):
         Reformats :attr:`python_version` using
         :func:`.normalize_package_version()`.
         """
-        return normalize_package_version(self.python_version)
+        return normalize_package_version(
+            self.python_version, prerelease_workaround=self.converter.prerelease_workaround
+        )
 
     @cached_property
     def debian_maintainer(self):

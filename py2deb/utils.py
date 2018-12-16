@@ -3,7 +3,7 @@
 # Authors:
 #  - Arjan Verwer
 #  - Peter Odding <peter.odding@paylogic.com>
-# Last Change: November 18, 2018
+# Last Change: December 16, 2018
 # URL: https://py2deb.readthedocs.io
 
 """The :mod:`py2deb.utils` module contains miscellaneous code."""
@@ -346,11 +346,14 @@ def normalize_package_name(python_package_name):
     return re.sub('[^a-z0-9]+', '-', python_package_name.lower()).strip('-')
 
 
-def normalize_package_version(python_package_version):
+def normalize_package_version(python_package_version, prerelease_workaround=True):
     """
     Normalize Python package version to be used as Debian package version.
 
     :param python_package_version: The version of a Python package (a string).
+    :param prerelease_workaround: :data:`True` to enable the pre-release
+                                  handling documented below, :data:`False` to
+                                  restore the old behavior.
 
     Reformats Python package versions to comply with the Debian policy manual.
     All characters except alphanumerics, dot (``.``) and plus (``+``) are
@@ -363,10 +366,11 @@ def normalize_package_version(python_package_version):
     """
     # Lowercase and remove invalid characters from the version string.
     version = re.sub('[^a-z0-9.+]+', '-', python_package_version.lower()).strip('-')
-    # Translate the PEP 440 pre-release identifier 'c' to 'rc'.
-    version = re.sub(r'(\d)c(\d)', r'\1rc\2', version)
-    # Replicate the intended ordering of PEP 440 pre-release versions (a, b, rc).
-    version = re.sub(r'(\d)(a|b|rc)(\d)', r'\1~\2\3', version)
+    if prerelease_workaround:
+        # Translate the PEP 440 pre-release identifier 'c' to 'rc'.
+        version = re.sub(r'(\d)c(\d)', r'\1rc\2', version)
+        # Replicate the intended ordering of PEP 440 pre-release versions (a, b, rc).
+        version = re.sub(r'(\d)(a|b|rc)(\d)', r'\1~\2\3', version)
     # Make sure the "Debian revision" contains a digit.
     components = version.split('-')
     if len(components) > 1 and not re.search('[0-9]', components[-1]):
