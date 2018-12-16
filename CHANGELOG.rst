@@ -11,6 +11,20 @@ to `semantic versioning`_.
 .. _Keep a Changelog: http://keepachangelog.com/
 .. _semantic versioning: http://semver.org/
 
+`Release 2.1`_ (2018-12-16)
+---------------------------
+
+Enable optional backwards compatibility with the old version number conversion
+up to :ref:`release 0.25` in which pre-release identifiers didn't receive any
+special treatment.
+
+My reason for adding this backwards compatibility now is that it will allow me
+to upgrade py2deb on the build server of my employer to the latest version
+without being forced to switch to the new version number format at the same
+time. This simplifies the transition significantly.
+
+.. _Release 2.1: https://github.com/paylogic/py2deb/compare/2.0...2.1
+
 `Release 2.0`_ (2018-11-18)
 ---------------------------
 
