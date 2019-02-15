@@ -141,7 +141,7 @@ def generate_bytecode_files(package_name, installed_files):
             py_compile.compile(filename)
             num_generated += 1
     if num_generated > 0:
-        logger.info("Generated %i Python bytecode files(s) for %s package.", num_generated, package_name)
+        logger.info("Generated %i Python bytecode file(s) for %s package.", num_generated, package_name)
 
 
 def cleanup_bytecode_files(package_name, installed_files):
