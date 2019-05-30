@@ -364,8 +364,16 @@ def normalize_package_version(python_package_version, prerelease_workaround=True
     the identifier 'c' is translated into 'rc'. Refer to `issue #8
     <https://github.com/paylogic/py2deb/issues/8>`_ for details.
     """
+    # Do not normalize local version labels since these may contain strings
+    # such as SCM hashes that should not be altered. Split the version string
+    # into the primary version and the local version label and only operate
+    # on the primary version string.
+    version_parts = python_package_version.split('+', 2)
+    version = version_parts[0]
+    local_version_label = version_parts[1] if len(version_parts) == 2 else None
+
     # Lowercase and remove invalid characters from the version string.
-    version = re.sub('[^a-z0-9.+]+', '-', python_package_version.lower()).strip('-')
+    version = re.sub('[^a-z0-9.+]+', '-', version.lower()).strip('-')
     if prerelease_workaround:
         # Translate the PEP 440 pre-release identifier 'c' to 'rc'.
         version = re.sub(r'(\d)c(\d)', r'\1rc\2', version)
@@ -376,6 +384,9 @@ def normalize_package_version(python_package_version, prerelease_workaround=True
     if len(components) > 1 and not re.search('[0-9]', components[-1]):
         components.append('1')
         version = '-'.join(components)
+    # Join local version label back if it exists
+    if local_version_label:
+        version = version + '+' + local_version_label
     return version
 
 
