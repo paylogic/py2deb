@@ -11,6 +11,28 @@ to `semantic versioning`_.
 .. _Keep a Changelog: http://keepachangelog.com/
 .. _semantic versioning: http://semver.org/
 
+`Release 2.1.1`_ (2020-05-26)
+-----------------------------
+
+**Defensively pin pip-accel requirement.**
+
+I intend to revive pip-accel_ based on the latest pip_ release, offering a
+minimal conceptual subset of previous functionality of pip-accel_, just enough
+for py2deb to use for downloading and unpacking distribution archives.
+
+However this will surely take some time to flesh out - possibly multiple
+releases of both projects. I'm not even sure yet what will be involved in
+getting pip-accel and py2deb running on the latest version of pip (I can
+however already tell that large architectural changes will be required in
+pip-accel and consequently also py2deb).
+
+In the mean time I don't want any users (including my employer) run into
+breakage caused by this endeavor. Alpha / beta releases on PyPI should be able
+to avoid this problem, however I've never published those myself, so I'm opting
+for "defense in depth" 😇.
+
+.. _Release 2.1.1: https://github.com/paylogic/py2deb/compare/2.1...2.1.1
+
 `Release 2.1`_ (2018-12-16)
 ---------------------------
 
@@ -252,7 +274,7 @@ Update usage instructions in readme (and automate the process for the future).
 `Release 0.21`_ (2015-04-04)
 ----------------------------
 
-Upgraded dependencies: pip-accel 0.25 and pip 6.
+Upgraded dependencies: pip-accel_ 0.25 and pip_ 6.
 
 .. _Release 0.21: https://github.com/paylogic/py2deb/compare/0.20.11...0.21
 
@@ -1058,7 +1080,7 @@ Process required packages in alphabetical sort order.
 `Release 0.8.1`_ (2013-08-13)
 -----------------------------
 
-- Implement control overrides for pip-accel backend (also: refactor configuration handling).
+- Implement control overrides for pip-accel_ backend (also: refactor configuration handling).
 - Make it possible to override individual Debian package names.
 - Backends shouldn't know about "replacements".
 
