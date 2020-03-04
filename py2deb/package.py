@@ -138,11 +138,19 @@ class PackageToConvert(PropertyManager):
         The name and e-mail address are combined into a single string that can
         be embedded in a Debian package.
         """
-        maintainer = self.metadata.maintainer
-        maintainer_email = self.metadata.maintainer_email
-        if not maintainer:
+        if os.getenv("DEBFULLNAME"):
+            maintainer = os.getenv("DEBFULLNAME")
+            maintainer_email = os.getenv("DEBEMAIL")
+        elif self.metadata.maintainer:
+            maintainer = self.metadata.maintainer
+            maintainer_email = self.metadata.maintainer_email
+        elif self.metadata.author:
             maintainer = self.metadata.author
             maintainer_email = self.metadata.author_email
+        else:
+            maintainer = None
+            maintainer_email = None
+
         if maintainer and maintainer_email:
             return '%s <%s>' % (maintainer, maintainer_email.strip('<>'))
         else:
