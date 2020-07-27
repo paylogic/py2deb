@@ -29,7 +29,7 @@ logger = logging.getLogger(__name__)
 integer_pattern = re.compile('([0-9]+)')
 """Compiled regular expression to match a consecutive run of digits."""
 
-PYTHON_EXECUTABLE_PATTERN = re.compile(r'^(pypy(\d\.\d)?|python(\d(\.\d)?)?m?)$')
+PYTHON_EXECUTABLE_PATTERN = re.compile(r'^(pypy|python)(\d(\.\d)?)?m?$')
 """
 A compiled regular expression to match Python interpreter executable names.
 
