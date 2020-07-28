@@ -37,6 +37,7 @@ The following are examples of program names that match this pattern:
 
 - pypy
 - pypy2.7
+- pypy3
 - python
 - python2
 - python2.7
@@ -405,10 +406,13 @@ def python_version():
 
     :returns: A string like ``python2.7``, ``python3.7`` or ``pypy``.
     """
-    python_version = (
-        'pypy' if platform.python_implementation() == 'PyPy'
-        else 'python%d.%d' % sys.version_info[:2]
-    )
+    if platform.python_implementation() == 'PyPy':
+        if sys.version_info[0] == 3:
+            python_version = 'pypy3'
+        else:
+            python_version = 'pypy'
+    else:
+        python_version = 'python%d.%d' % sys.version_info[:2]
     logger.debug("Detected Python version: %s", python_version)
     return python_version
 
