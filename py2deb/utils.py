@@ -3,7 +3,7 @@
 # Authors:
 #  - Arjan Verwer
 #  - Peter Odding <peter.odding@paylogic.com>
-# Last Change: December 16, 2018
+# Last Change: July 28, 2020
 # URL: https://py2deb.readthedocs.io
 
 """The :mod:`py2deb.utils` module contains miscellaneous code."""
@@ -37,6 +37,7 @@ The following are examples of program names that match this pattern:
 
 - pypy
 - pypy2.7
+- pypy3
 - python
 - python2
 - python2.7
@@ -227,12 +228,10 @@ def default_name_prefix():
 
     :returns: One of the strings ``python``, ``python3`` or ``pypy``.
     """
-    if platform.python_implementation() == 'PyPy':
-        return 'pypy'
-    elif sys.version_info[0] == 3:
-        return 'python3'
-    else:
-        return 'python'
+    implementation = 'pypy' if platform.python_implementation() == 'PyPy' else 'python'
+    if sys.version_info[0] == 3:
+        implementation += '3'
+    return implementation
 
 
 def detect_python_script(handle):
@@ -403,12 +402,14 @@ def python_version():
     - The name of the Debian package providing the current Python version.
     - The name of the interpreter executable for the current Python version.
 
-    :returns: A string like ``python2.7``, ``python3.7`` or ``pypy``.
+    :returns: A string like ``python2.7``, ``python3.8``, ``pypy`` or ``pypy3``.
     """
-    python_version = (
-        'pypy' if platform.python_implementation() == 'PyPy'
-        else 'python%d.%d' % sys.version_info[:2]
-    )
+    if platform.python_implementation() == 'PyPy':
+        python_version = 'pypy'
+        if sys.version_info[0] == 3:
+            python_version += '3'
+    else:
+        python_version = 'python%d.%d' % sys.version_info[:2]
     logger.debug("Detected Python version: %s", python_version)
     return python_version
 
