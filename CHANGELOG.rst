@@ -11,6 +11,17 @@ to `semantic versioning`_.
 .. _Keep a Changelog: http://keepachangelog.com/
 .. _semantic versioning: http://semver.org/
 
+`Release 2.3`_ (2020-07-28)
+---------------------------
+
+Merged pull request `#30`_:
+
+- Added support ``pypy3`` in replacement hashbangs.
+- Added support for ``pypy3`` package name prefix.
+
+.. _Release 2.3: https://github.com/paylogic/py2deb/compare/2.2...2.3
+.. _#30: https://github.com/paylogic/py2deb/pull/30
+
 `Release 2.2`_ (2020-07-28)
 ---------------------------
 
