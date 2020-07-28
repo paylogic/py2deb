@@ -228,12 +228,12 @@ def default_name_prefix():
 
     :returns: One of the strings ``python``, ``python3`` or ``pypy``.
     """
-    if platform.python_implementation() == 'PyPy':
-        return 'pypy'
-    elif sys.version_info[0] == 3:
-        return 'python3'
+    implementation = ('pypy' if platform.python_implementation() == 'PyPy'
+            else 'python')
+    if sys.version_info[0] == 3:
+        return implementation + '3'
     else:
-        return 'python'
+        return implementation
 
 
 def detect_python_script(handle):
