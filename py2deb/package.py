@@ -78,76 +78,73 @@ class PackageToConvert(PropertyManager):
         self.converter = converter
         self.requirement = requirement
 
-    def __str__(self):
-        """The name, version and extras of the package encoded in a human readable string."""
-        version = [self.python_version]
-        extras = self.requirement.pip_requirement.extras
-        if extras:
-            version.append("extras: %s" % concatenate(sorted(extras)))
-        return "%s (%s)" % (self.python_name, ', '.join(version))
+    @cached_property
+    def debian_dependencies(self):
+        """
+        Find Debian dependencies of Python package.
 
-    @property
-    def python_name(self):
-        """The name of the Python package (a string)."""
-        return self.requirement.name
+        Converts `Python version specifiers`_ to `Debian package
+        relationships`_.
+
+        :returns: A list with Debian package relationships (strings) in the
+                  format of the ``Depends:`` line of a Debian package
+                  ``control`` file. Based on :data:`python_requirements`.
+
+        .. _Python version specifiers: http://www.python.org/dev/peps/pep-0440/#version-specifiers
+        .. _Debian package relationships: https://www.debian.org/doc/debian-policy/ch-relationships.html
+        """
+        dependencies = set()
+        for requirement in self.python_requirements:
+            debian_package_name = self.converter.transform_name(requirement.project_name, *requirement.extras)
+            if requirement.specs:
+                for constraint, version in requirement.specs:
+                    version = self.converter.transform_version(self, requirement.project_name, version)
+                    if version == 'dev':
+                        # Requirements like 'pytz > dev' (celery==3.1.16) don't
+                        # seem to really mean anything to pip (based on my
+                        # reading of the 1.4.x source code) but Debian will
+                        # definitely complain because version strings should
+                        # start with a digit. In this case we'll just fall
+                        # back to a dependency without a version specification
+                        # so we don't drop the dependency.
+                        dependencies.add(debian_package_name)
+                    elif constraint == '==':
+                        dependencies.add('%s (= %s)' % (debian_package_name, version))
+                    elif constraint == '!=':
+                        values = (debian_package_name, version, debian_package_name, version)
+                        dependencies.add('%s (<< %s) | %s (>> %s)' % values)
+                    elif constraint == '<':
+                        dependencies.add('%s (<< %s)' % (debian_package_name, version))
+                    elif constraint == '>':
+                        dependencies.add('%s (>> %s)' % (debian_package_name, version))
+                    elif constraint in ('<=', '>='):
+                        dependencies.add('%s (%s %s)' % (debian_package_name, constraint, version))
+                    else:
+                        msg = "Conversion specifier not supported! (%r used by Python package %s)"
+                        raise Exception(msg % (constraint, self.python_name))
+            else:
+                dependencies.add(debian_package_name)
+        dependencies = sorted(dependencies)
+        logger.debug("Debian dependencies of %s: %r", self, dependencies)
+        return dependencies
 
     @cached_property
-    def debian_name(self):
-        """The name of the converted Debian package (a string)."""
-        return self.converter.transform_name(self.python_name, *self.requirement.pip_requirement.extras)
-
-    @cached_property
-    def debian_provides(self):
+    def debian_description(self):
         """
-        A symbolic name for the role the package provides (a string).
+        Get a minimal description for the converted Debian package.
 
-        When a Python package provides "extras" those extras are encoded into
-        the name of the generated Debian package, to represent the additional
-        dependencies versus the package without extras.
-
-        However the package including extras definitely also satisfies a
-        dependency on the package without extras, so a ``Provides: ...``
-        control field is added to the Debian package that contains the
-        converted package name *without extras*.
+        Includes the name of the Python package and the date at which the
+        package was converted.
         """
-        if self.requirement.pip_requirement.extras:
-            return self.converter.transform_name(self.python_name)
-        else:
-            return ''
-
-    @property
-    def python_version(self):
-        """The version of the Python package (a string)."""
-        return self.requirement.version
-
-    @cached_property
-    def vcs_revision(self):
-        """
-        The VCS revision of the Python package.
-
-        This works by parsing the ``.hg_archival.txt`` file generated by the
-        ``hg archive`` command so for now this only supports Python source
-        distributions exported from Mercurial repositories.
-        """
-        filename = os.path.join(self.requirement.source_directory, '.hg_archival.txt')
-        if os.path.isfile(filename):
-            with open(filename) as handle:
-                for line in handle:
-                    name, _, value = line.partition(':')
-                    if name.strip() == 'node':
-                        return value.strip()
-
-    @cached_property
-    def debian_version(self):
-        """
-        The version of the Debian package (a string).
-
-        Reformats :attr:`python_version` using
-        :func:`.normalize_package_version()`.
-        """
-        return normalize_package_version(
-            self.python_version, prerelease_workaround=self.converter.prerelease_workaround
-        )
+        text = ["Python package", self.python_name, "converted by py2deb on"]
+        # The %e directive (not documented in the Python standard library but
+        # definitely available on Linux which is the only platform that py2deb
+        # targets, for obvious reasons :-) includes a leading space for single
+        # digit day-of-month numbers. I don't like that, fixed width fields are
+        # an artefact of 30 years ago and have no place in my software
+        # (generally speaking :-). This explains the split/compact duo.
+        text.extend(time.strftime('%B %e, %Y at %H:%M').split())
+        return ' '.join(text)
 
     @cached_property
     def debian_maintainer(self):
@@ -191,22 +188,68 @@ class PackageToConvert(PropertyManager):
             return maintainer or 'Unknown'
 
     @cached_property
-    def debian_description(self):
-        """
-        Get a minimal description for the converted Debian package.
+    def debian_name(self):
+        """The name of the converted Debian package (a string)."""
+        return self.converter.transform_name(self.python_name, *self.requirement.pip_requirement.extras)
 
-        Includes the name of the Python package and the date at which the
-        package was converted.
+    @cached_property
+    def debian_provides(self):
         """
-        text = ["Python package", self.python_name, "converted by py2deb on"]
-        # The %e directive (not documented in the Python standard library but
-        # definitely available on Linux which is the only platform that py2deb
-        # targets, for obvious reasons :-) includes a leading space for single
-        # digit day-of-month numbers. I don't like that, fixed width fields are
-        # an artefact of 30 years ago and have no place in my software
-        # (generally speaking :-). This explains the split/compact duo.
-        text.extend(time.strftime('%B %e, %Y at %H:%M').split())
-        return ' '.join(text)
+        A symbolic name for the role the package provides (a string).
+
+        When a Python package provides "extras" those extras are encoded into
+        the name of the generated Debian package, to represent the additional
+        dependencies versus the package without extras.
+
+        However the package including extras definitely also satisfies a
+        dependency on the package without extras, so a ``Provides: ...``
+        control field is added to the Debian package that contains the
+        converted package name *without extras*.
+        """
+        if self.requirement.pip_requirement.extras:
+            return self.converter.transform_name(self.python_name)
+        else:
+            return ''
+
+    @cached_property
+    def debian_version(self):
+        """
+        The version of the Debian package (a string).
+
+        Reformats :attr:`python_version` using
+        :func:`.normalize_package_version()`.
+        """
+        return normalize_package_version(
+            self.python_version, prerelease_workaround=self.converter.prerelease_workaround
+        )
+
+    @cached_property
+    def existing_archive(self):
+        """
+        Find ``*.deb`` archive for current package name and version.
+
+        :returns: The pathname of the found archive (a string) or ``None`` if
+                  no existing archive is found.
+        """
+        return self.converter.repository.get_package(
+            self.debian_name, self.debian_version, "all"
+        ) or self.converter.repository.get_package(
+            self.debian_name, self.debian_version, self.converter.debian_architecture
+        )
+
+    @cached_property
+    def has_custom_install_prefix(self):
+        """
+        Check whether package is being installed under custom installation prefix.
+
+        :returns: ``True`` if the package is being installed under a custom
+                  installation prefix, ``False`` otherwise.
+
+        A custom installation prefix is an installation prefix whose ``bin``
+        directory is (likely) not available on the default executable search
+        path (the environment variable ``$PATH``)
+        """
+        return self.converter.install_prefix not in KNOWN_INSTALL_PREFIXES
 
     @cached_property
     def metadata(self):
@@ -279,19 +322,10 @@ class PackageToConvert(PropertyManager):
                 namespaces.add(tuple(dotted_name))
         return sorted(namespaces, key=lambda n: len(n))
 
-    @cached_property
-    def has_custom_install_prefix(self):
-        """
-        Check whether package is being installed under custom installation prefix.
-
-        :returns: ``True`` if the package is being installed under a custom
-                  installation prefix, ``False`` otherwise.
-
-        A custom installation prefix is an installation prefix whose ``bin``
-        directory is (likely) not available on the default executable search
-        path (the environment variable ``$PATH``)
-        """
-        return self.converter.install_prefix not in KNOWN_INSTALL_PREFIXES
+    @property
+    def python_name(self):
+        """The name of the Python package (a string)."""
+        return self.requirement.name
 
     @cached_property
     def python_requirements(self):
@@ -344,69 +378,27 @@ class PackageToConvert(PropertyManager):
                         requirements.append(Requirement.parse(line))
         return requirements
 
-    @cached_property
-    def debian_dependencies(self):
-        """
-        Find Debian dependencies of Python package.
-
-        Converts `Python version specifiers`_ to `Debian package
-        relationships`_.
-
-        :returns: A list with Debian package relationships (strings) in the
-                  format of the ``Depends:`` line of a Debian package
-                  ``control`` file. Based on :data:`python_requirements`.
-
-        .. _Python version specifiers: http://www.python.org/dev/peps/pep-0440/#version-specifiers
-        .. _Debian package relationships: https://www.debian.org/doc/debian-policy/ch-relationships.html
-        """
-        dependencies = set()
-        for requirement in self.python_requirements:
-            debian_package_name = self.converter.transform_name(requirement.project_name, *requirement.extras)
-            if requirement.specs:
-                for constraint, version in requirement.specs:
-                    version = self.converter.transform_version(self, requirement.project_name, version)
-                    if version == 'dev':
-                        # Requirements like 'pytz > dev' (celery==3.1.16) don't
-                        # seem to really mean anything to pip (based on my
-                        # reading of the 1.4.x source code) but Debian will
-                        # definitely complain because version strings should
-                        # start with a digit. In this case we'll just fall
-                        # back to a dependency without a version specification
-                        # so we don't drop the dependency.
-                        dependencies.add(debian_package_name)
-                    elif constraint == '==':
-                        dependencies.add('%s (= %s)' % (debian_package_name, version))
-                    elif constraint == '!=':
-                        values = (debian_package_name, version, debian_package_name, version)
-                        dependencies.add('%s (<< %s) | %s (>> %s)' % values)
-                    elif constraint == '<':
-                        dependencies.add('%s (<< %s)' % (debian_package_name, version))
-                    elif constraint == '>':
-                        dependencies.add('%s (>> %s)' % (debian_package_name, version))
-                    elif constraint in ('<=', '>='):
-                        dependencies.add('%s (%s %s)' % (debian_package_name, constraint, version))
-                    else:
-                        msg = "Conversion specifier not supported! (%r used by Python package %s)"
-                        raise Exception(msg % (constraint, self.python_name))
-            else:
-                dependencies.add(debian_package_name)
-        dependencies = sorted(dependencies)
-        logger.debug("Debian dependencies of %s: %r", self, dependencies)
-        return dependencies
+    @property
+    def python_version(self):
+        """The version of the Python package (a string)."""
+        return self.requirement.version
 
     @cached_property
-    def existing_archive(self):
+    def vcs_revision(self):
         """
-        Find ``*.deb`` archive for current package name and version.
+        The VCS revision of the Python package.
 
-        :returns: The pathname of the found archive (a string) or ``None`` if
-                  no existing archive is found.
+        This works by parsing the ``.hg_archival.txt`` file generated by the
+        ``hg archive`` command so for now this only supports Python source
+        distributions exported from Mercurial repositories.
         """
-        return self.converter.repository.get_package(
-            self.debian_name, self.debian_version, "all"
-        ) or self.converter.repository.get_package(
-            self.debian_name, self.debian_version, self.converter.debian_architecture
-        )
+        filename = os.path.join(self.requirement.source_directory, '.hg_archival.txt')
+        if os.path.isfile(filename):
+            with open(filename) as handle:
+                for line in handle:
+                    name, _, value = line.partition(':')
+                    if name.strip() == 'node':
+                        return value.strip()
 
     def convert(self):
         """
@@ -544,6 +536,129 @@ class PackageToConvert(PropertyManager):
                                  check_package=self.converter.lintian_enabled,
                                  copy_files=False)
 
+    def determine_package_architecture(self, has_shared_object_files):
+        """
+        Determine binary architecture that Debian package should be tagged with.
+
+        If a package contains ``*.so`` files we're dealing with a compiled
+        Python module. To determine the applicable architecture, we take the
+        Debian architecture reported by
+        :attr:`~py2deb.converter.PackageConverter.debian_architecture`.
+
+        :param has_shared_objects: ``True`` if the package contains ``*.so``
+                                   files, ``False`` otherwise.
+        :returns: The architecture string, 'all' or one of the values of
+                  :attr:`~py2deb.converter.PackageConverter.debian_architecture`.
+        """
+        logger.debug("Checking package architecture ..")
+        if has_shared_object_files:
+            logger.debug("Package contains shared object files, tagging with %s architecture.",
+                         self.converter.debian_architecture)
+            return self.converter.debian_architecture
+        else:
+            logger.debug("Package doesn't contain shared object files, dealing with a portable package.")
+            return 'all'
+
+    def find_egg_info_file(self, pattern=''):
+        """
+        Find pip metadata files in unpacked source distributions.
+
+        When pip unpacks a source distribution archive it creates a directory
+        ``pip-egg-info`` which contains the package metadata in a declarative
+        and easy to parse format. This method finds such metadata files.
+
+        :param pattern: The :mod:`glob` pattern to search for (a string).
+        :returns: A list of matched filenames (strings).
+        """
+        full_pattern = os.path.join(self.requirement.source_directory, 'pip-egg-info', '*.egg-info', pattern)
+        logger.debug("Looking for %r file(s) using pattern %r ..", pattern, full_pattern)
+        matches = glob.glob(full_pattern)
+        if len(matches) > 1:
+            msg = "Source distribution directory of %s (%s) contains multiple *.egg-info directories: %s"
+            raise Exception(msg % (self.requirement.project_name, self.requirement.version, concatenate(matches)))
+        elif matches:
+            logger.debug("Matched %s: %s.", pluralize(len(matches), "file", "files"), concatenate(matches))
+            return matches[0]
+        else:
+            logger.debug("No matching %r files found.", pattern)
+
+    def generate_maintainer_script(self, filename, python_executable, function, **arguments):
+        """
+        Generate a post-installation or pre-removal maintainer script.
+
+        :param filename: The pathname of the maintainer script (a string).
+        :param python_executable: The absolute pathname of the Python
+                                  interpreter on the target system (a string).
+        :param function: The name of the function in the :mod:`py2deb.hooks`
+                         module to be called when the maintainer script is run
+                         (a string).
+        :param arguments: Any keyword arguments to the function in the
+                          :mod:`py2deb.hooks` are serialized and embedded
+                          inside the generated maintainer script.
+        """
+        # Read the py2deb/hooks.py script.
+        py2deb_directory = os.path.dirname(os.path.abspath(__file__))
+        hooks_script = os.path.join(py2deb_directory, 'hooks.py')
+        with open(hooks_script) as handle:
+            contents = handle.read()
+        blocks = contents.split('\n\n')
+        # Generate the shebang / hashbang line.
+        blocks.insert(0, '#!%s' % python_executable)
+        # Generate the call to the top level function.
+        encoded_arguments = ', '.join('%s=%r' % (k, v) for k, v in arguments.items())
+        blocks.append('%s(%s)' % (function, encoded_arguments))
+        # Write the maintainer script.
+        with open(filename, 'w') as handle:
+            handle.write('\n\n'.join(blocks))
+            handle.write('\n')
+        # Make sure the maintainer script is executable.
+        os.chmod(filename, 0o755)
+
+    def load_control_field_overrides(self, control_fields):
+        """
+        Apply user defined control field overrides.
+
+        Looks for an ``stdeb.cfg`` file inside the Python package's source
+        distribution and if found it merges the overrides into the control
+        fields that will be embedded in the generated Debian binary package.
+
+        This method first applies any overrides defined in the ``DEFAULT``
+        section and then it applies any overrides defined in the section whose
+        normalized name (see :func:`~py2deb.utils.package_names_match()`)
+        matches that of the Python package.
+
+        :param control_fields: The control field defaults constructed by py2deb
+                               (a :class:`debian.deb822.Deb822` object).
+        :returns: The merged defaults and overrides (a
+                  :class:`debian.deb822.Deb822` object).
+        """
+        py2deb_cfg = os.path.join(self.requirement.source_directory, 'stdeb.cfg')
+        if not os.path.isfile(py2deb_cfg):
+            logger.debug("Control field overrides file not found (%s).", py2deb_cfg)
+        else:
+            logger.debug("Loading control field overrides from %s ..", py2deb_cfg)
+            parser = configparser.RawConfigParser()
+            parser.read(py2deb_cfg)
+            # Prepare to load the overrides from the DEFAULT section and
+            # the section whose name matches that of the Python package.
+            # DEFAULT is processed first on purpose.
+            section_names = ['DEFAULT']
+            # Match the normalized package name instead of the raw package
+            # name because `python setup.py egg_info' normalizes
+            # underscores in package names to dashes which can bite
+            # unsuspecting users. For what it's worth, PEP-8 discourages
+            # underscores in package names but doesn't forbid them:
+            # https://www.python.org/dev/peps/pep-0008/#package-and-module-names
+            section_names.extend(section_name for section_name in parser.sections()
+                                 if package_names_match(section_name, self.python_name))
+            for section_name in section_names:
+                if parser.has_section(section_name):
+                    overrides = dict(parser.items(section_name))
+                    logger.debug("Found %i control file field override(s) in section %s of %s: %r",
+                                 len(overrides), section_name, py2deb_cfg, overrides)
+                    control_fields = merge_control_fields(control_fields, overrides)
+        return control_fields
+
     def transform_binary_dist(self, interpreter):
         """
         Build Python package and transform directory layout.
@@ -644,125 +759,10 @@ class PackageToConvert(PropertyManager):
             handle.seek(0)
         return handle
 
-    def determine_package_architecture(self, has_shared_object_files):
-        """
-        Determine binary architecture that Debian package should be tagged with.
-
-        If a package contains ``*.so`` files we're dealing with a compiled
-        Python module. To determine the applicable architecture, we take the
-        Debian architecture reported by
-        :attr:`~py2deb.converter.PackageConverter.debian_architecture`.
-
-        :param has_shared_objects: ``True`` if the package contains ``*.so``
-                                   files, ``False`` otherwise.
-        :returns: The architecture string, 'all' or one of the values of
-                  :attr:`~py2deb.converter.PackageConverter.debian_architecture`.
-        """
-        logger.debug("Checking package architecture ..")
-        if has_shared_object_files:
-            logger.debug("Package contains shared object files, tagging with %s architecture.",
-                         self.converter.debian_architecture)
-            return self.converter.debian_architecture
-        else:
-            logger.debug("Package doesn't contain shared object files, dealing with a portable package.")
-            return 'all'
-
-    def load_control_field_overrides(self, control_fields):
-        """
-        Apply user defined control field overrides.
-
-        Looks for an ``stdeb.cfg`` file inside the Python package's source
-        distribution and if found it merges the overrides into the control
-        fields that will be embedded in the generated Debian binary package.
-
-        This method first applies any overrides defined in the ``DEFAULT``
-        section and then it applies any overrides defined in the section whose
-        normalized name (see :func:`~py2deb.utils.package_names_match()`)
-        matches that of the Python package.
-
-        :param control_fields: The control field defaults constructed by py2deb
-                               (a :class:`debian.deb822.Deb822` object).
-        :returns: The merged defaults and overrides (a
-                  :class:`debian.deb822.Deb822` object).
-        """
-        py2deb_cfg = os.path.join(self.requirement.source_directory, 'stdeb.cfg')
-        if not os.path.isfile(py2deb_cfg):
-            logger.debug("Control field overrides file not found (%s).", py2deb_cfg)
-        else:
-            logger.debug("Loading control field overrides from %s ..", py2deb_cfg)
-            parser = configparser.RawConfigParser()
-            parser.read(py2deb_cfg)
-            # Prepare to load the overrides from the DEFAULT section and
-            # the section whose name matches that of the Python package.
-            # DEFAULT is processed first on purpose.
-            section_names = ['DEFAULT']
-            # Match the normalized package name instead of the raw package
-            # name because `python setup.py egg_info' normalizes
-            # underscores in package names to dashes which can bite
-            # unsuspecting users. For what it's worth, PEP-8 discourages
-            # underscores in package names but doesn't forbid them:
-            # https://www.python.org/dev/peps/pep-0008/#package-and-module-names
-            section_names.extend(section_name for section_name in parser.sections()
-                                 if package_names_match(section_name, self.python_name))
-            for section_name in section_names:
-                if parser.has_section(section_name):
-                    overrides = dict(parser.items(section_name))
-                    logger.debug("Found %i control file field override(s) in section %s of %s: %r",
-                                 len(overrides), section_name, py2deb_cfg, overrides)
-                    control_fields = merge_control_fields(control_fields, overrides)
-        return control_fields
-
-    def generate_maintainer_script(self, filename, python_executable, function, **arguments):
-        """
-        Generate a post-installation or pre-removal maintainer script.
-
-        :param filename: The pathname of the maintainer script (a string).
-        :param python_executable: The absolute pathname of the Python
-                                  interpreter on the target system (a string).
-        :param function: The name of the function in the :mod:`py2deb.hooks`
-                         module to be called when the maintainer script is run
-                         (a string).
-        :param arguments: Any keyword arguments to the function in the
-                          :mod:`py2deb.hooks` are serialized and embedded
-                          inside the generated maintainer script.
-        """
-        # Read the py2deb/hooks.py script.
-        py2deb_directory = os.path.dirname(os.path.abspath(__file__))
-        hooks_script = os.path.join(py2deb_directory, 'hooks.py')
-        with open(hooks_script) as handle:
-            contents = handle.read()
-        blocks = contents.split('\n\n')
-        # Generate the shebang / hashbang line.
-        blocks.insert(0, '#!%s' % python_executable)
-        # Generate the call to the top level function.
-        encoded_arguments = ', '.join('%s=%r' % (k, v) for k, v in arguments.items())
-        blocks.append('%s(%s)' % (function, encoded_arguments))
-        # Write the maintainer script.
-        with open(filename, 'w') as handle:
-            handle.write('\n\n'.join(blocks))
-            handle.write('\n')
-        # Make sure the maintainer script is executable.
-        os.chmod(filename, 0o755)
-
-    def find_egg_info_file(self, pattern=''):
-        """
-        Find pip metadata files in unpacked source distributions.
-
-        When pip unpacks a source distribution archive it creates a directory
-        ``pip-egg-info`` which contains the package metadata in a declarative
-        and easy to parse format. This method finds such metadata files.
-
-        :param pattern: The :mod:`glob` pattern to search for (a string).
-        :returns: A list of matched filenames (strings).
-        """
-        full_pattern = os.path.join(self.requirement.source_directory, 'pip-egg-info', '*.egg-info', pattern)
-        logger.debug("Looking for %r file(s) using pattern %r ..", pattern, full_pattern)
-        matches = glob.glob(full_pattern)
-        if len(matches) > 1:
-            msg = "Source distribution directory of %s (%s) contains multiple *.egg-info directories: %s"
-            raise Exception(msg % (self.requirement.project_name, self.requirement.version, concatenate(matches)))
-        elif matches:
-            logger.debug("Matched %s: %s.", pluralize(len(matches), "file", "files"), concatenate(matches))
-            return matches[0]
-        else:
-            logger.debug("No matching %r files found.", pattern)
+    def __str__(self):
+        """The name, version and extras of the package encoded in a human readable string."""
+        version = [self.python_version]
+        extras = self.requirement.pip_requirement.extras
+        if extras:
+            version.append("extras: %s" % concatenate(sorted(extras)))
+        return "%s (%s)" % (self.python_name, ', '.join(version))
