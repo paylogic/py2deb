@@ -1,5 +1,5 @@
 sudo: required
-dist: trusty
+dist: bionic
 language: python
 matrix:
   include:
@@ -9,7 +9,6 @@ matrix:
     - env: TOXENV=py35
     - env: TOXENV=py36
     - env: TOXENV=py37
-      dist: xenial
     - env: TOXENV=pypy
 install:
   - scripts/travis.sh
