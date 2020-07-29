@@ -14,8 +14,7 @@ matrix:
 install:
   - scripts/travis.sh
   - make install
-  - pip-accel install coveralls tox
-  - pip-accel install -r requirements-checks.txt
+  - pip install -r requirements-travis.txt
 script:
   - make check
   - make tox
