@@ -1,7 +1,7 @@
 # Automated tests for the `py2deb' package.
 #
 # Author: Peter Odding <peter.odding@paylogic.com>
-# Last Change: December 16, 2018
+# Last Change: July 29, 2020
 # URL: https://py2deb.readthedocs.io
 
 """
@@ -357,8 +357,6 @@ class PackageConverterTestCase(TestCase):
         Converts ``weasyprint==0.42`` and sanity checks that the ``cairosvg``
         dependency is present.
         """
-        if sys.version_info[:2] == (2, 6):
-            self.skipTest("WeasyPrint 0.42 is not Python 2.6 compatible")
         with TemporaryDirectory() as directory:
             # Run the conversion command.
             converter = self.create_isolated_converter()

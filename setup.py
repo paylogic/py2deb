@@ -3,7 +3,7 @@
 # Setup script for the `py2deb' package.
 
 # Author: Peter Odding <peter.odding@paylogic.com>
-# Last Change: November 18, 2018
+# Last Change: July 29, 2020
 # URL: https://py2deb.readthedocs.io
 
 """
@@ -119,7 +119,6 @@ setup(
         'Operating System :: POSIX :: Linux',
         'Programming Language :: Python',
         'Programming Language :: Python :: 2',
-        'Programming Language :: Python :: 2.6',
         'Programming Language :: Python :: 2.7',
         'Programming Language :: Python :: 3',
         'Programming Language :: Python :: 3.4',

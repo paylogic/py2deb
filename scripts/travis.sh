@@ -23,10 +23,6 @@ REQUIRED_SYSTEM_PACKAGES="dpkg-dev fakeroot lintian"
 main () {
   msg "Preparing Travis CI test environment .."
   case "$TOXENV" in
-    py26)
-      # We need to get Python 2.6 from the deadsnakes PPA.
-      install_with_deadsnakes_ppa python2.6 python2.6-dev
-      ;;
     py27)
       # At the time of writing Travis CI workers are running Ubuntu 12.04 which
       # includes Python 2.7 as the default system wide Python version so we
