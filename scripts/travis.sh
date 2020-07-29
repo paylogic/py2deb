@@ -29,10 +29,6 @@ main () {
       # don't need the deadsnakes PPA.
       install_with_apt_get python2.7 python2.7-dev
       ;;
-    py34)
-      # We need to get Python 3.4 from the deadsnakes PPA.
-      install_with_deadsnakes_ppa python3.4 python3.4-dev
-      ;;
     py35)
       # We need to get Python 3.5 from the deadsnakes PPA.
       install_with_deadsnakes_ppa python3.5 python3.5-dev

@@ -4,7 +4,6 @@ language: python
 matrix:
   include:
     - env: PYTHON=python2.7 TOXENV=py27
-    - env: PYTHON=python3.4 TOXENV=py34
     - env: PYTHON=python3.5 TOXENV=py35
     - env: PYTHON=python3.6 TOXENV=py36
     - env: PYTHON=python3.7 TOXENV=py37

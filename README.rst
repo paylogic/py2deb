@@ -21,9 +21,9 @@ listing your transitive dependencies in requirement files because `py2deb` will
 translate the version constraints of Python packages into Debian package
 relationships.
 
-The `py2deb` package is currently tested on CPython_ 2.7, 3.4, 3.5, 3.6 and 3.7
-and PyPy_. For usage instructions please refer to the documentation hosted on
-`Read The Docs`_.
+The `py2deb` package is currently tested on CPython_ 2.7, 3.5, 3.6 and 3.7 and
+PyPy_. For usage instructions please refer to the documentation hosted on `Read
+The Docs`_.
 
 .. contents::
    :local:
