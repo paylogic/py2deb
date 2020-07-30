@@ -25,6 +25,7 @@ matrix:
 install:
   - scripts/travis.sh
   - make install
+  - which pip
   - pip install -r requirements-travis.txt
 script:
   - make check
