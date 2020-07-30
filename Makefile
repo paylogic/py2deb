@@ -32,6 +32,11 @@ install:
 	@test -d "$(VIRTUAL_ENV)" || mkdir -p "$(VIRTUAL_ENV)"
 	@test -x "$(VIRTUAL_ENV)/bin/python" || virtualenv --python=$(PYTHON) "$(VIRTUAL_ENV)"
 ifeq ($(TRAVIS), true)
+# Setuptools and wheel are build dependencies of cryptography. If we don't
+# install them before the main 'pip install' run the setup.py script of
+# cryptography attempts to take care of this on its own initiative which for
+# some reason fails on PyPy: https://travis-ci.org/github/paylogic/py2deb/jobs/713379963
+	@pip install --constraint=constraints.txt 'setuptools >= 40.6.0' wheel
 	@pip install --constraint=constraints.txt --requirement=requirements-travis.txt
 else
 	@pip install --constraint=constraints.txt --requirement=requirements.txt
