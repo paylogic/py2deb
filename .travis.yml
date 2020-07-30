@@ -1,13 +1,27 @@
+# We use tox for testing against Python interpreters provided by deadsnakes and
+# the PyPy PPA, also on Travis CI, because it's important for py2deb that the
+# Python interpreter was installed using a Debian package. We use the following
+# environment variables to accomplish this:
+#
+#  - $PYTHON is set so that the Makefile uses the correct Python interpreter
+#    when the virtual environment is created.
+#
+#  - $TOXENV is set so that tox knows what needs to be tested.
+#
+#  - $VIRTUAL_ENV is set so that we don't accidentally use the virtual
+#    environment that Travis CI provides, because of the custom compiled Python
+#    interpreter (not installed using a Debian package).
+
 sudo: required
 dist: bionic
 language: python
 matrix:
   include:
-    - env: PYTHON=python2.7 TOXENV=py27
-    - env: PYTHON=python3.5 TOXENV=py35
-    - env: PYTHON=python3.6 TOXENV=py36
-    - env: PYTHON=python3.7 TOXENV=py37
-    - env: PYTHON=pypy TOXENV=pypy
+    - env: PYTHON=python2.7 TOXENV=py27 VIRTUAL_ENV=/home/travis/virtualenv/py2deb
+    - env: PYTHON=python3.5 TOXENV=py35 VIRTUAL_ENV=/home/travis/virtualenv/py2deb
+    - env: PYTHON=python3.6 TOXENV=py36 VIRTUAL_ENV=/home/travis/virtualenv/py2deb
+    - env: PYTHON=python3.7 TOXENV=py37 VIRTUAL_ENV=/home/travis/virtualenv/py2deb
+    - env: PYTHON=pypy TOXENV=pypy VIRTUAL_ENV=/home/travis/virtualenv/py2deb
 install:
   - scripts/travis.sh
   - make install
