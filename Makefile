@@ -1,7 +1,7 @@
 # Makefile for py2deb.
 #
 # Author: Peter Odding <peter.odding@paylogic.com>
-# Last Change: July 29, 2020
+# Last Change: July 30, 2020
 # URL: https://github.com/paylogic/py2deb
 
 PACKAGE_NAME = py2deb
@@ -31,9 +31,13 @@ default:
 install:
 	@test -d "$(VIRTUAL_ENV)" || mkdir -p "$(VIRTUAL_ENV)"
 	@test -x "$(VIRTUAL_ENV)/bin/python" || virtualenv --python=$(PYTHON) --quiet "$(VIRTUAL_ENV)"
-	@pip install --quiet --constraint=constraints.txt --requirement=requirements.txt
+ifeq ($(TRAVIS), true)
+	@pip install --constraint=constraints.txt --requirement=requirements-travis.txt
+else
+	@pip install --constraint=constraints.txt --requirement=requirements.txt
 	@pip uninstall --yes $(PACKAGE_NAME) &>/dev/null || true
 	@pip install --quiet --no-deps --ignore-installed .
+endif
 
 reset:
 	@$(MAKE) clean
