@@ -37,3 +37,7 @@ virtualenv < 16.0.0
 # wheel 0.30.0 drops Python 2.6 compatibility:
 # https://pypi.org/project/wheel
 wheel < 0.30.0 ; python_version < '2.7'
+
+# zipp 2 drops Python 2 compatibility:
+# https://github.com/jaraco/zipp/issues/50
+zipp < 2 ; python_version < '3.0'
