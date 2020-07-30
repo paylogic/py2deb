@@ -69,7 +69,7 @@ docs: readme
 publish: install
 	@git push origin && git push --tags origin
 	@$(MAKE) clean
-	@pip install --quiet twine wheel
+	@pip install --constraint=constraints.txt twine wheel
 	@$(PYTHON) setup.py sdist bdist_wheel
 	@twine upload dist/*
 	@$(MAKE) clean
