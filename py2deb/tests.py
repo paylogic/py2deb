@@ -1,7 +1,7 @@
 # Automated tests for the `py2deb' package.
 #
 # Author: Peter Odding <peter.odding@paylogic.com>
-# Last Change: July 29, 2020
+# Last Change: July 30, 2020
 # URL: https://py2deb.readthedocs.io
 
 """
@@ -361,7 +361,9 @@ class PackageConverterTestCase(TestCase):
             # Run the conversion command.
             converter = self.create_isolated_converter()
             converter.set_repository(directory)
-            archives, relationships = converter.convert(['weasyprint==0.42'])
+            # Constrain tinycss2 to avoid Python 2 incompatibilities:
+            # https://travis-ci.org/github/paylogic/py2deb/jobs/713388666
+            archives, relationships = converter.convert(['weasyprint==0.42', 'tinycss2<1.0.0'])
             # Check that the dependency is present.
             pathname = find_package_archive(archives, fix_name_prefix('python-weasyprint'))
             metadata, contents = inspect_package(pathname)
