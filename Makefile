@@ -30,13 +30,13 @@ default:
 
 install:
 	@test -d "$(VIRTUAL_ENV)" || mkdir -p "$(VIRTUAL_ENV)"
-	@test -x "$(VIRTUAL_ENV)/bin/python" || virtualenv --python=$(PYTHON) --quiet "$(VIRTUAL_ENV)"
+	@test -x "$(VIRTUAL_ENV)/bin/python" || virtualenv --python=$(PYTHON) "$(VIRTUAL_ENV)"
 ifeq ($(TRAVIS), true)
 	@pip install --constraint=constraints.txt --requirement=requirements-travis.txt
 else
 	@pip install --constraint=constraints.txt --requirement=requirements.txt
 	@pip uninstall --yes $(PACKAGE_NAME) &>/dev/null || true
-	@pip install --quiet --no-deps --ignore-installed .
+	@pip install --no-deps --ignore-installed .
 endif
 
 reset:
@@ -45,25 +45,25 @@ reset:
 	@$(MAKE) install
 
 check: install
-	@pip install --upgrade --quiet --constraint=constraints.txt --requirement=requirements-checks.txt
+	@pip install --upgrade --constraint=constraints.txt --requirement=requirements-checks.txt
 	@flake8
 
 test: install
-	@pip install --quiet --constraint=constraints.txt --requirement=requirements-tests.txt
+	@pip install --constraint=constraints.txt --requirement=requirements-tests.txt
 	@py.test --cov
 	@coverage html
 	@coverage report --fail-under=90 &>/dev/null
 
 tox: install
-	@pip install --quiet --constraint=constraints.txt tox
+	@pip install --constraint=constraints.txt tox
 	@tox
 
 readme: install
-	@pip install --quiet cogapp
+	@pip install cogapp
 	@cog.py -r README.rst
 
 docs: readme
-	@pip install --quiet --constraint=constraints.txt sphinx
+	@pip install --constraint=constraints.txt sphinx
 	@cd docs && sphinx-build -nb html -d build/doctrees . build/html
 
 publish: install
