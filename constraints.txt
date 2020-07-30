@@ -41,3 +41,7 @@ wheel < 0.30.0 ; python_version < '2.7'
 # zipp 2 drops Python 2 compatibility:
 # https://github.com/jaraco/zipp/issues/50
 zipp < 2 ; python_version < '3.0'
+
+# pydocstyle 4.0.0 drops Python 2 compatibility:
+# http://www.pydocstyle.org/en/5.0.2/release_notes.html#july-6th-2019
+pydocstyle < 4.0.0 ; python_version < '3.0'
