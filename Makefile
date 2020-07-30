@@ -70,7 +70,7 @@ publish: install
 	@git push origin && git push --tags origin
 	@$(MAKE) clean
 	@pip install --quiet twine wheel
-	@python setup.py sdist bdist_wheel
+	@$(PYTHON) setup.py sdist bdist_wheel
 	@twine upload dist/*
 	@$(MAKE) clean
 
