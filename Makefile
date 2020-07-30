@@ -30,7 +30,8 @@ default:
 
 install:
 	@test -d "$(VIRTUAL_ENV)" || mkdir -p "$(VIRTUAL_ENV)"
-	@test -x "$(VIRTUAL_ENV)/bin/python" || virtualenv --python=$(PYTHON) "$(VIRTUAL_ENV)"
+	# Constrain initial version of pip to avoid https://github.com/pypa/pip/issues/8653.
+	@test -x "$(VIRTUAL_ENV)/bin/python" || virtualenv --python=$(PYTHON) --pip=20.1.1 "$(VIRTUAL_ENV)"
 ifeq ($(TRAVIS), true)
 # Setuptools and wheel are build dependencies of cryptography. If we don't
 # install them before the main 'pip install' run the setup.py script of
