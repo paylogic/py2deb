@@ -61,7 +61,7 @@ test: install
 	@coverage report --fail-under=90 &>/dev/null
 
 tox: install
-	@pip install --constraint=constraints.txt tox tox-pip-version
+	@pip install --constraint=constraints.txt --requirement=requirements-tox.txt
 	@tox
 
 readme: install
