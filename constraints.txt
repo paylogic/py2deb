@@ -45,3 +45,20 @@ zipp < 2 ; python_version < '3.0'
 # pydocstyle 4.0.0 drops Python 2 compatibility:
 # http://www.pydocstyle.org/en/5.0.2/release_notes.html#july-6th-2019
 pydocstyle < 4.0.0 ; python_version < '3.0'
+
+# The following constraints are used by the py2deb test suite to make sure it
+# doesn't download incompatible packages. Nowadays pip mostly does this
+# automatically however the old version of pip that pip-accel depends on
+# doesn't have that feature yet, hence the need for explicit constraints.
+
+# cairocffi 1.0.0 (a dependency of WeasyPrint) drops Python 2 compatibility:
+# https://github.com/Kozea/cairocffi/blob/master/NEWS.rst#version-100
+cairocffi < 1.0.0 ; python_version < '3.0'
+
+# cssselect2 (a dependency of WeasyPrint) drops Python 2 compatibility:
+# https://github.com/Kozea/cssselect2/blob/master/CHANGES
+cssselect2 < 0.3.0 ; python_version < '3.0'
+
+# tinycss2 1.0.0 (a dependency of WeasyPrint) drops Python 2 compatibility:
+# https://tinycss2.readthedocs.io/en/latest/#version-1-0-0
+tinycss2 < 1.0.0 ; python_version < '3.0'
