@@ -3,7 +3,7 @@
 # Authors:
 #  - Arjan Verwer
 #  - Peter Odding <peter.odding@paylogic.com>
-# Last Change: December 16, 2018
+# Last Change: July 31, 2020
 # URL: https://py2deb.readthedocs.io
 
 """
@@ -30,7 +30,7 @@ import time
 from deb_pkg_tools.control import merge_control_fields, unparse_control_fields
 from deb_pkg_tools.package import build_package, find_object_files, find_system_dependencies, strip_object_files
 from executor import execute
-from humanfriendly import concatenate, pluralize
+from humanfriendly.text import concatenate, pluralize
 from pkg_resources import Requirement
 from pkginfo import UnpackedSDist
 from property_manager import PropertyManager, cached_property

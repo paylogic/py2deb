@@ -3,7 +3,7 @@
 # Authors:
 #  - Arjan Verwer
 #  - Peter Odding <peter.odding@paylogic.com>
-# Last Change: December 16, 2018
+# Last Change: July 31, 2020
 # URL: https://py2deb.readthedocs.io
 
 """
@@ -30,7 +30,8 @@ from property_manager import PropertyManager, cached_property, lazy_property, mu
 from deb_pkg_tools.cache import get_default_cache
 from deb_pkg_tools.checks import check_duplicate_files
 from deb_pkg_tools.utils import find_debian_architecture
-from humanfriendly import coerce_boolean, compact
+from humanfriendly import coerce_boolean
+from humanfriendly.text import compact
 from pip_accel import PipAccelerator
 from pip_accel.config import Config as PipAccelConfig
 from six.moves import configparser
