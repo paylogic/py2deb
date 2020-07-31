@@ -1,8 +1,9 @@
 """
-Downgrade to pip < 20.2 when running on PyPy because pip 20.2 (the most recent
-release at the time of writing) breaks compatibility with PyPy, thereby causing
-Travis CI builds of py2deb to fail as well. For more details please refer to
-https://github.com/pypa/pip/issues/8653.
+Downgrade to pip < 20.2 when running on PyPy.
+
+Unfortunately pip 20.2 (the most recent release at the time of writing) breaks
+compatibility with PyPy, thereby causing Travis CI builds of py2deb to fail as
+well. For details please refer to https://github.com/pypa/pip/issues/8653.
 """
 
 import pip
