@@ -1,7 +1,7 @@
 # Makefile for py2deb.
 #
 # Author: Peter Odding <peter.odding@paylogic.com>
-# Last Change: July 31, 2020
+# Last Change: August 3, 2020
 # URL: https://github.com/paylogic/py2deb
 
 PACKAGE_NAME = py2deb
@@ -61,7 +61,7 @@ test: install
 	@coverage report --fail-under=90 &>/dev/null
 
 tox: install
-	@pip install --constraint=constraints.txt --requirement=requirements-tox.txt
+	@pip install --constraint=constraints.txt tox
 	@tox
 
 readme: install
