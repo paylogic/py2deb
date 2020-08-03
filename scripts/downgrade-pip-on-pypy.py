@@ -19,4 +19,7 @@ if platform.python_implementation() == "PyPy":
     if installed_release >= known_bad_release:
         # Given that pip is broken, we can't use it to downgrade itself!
         # Fortunately setuptools provides easy_install which works fine.
-        subprocess.check_call([sys.executable, "-m", "easy_install", "pip < 20.2"])
+        # We use --always-unzip in an attempt to ensure that easy_install
+        # replaces the current pip installation instead of installing a
+        # *.egg parallel to an existing regular install.
+        subprocess.check_call([sys.executable, "-m", "easy_install", "--always-unzip", "pip < 20.2"])
