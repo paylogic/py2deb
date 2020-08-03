@@ -22,4 +22,5 @@ if platform.python_implementation() == "PyPy":
         # We use --always-unzip in an attempt to ensure that easy_install
         # replaces the current pip installation instead of installing a
         # *.egg parallel to an existing regular install.
+        sys.stderr.write("Downgrading pip using easy_install ..\n")
         subprocess.check_call([sys.executable, "-m", "easy_install", "--always-unzip", "pip < 20.2"])
