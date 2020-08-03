@@ -69,7 +69,7 @@ install:
 	@test -x "$(VIRTUAL_ENV)/bin/python" || virtualenv --python=$(PYTHON) "$(VIRTUAL_ENV)"
 ifeq ($(findstring pypy,$(PYTHON)),pypy)
 # Downgrade pip on PyPy in an attempt to avoid wheel incompatibilities.
-	@source "$(VIRTUAL_ENV)/bin/activate" && $(PYTHON) scripts/pypi.py
+	@source "$(VIRTUAL_ENV)/bin/activate" && $(PYTHON) scripts/pypy.py
 endif
 ifeq ($(TRAVIS), true)
 # Setuptools and wheel are build dependencies of cryptography. If we don't
