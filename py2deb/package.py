@@ -3,7 +3,7 @@
 # Authors:
 #  - Arjan Verwer
 #  - Peter Odding <peter.odding@paylogic.com>
-# Last Change: July 31, 2020
+# Last Change: August 3, 2020
 # URL: https://py2deb.readthedocs.io
 
 """
@@ -520,7 +520,22 @@ class PackageToConvert(PropertyManager):
         # Detect whether we're running on PyPy (it needs special handling).
         if platform.python_implementation() == 'PyPy':
             on_pypy = True
-            regular_pypy_path = 'lib/pypy%i.%i/site-packages/' % sys.version_info[:2]
+            normalized_pypy_path = 'lib/pypy%i.%i/site-packages/' % sys.version_info[:2]
+            if sys.version_info[0] == 3:
+                # The file /usr/lib/pypy3/dist-packages/README points to
+                # /usr/lib/pypy3/lib-python/3/site.py which states that in
+                # PyPy 3 /usr/lib/python3/dist-packages is shared between
+                # cPython and PyPy.
+                normalized_pypy_segment = '/python3/'
+            else:
+                # The file /usr/lib/pypy/dist-packages/README points to
+                # /usr/lib/pypy/lib-python/2.7/site.py which states that in
+                # PyPy 2 /usr/lib/pypy<version>/dist-packages is used for
+                # "Debian addons" however when you run the interpreter and
+                # inspect sys.path you'll find that /usr/lib/pypy/dist-packages
+                # is being used instead of the <version> directory. This might
+                # be a documentation bug?
+                normalized_pypy_segment = '/pypy/'
         else:
             on_pypy = False
         for member, handle in self.converter.pip_accel.bdists.get_binary_dist(self.requirement):
@@ -536,7 +551,7 @@ class PackageToConvert(PropertyManager):
                 # In this if branch we change 2 to look like 1 so that the
                 # following if/else branches don't need to care about the
                 # difference.
-                member.name = re.sub('^(dist|site)-packages/', regular_pypy_path, member.name)
+                member.name = re.sub('^(dist|site)-packages/', normalized_pypy_path, member.name)
             if self.has_custom_install_prefix:
                 # Strip the complete /usr/lib/pythonX.Y/site-packages/ prefix
                 # so we can replace it with the custom installation prefix.
@@ -547,17 +562,9 @@ class PackageToConvert(PropertyManager):
                     handle = embed_install_prefix(handle, os.path.join(self.converter.install_prefix, 'lib'))
             else:
                 if on_pypy:
-                    # Rewrite /usr/lib/pypy2.7/dist-packages to /usr/lib/pypy/dist-packages for two reasons:
-                    #
-                    # 1. /usr/lib/pypy2.7/dist-packages is not included in sys.path by default.
-                    # 2. /usr/lib/pypy/dist-packages is included in sys.path by default and
-                    #    according to /usr/lib/pypy/dist-packages/README "this directory
-                    #    exists so that 3rd party packages can be installed here".
-                    #
-                    # See also the build https://travis-ci.org/paylogic/py2deb/builds/456594190
-                    # which clearly shows that /usr/lib/pypy2.7/dist-packages doesn't work
-                    # (which I've since confirmed in local testing).
-                    member.name = re.sub(r'/pypy\d(\.\d)?/', '/pypy/', member.name)
+                    # Normalize the PyPy "versioned directory segment" (it differs
+                    # between virtual environments versus system wide installations).
+                    member.name = re.sub(r'/pypy\d(\.\d)?/', normalized_pypy_segment, member.name)
                 # Rewrite /site-packages/ to /dist-packages/. For details see
                 # https://wiki.debian.org/Python#Deviations_from_upstream.
                 member.name = member.name.replace('/site-packages/', '/dist-packages/')
