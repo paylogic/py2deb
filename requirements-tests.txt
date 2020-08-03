@@ -2,3 +2,10 @@
 coverage >= 4.2
 pytest >= 3.0.4
 pytest-cov >= 2.4.0
+
+# The setuptools-scm package is part of the setup_requires of pytest,
+# unfortunately when it's installed automatically (nested inside the main "pip
+# install" run) the nested pip command tries to install via a wheel, which is
+# broken on PyPy. By lifting this dependency to the top level our
+# --no-binary=:all: choice should hopefully be respected.
+setuptools-scm
