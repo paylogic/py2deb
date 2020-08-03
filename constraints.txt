@@ -12,6 +12,11 @@ flake8 < 3.0.0 ; python_version < '2.7'
 # https://gitlab.com/pycqa/flake8-docstrings/blob/master/HISTORY.rst
 flake8-docstrings < 1.0.0 ; python_version < '2.7'
 
+# Constrain pip to the (very old but nonetheless) most recent release of pip
+# that pip-accel and consequently py2deb are compatible with. An upcoming
+# refactor is intended to finally resolve this awkward situation :-).
+pip >= 7.0, < 7.2
+
 # pycparser < 2.19 drops Python 2.6 compatibility:
 # https://github.com/eliben/pycparser/blob/master/CHANGES
 pycparser < 2.19 ; python_version < '2.7'
