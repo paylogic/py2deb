@@ -46,15 +46,10 @@ endif
 # can't set $PIP_NO_BINARY=:all: because it will just be overridden).
 export PIP_CONSTRAINT = constraints.txt
 
-# Disable installation of wheels via an environment variable as well, so that
-# nested pip invocations respect our choice (making sure the PyPy builds on
-# Travis CI don't "crash" with pip internal errors).
-export PIP_NO_BINARY = $(NO_BINARY_OPTION)
-
-# Define how pip is run in a single place.
+# Define how we run 'pip' in a single place (DRY).
 PIP_CMD := python -m pip
 
-# Define a common 'pip install' command (DRY).
+# Define how we run 'pip install' in a single place (DRY).
 PIP_INSTALL_CMD := $(PIP_CMD) install \
 	--constraint=constraints.txt \
 	--no-binary=$(NO_BINARY_OPTION)
