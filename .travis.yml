@@ -22,6 +22,7 @@ matrix:
     - env: PYTHON=python3.6 TOXENV=py36
     - env: PYTHON=python3.7 TOXENV=py37
     - env: PYTHON=pypy TOXENV=pypy
+    - env: PYTHON=pypy3 TOXENV=pypy3
 install:
   - scripts/travis.sh
   - make install
