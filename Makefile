@@ -67,6 +67,10 @@ default:
 install:
 	@test -d "$(VIRTUAL_ENV)" || mkdir -p "$(VIRTUAL_ENV)"
 	@test -x "$(VIRTUAL_ENV)/bin/python" || virtualenv --python=$(PYTHON) "$(VIRTUAL_ENV)"
+ifeq ($(findstring pypy,$(PYTHON)),pypy)
+# Downgrade pip on PyPy in an attempt to avoid wheel incompatibilities.
+	@source "$(VIRTUAL_ENV)/bin/active" && $(PYTHON) scripts/pypi.py
+endif
 ifeq ($(TRAVIS), true)
 # Setuptools and wheel are build dependencies of cryptography. If we don't
 # install them before the main 'pip install' run the setup.py script of
