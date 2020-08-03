@@ -67,12 +67,12 @@ default:
 install:
 	@test -d "$(VIRTUAL_ENV)" || mkdir -p "$(VIRTUAL_ENV)"
 	@test -x "$(VIRTUAL_ENV)/bin/python" || virtualenv --python=$(PYTHON) "$(VIRTUAL_ENV)"
-	@source "$(VIRTUAL_ENV)/bin/activate" && $(PYTHON) scripts/downgrade-pip-on-pypy.py
 ifeq ($(TRAVIS), true)
 # Setuptools and wheel are build dependencies of cryptography. If we don't
 # install them before the main 'pip install' run the setup.py script of
-# cryptography attempts to take care of this on its own initiative which for
-# some reason fails on PyPy: https://travis-ci.org/github/paylogic/py2deb/jobs/713379963
+# cryptography attempts to take care of this on its own initiative which
+# fails on PyPy due to incompatibilities between pip and PyPy:
+# https://travis-ci.org/github/paylogic/py2deb/jobs/713379963
 	@$(PIP_INSTALL_CMD) --upgrade 'setuptools >= 40.6.0' wheel
 	@$(PIP_INSTALL_CMD) --requirement=requirements-travis.txt
 else
