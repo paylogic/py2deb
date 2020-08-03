@@ -37,7 +37,7 @@ ifeq ($(TRAVIS), true)
 # install them before the main 'pip install' run the setup.py script of
 # cryptography attempts to take care of this on its own initiative which for
 # some reason fails on PyPy: https://travis-ci.org/github/paylogic/py2deb/jobs/713379963
-	@pip install --constraint=constraints.txt 'setuptools >= 40.6.0' wheel
+	@pip install --constraint=constraints.txt --no-binary 'setuptools >= 40.6.0' wheel
 	@pip install --constraint=constraints.txt --requirement=requirements-travis.txt
 else
 	@pip install --constraint=constraints.txt --requirement=requirements.txt
