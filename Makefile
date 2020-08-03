@@ -40,12 +40,6 @@ else
 NO_BINARY_OPTION := :none:
 endif
 
-# Try to propagate constraints on Python installation requirements to child
-# processes like the nested pip invocation that installs build dependencies of
-# cryptography (that invocation hard codes --no-binary=:none: which means we
-# can't set $PIP_NO_BINARY=:all: because it will just be overridden).
-export PIP_CONSTRAINT = constraints.txt
-
 # Define how we run 'pip' in a single place (DRY).
 PIP_CMD := python -m pip
 
