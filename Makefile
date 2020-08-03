@@ -44,7 +44,7 @@ endif
 PIP_CMD := python -m pip
 
 # Define a common 'pip install' command (DRY).
-PIP_INSTALL_CMD := $(PIP) install \
+PIP_INSTALL_CMD := $(PIP_CMD) install \
 	--constraint=constraints.txt \
 	--no-binary=$(NO_BINARY_OPTION)
 
