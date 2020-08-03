@@ -35,10 +35,15 @@ SHELL = bash
 # Here's an overview of things I tried and what I ended up using:
 # https://github.com/paylogic/py2deb/compare/0f785b8cbc3...819b8101a21
 ifeq ($(findstring pypy3,$(PYTHON)),pypy3)
-NO_BINARY_OPTION=:all:
+NO_BINARY_OPTION := :all:
 else
-NO_BINARY_OPTION=:none:
+NO_BINARY_OPTION := :none:
 endif
+
+# Disable installation of wheels via an environment variable as well, so that
+# nested pip invocations respect our choice (making sure the PyPy builds on
+# Travis CI don't "crash" with pip internal errors).
+export PIP_NO_BINARY = $(NO_BINARY_OPTION)
 
 # Define how pip is run in a single place.
 PIP_CMD := python -m pip
