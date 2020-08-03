@@ -28,6 +28,10 @@ pyflakes < 2.0.0 ; python_version < '2.7'
 # https://docs.pytest.org/en/latest/changelog.html#pytest-3-3-0-2017-11-23
 pytest < 3.3 ; python_version < '2.7'
 
+# setuptools 45 drops Python 2.7 compatibility:
+# https://setuptools.readthedocs.io/en/latest/history.html#v45-0-0
+setuptools < 45
+
 # tox 3.0.0 drops Python 2.6 compatibility:
 # https://tox.readthedocs.io/en/latest/changelog.html#v3-0-0-2018-04-02
 tox < 3.0.0
