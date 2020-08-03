@@ -42,8 +42,12 @@ main () {
       install_with_deadsnakes_ppa python3.7 python3.7-dev
       ;;
     pypy)
-      # Get PyPy from the official PyPy PPA.
+      # Get PyPy 2 from the official PyPy PPA.
       install_with_pypy_ppa pypy pypy-dev
+      ;;
+    pypy3)
+      # Get PyPy 3 from the official PyPy PPA.
+      install_with_pypy_ppa pypy3 pypy3-dev
       ;;
     *)
       # Make sure .travis.yml and .travis.sh don't get out of sync.
