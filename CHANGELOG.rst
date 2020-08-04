@@ -11,6 +11,47 @@ to `semantic versioning`_.
 .. _Keep a Changelog: http://keepachangelog.com/
 .. _semantic versioning: http://semver.org/
 
+`Release 3.0`_ (2020-08-04)
+---------------------------
+
+.. note:: While I don't consider this a major release feature wise, the major
+          version number was bumped because of the compatibility changes
+          (dropping 2.6 and 3.4).
+
+**Updated compatibility:**
+
+- PyPy 3 is now officially supported (and tested on Travis CI). This was
+  triggered by pull requests `#29`_ and `#30`_.
+
+- Python 2.6 and 3.4 are no longer supported (nor tested on Travis CI)
+  following the same change in my other 20+ open source Python projects
+  (some of which are requirements of :pypi:`py2deb`).
+
+**Project maintenance:**
+
+- Spent several days stabilizing the test suite on Travis CI, to avoid finding
+  myself in a situation where I'm releasing new features without the safety net
+  provided by a test suite that runs automatically and shouts loudly when
+  breakage is found 😇.
+
+- Spent several days getting PyPy 3 testing to work on Travis CI, due to fatal
+  incompatibilities between the most recent release of :pypi:`pip` and PyPy 3.
+  For more then you ever wanted to know consult `these commits`_ and the
+  related Travis CI build failures (some of which are linked in commit
+  messages).
+
+- Updated some imports to be compatible with :pypi:`humanfriendly` 8.0.
+
+**Miscellaneous changes:**
+
+- Merged pull request `#21`_ which fixes a typo in the hooks module.
+
+.. _Release 3.0: https://github.com/paylogic/py2deb/compare/2.3...3.0
+.. _#29: https://github.com/paylogic/py2deb/pull/29
+.. _#30: https://github.com/paylogic/py2deb/pull/30
+.. _#21: https://github.com/paylogic/py2deb/pull/21
+.. _these commits: https://github.com/paylogic/py2deb/compare/4ab626b6582...affa7158560
+
 `Release 2.3`_ (2020-07-28)
 ---------------------------
 
