@@ -1,7 +1,7 @@
 # Automated tests for the `py2deb' package.
 #
 # Author: Peter Odding <peter.odding@paylogic.com>
-# Last Change: August 4, 2020
+# Last Change: August 5, 2020
 # URL: https://py2deb.readthedocs.io
 
 """
@@ -33,7 +33,7 @@ from deb_pkg_tools.control import load_control_file, patch_control_file
 from deb_pkg_tools.package import inspect_package, parse_filename
 from executor import execute
 from humanfriendly.text import dedent
-from humanfriendly.testing import TestCase, run_cli
+from humanfriendly.testing import TestCase, run_cli, touch
 
 # Modules included in our package.
 from py2deb.cli import main
@@ -55,7 +55,6 @@ from py2deb.hooks import (
     initialize_namespaces,
     post_installation_hook,
     pre_removal_hook,
-    touch,
 )
 
 # Initialize a logger.
