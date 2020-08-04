@@ -3,7 +3,7 @@
 # Setup script for the `py2deb' package.
 
 # Author: Peter Odding <peter.odding@paylogic.com>
-# Last Change: July 29, 2020
+# Last Change: August 4, 2020
 # URL: https://py2deb.readthedocs.io
 
 """
@@ -110,6 +110,7 @@ setup(
     extras_require=get_extras_require(),
     test_suite='py2deb.tests',
     include_package_data=True,
+    python_requires='>=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*, !=3.4.*',
     classifiers=[
         'Development Status :: 5 - Production/Stable',
         'Intended Audience :: Developers',
