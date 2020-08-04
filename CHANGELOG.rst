@@ -11,6 +11,23 @@ to `semantic versioning`_.
 .. _Keep a Changelog: http://keepachangelog.com/
 .. _semantic versioning: http://semver.org/
 
+`Release 4.0`_ (2020-08-04)
+---------------------------
+
+.. note:: While I don't consider this a major release feature wise, the
+          major version number was bumped because this change is backwards
+          incompatible (although clearly an improvement).
+
+Merged pull request `#22`_ to stop :pypi:`py2deb` from normalizing "local
+version labels" as defined by `PEP 440`_. One important thing to note is that
+the "Debian revision" safe guard is applied after the "local version label" is
+restored, which means the "local version label" may not be the final part of
+the generated Debian version string.
+
+.. _Release 4.0: https://github.com/paylogic/py2deb/compare/3.2...4.0
+.. _#22: https://github.com/paylogic/py2deb/pull/22
+.. _PEP 440: https://www.python.org/dev/peps/pep-0440/
+
 `Release 3.2`_ (2020-08-04)
 ---------------------------
 
