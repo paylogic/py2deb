@@ -152,16 +152,39 @@ class PackageToConvert(PropertyManager):
     @cached_property
     def debian_maintainer(self):
         """
-        Get the package maintainer's name and e-mail address.
+        Get the package maintainer name and e-mail address.
 
         The name and e-mail address are combined into a single string that can
-        be embedded in a Debian package.
+        be embedded in a Debian package (in the format ``name <email>``). The
+        metadata is retrieved as follows:
+
+        1. If the environment variable ``$DEBFULLNAME`` is defined then its
+           value is taken to be the name of the maintainer (this logic was
+           added in `#25`_). If ``$DEBEMAIL`` is set as well that will be
+           incorporated into the result.
+
+        2. The Python package maintainer name and email address are looked up
+           in the package metadata and if found these are used.
+
+        3. The Python package author name and email address are looked up in
+           the package metadata and if found these are used.
+
+        4. Finally if all else fails the text "Unknown" is returned.
+
+        .. _#25: https://github.com/paylogic/py2deb/pull/25
         """
-        maintainer = self.metadata.maintainer
-        maintainer_email = self.metadata.maintainer_email
-        if not maintainer:
+        if "DEBFULLNAME" in os.environ:
+            maintainer = os.environ["DEBFULLNAME"]
+            maintainer_email = os.environ.get("DEBEMAIL")
+        elif self.metadata.maintainer:
+            maintainer = self.metadata.maintainer
+            maintainer_email = self.metadata.maintainer_email
+        elif self.metadata.author:
             maintainer = self.metadata.author
             maintainer_email = self.metadata.author_email
+        else:
+            maintainer = None
+            maintainer_email = None
         if maintainer and maintainer_email:
             return '%s <%s>' % (maintainer, maintainer_email.strip('<>'))
         else:
