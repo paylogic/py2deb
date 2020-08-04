@@ -205,7 +205,7 @@ License
 
 This software is licensed under the `MIT license`_.
 
-© 2018 Peter Odding, Arjan Verwer and Paylogic International.
+© 2020 Peter Odding, Arjan Verwer and Paylogic International.
 
 .. External references:
 .. _changelog: https://py2deb.readthedocs.io/en/latest/changelog.html
