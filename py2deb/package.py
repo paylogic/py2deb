@@ -3,7 +3,7 @@
 # Authors:
 #  - Arjan Verwer
 #  - Peter Odding <peter.odding@paylogic.com>
-# Last Change: August 3, 2020
+# Last Change: August 4, 2020
 # URL: https://py2deb.readthedocs.io
 
 """
@@ -95,6 +95,25 @@ class PackageToConvert(PropertyManager):
     def debian_name(self):
         """The name of the converted Debian package (a string)."""
         return self.converter.transform_name(self.python_name, *self.requirement.pip_requirement.extras)
+
+    @cached_property
+    def debian_provides(self):
+        """
+        A symbolic name for the role the package provides (a string).
+
+        When a Python package provides "extras" those extras are encoded into
+        the name of the generated Debian package, to represent the additional
+        dependencies versus the package without extras.
+
+        However the package including extras definitely also satisfies a
+        dependency on the package without extras, so a ``Provides: ...``
+        control field is added to the Debian package that contains the
+        converted package name *without extras*.
+        """
+        if self.requirement.pip_requirement.extras:
+            return self.converter.transform_name(self.python_name)
+        else:
+            return ''
 
     @property
     def python_version(self):
@@ -432,6 +451,7 @@ class PackageToConvert(PropertyManager):
                                                          description=self.debian_description,
                                                          architecture=architecture,
                                                          depends=dependencies,
+                                                         provides=self.debian_provides,
                                                          priority='optional',
                                                          section='python'))
 
