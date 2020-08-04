@@ -81,7 +81,7 @@ ifeq ($(TRAVIS), true)
 	@$(PIP_INSTALL_CMD) --requirement=requirements-travis.txt
 else
 	@$(PIP_INSTALL_CMD) --requirement=requirements.txt
-	@$(PIP) uninstall --yes $(PACKAGE_NAME) &>/dev/null || true
+	@$(PIP_CMD) uninstall --yes $(PACKAGE_NAME) &>/dev/null || true
 	@$(PIP_INSTALL_CMD) --no-deps --ignore-installed .
 endif
 
