@@ -366,14 +366,15 @@ Make it possible to disable automatic Lintian checks.
   coding standards (documentation, tests, readable and maintainable code) and
   some additional features:
 
-  - Robust support for Python namespace packages.
+  - Robust support for `pkg_resources-style namespace packages`_.
   - Smart enough to clean up properly after PEP 3147 (>= Python 3.2).
 
-- Use ``executor.quote()`` instead of ``pipes.quote()``.
+- Use :func:`executor.quote()` instead of :func:`pipes.quote()`.
 - Always clean up temporary directories created by pip_ and pip-accel_.
 - Remove redundant temporary directory creation.
 
 .. _Release 0.22: https://github.com/paylogic/py2deb/compare/0.21.1...0.22
+.. _pkg_resources-style namespace packages: https://packaging.python.org/guides/packaging-namespace-packages/#pkg-resources-style-namespace-packages
 
 `Release 0.21.1`_ (2015-04-05)
 ------------------------------

@@ -3,7 +3,7 @@
 # Authors:
 #  - Arjan Verwer
 #  - Peter Odding <peter.odding@paylogic.com>
-# Last Change: August 4, 2020
+# Last Change: August 5, 2020
 # URL: https://py2deb.readthedocs.io
 
 """
@@ -38,6 +38,7 @@ from six import BytesIO
 from six.moves import configparser
 
 # Modules included in our package.
+from py2deb.namespaces import find_pkgutil_namespaces
 from py2deb.utils import (
     TemporaryDirectory,
     detect_python_script,
@@ -269,23 +270,50 @@ class PackageToConvert(PropertyManager):
         """
         Get the Python `namespace packages`_ defined by the Python package.
 
-        This property returns the same value that was originally passed to the
-        ``namespace_packages`` keyword argument of ``setuptools.setup()``
-        (albeit in a very indirect way, but nonetheless the same value :-).
-
         :returns: A list of dotted names (strings).
 
-        .. _namespace packages: https://pythonhosted.org/setuptools/setuptools.html#namespace-packages
+        When :attr:`setuptools_namespaces` is available that will be used,
+        otherwise we fall back to :attr:`pkgutil_namespaces`. This order of
+        preference may be switched in the future, but not until
+        :attr:`pkgutil_namespaces` has seen more thorough testing:
+
+        - Support for :attr:`setuptools_namespaces` was added to py2deb in
+          release 0.22 (2015) so this is fairly mature code that has seen
+          thousands of executions between 2015-2020.
+
+        - Support for :attr:`pkgutil_namespaces` was added in August 2020 so
+          this is new (and complicated) code that hasn't seen a lot of use yet.
+          Out of conservativeness on my part this is nested in the 'else'
+          branch (to reduce the scope of potential regressions).
+
+        Additionally computing :attr:`setuptools_namespaces` is very cheap
+        (all it has to do is search for and read one text file) compared
+        to :attr:`pkgutil_namespaces` (which needs to recursively search
+        a directory tree for ``__init__.py`` files and parse each file
+        it finds to determine whether it's relevant).
+
+        .. _namespace packages: https://packaging.python.org/guides/packaging-namespace-packages/
         """
-        dotted_names = []
-        namespace_packages_file = self.find_egg_info_file('namespace_packages.txt')
-        if namespace_packages_file:
-            with open(namespace_packages_file) as handle:
-                for line in handle:
-                    line = line.strip()
-                    if line:
-                        dotted_names.append(line)
-        return dotted_names
+        if self.setuptools_namespaces:
+            return self.setuptools_namespaces
+        else:
+            return sorted(set(ns['name'] for ns in self.pkgutil_namespaces))
+
+    @cached_property
+    def namespace_style(self):
+        """
+        Get the style of Python `namespace packages`_ in use by this package.
+
+        :returns: One of the strings ``pkgutil``, ``setuptools`` or ``none``.
+        """
+        # We check setuptools_namespaces first because it's cheaper and the
+        # code has been battle tested (in contrast to pkgutil_namespaces).
+        if self.setuptools_namespaces:
+            return "setuptools"
+        elif self.pkgutil_namespaces:
+            return "pkgutil"
+        else:
+            return "none"
 
     @cached_property
     def namespaces(self):
@@ -321,6 +349,26 @@ class PackageToConvert(PropertyManager):
                 dotted_name.append(component)
                 namespaces.add(tuple(dotted_name))
         return sorted(namespaces, key=lambda n: len(n))
+
+    @cached_property
+    def pkgutil_namespaces(self):
+        """
+        Namespace packages declared through :mod:`pkgutil`.
+
+        :returns:
+
+          A list of dictionaries similar to those returned by
+          :func:`.find_pkgutil_namespaces()`.
+
+        For details about this type of namespace packages please refer to
+        <https://packaging.python.org/guides/packaging-namespace-packages/#pkgutil-style-namespace-packages>.
+
+        The implementation of this property lives in a separate module (refer
+        to :func:`.find_pkgutil_namespaces()`) in order to compartmentalize the
+        complexity of reliably identifying namespace packages defined using
+        :mod:`pkgutil`.
+        """
+        return list(find_pkgutil_namespaces(self.requirement.source_directory))
 
     @property
     def python_name(self):
@@ -382,6 +430,27 @@ class PackageToConvert(PropertyManager):
     def python_version(self):
         """The version of the Python package (a string)."""
         return self.requirement.version
+
+    @cached_property
+    def setuptools_namespaces(self):
+        """
+        Namespace packages declared through :pypi:`setuptools`.
+
+        :returns: A list of dotted names (strings).
+
+        For details about this type of namespace packages please refer to
+        <https://packaging.python.org/guides/packaging-namespace-packages/#pkg-resources-style-namespace-packages>.
+        """
+        logger.debug("Searching for pkg_resources-style namespace packages of '%s' ..", self.python_name)
+        dotted_names = []
+        namespace_packages_file = self.find_egg_info_file('namespace_packages.txt')
+        if namespace_packages_file:
+            with open(namespace_packages_file) as handle:
+                for line in handle:
+                    line = line.strip()
+                    if line:
+                        dotted_names.append(line)
+        return dotted_names
 
     @cached_property
     def vcs_revision(self):
@@ -508,6 +577,16 @@ class PackageToConvert(PropertyManager):
             alternatives = set((link, path) for link, path in self.converter.alternatives
                                if os.path.isfile(os.path.join(build_directory, path.lstrip('/'))))
 
+            # Remove __init__.py files that define "pkgutil-style namespace
+            # packages" and let the maintainer scripts generate these files
+            # instead. If we don't do this these __init__.py files will cause
+            # dpkg file conflicts.
+            if self.namespace_style == 'pkgutil':
+                for ns in self.pkgutil_namespaces:
+                    module_in_build_directory = os.path.join(build_modules_directory, ns['relpath'])
+                    logger.debug("Removing pkgutil-style namespace package file: %s", module_in_build_directory)
+                    os.remove(module_in_build_directory)
+
             # Generate post-installation and pre-removal maintainer scripts.
             self.generate_maintainer_script(filename=os.path.join(debian_directory, 'postinst'),
                                             python_executable=python_executable,
@@ -515,7 +594,8 @@ class PackageToConvert(PropertyManager):
                                             package_name=self.debian_name,
                                             alternatives=alternatives,
                                             modules_directory=install_modules_directory,
-                                            namespaces=self.namespaces)
+                                            namespaces=self.namespaces,
+                                            namespace_style=self.namespace_style)
             self.generate_maintainer_script(filename=os.path.join(debian_directory, 'prerm'),
                                             python_executable=python_executable,
                                             function='pre_removal_hook',
