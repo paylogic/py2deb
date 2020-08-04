@@ -11,6 +11,21 @@ to `semantic versioning`_.
 .. _Keep a Changelog: http://keepachangelog.com/
 .. _semantic versioning: http://semver.org/
 
+`Release 3.1`_ (2020-08-04)
+---------------------------
+
+Merged pull request `#20`_ which adds a ``Provides`` Debian control field for
+converted packages that have "extras" encoded in their name.
+
+One caveat to point out: ``Provides`` is a second-class citizen in the Debian
+packaging ecosystem in the sense that it satisfies only *unversioned*
+relationships.
+
+Nevertheless this may prove useful, so it was merged 🙂.
+
+.. _Release 3.1: https://github.com/paylogic/py2deb/compare/3.0.1...3.1
+.. _#20: https://github.com/paylogic/py2deb/pull/20
+
 `Release 3.0.1`_ (2020-08-04)
 -----------------------------
 
