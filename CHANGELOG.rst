@@ -11,6 +11,16 @@ to `semantic versioning`_.
 .. _Keep a Changelog: http://keepachangelog.com/
 .. _semantic versioning: http://semver.org/
 
+`Release 3.0.1`_ (2020-08-04)
+-----------------------------
+
+`Release 3.0`_ was yanked from PyPI just minutes after uploading, because I
+forgot to include a ``python_requires`` definition in the ``setup.py`` script,
+which means Python 2.6 and 3.4 installations could end up downloading
+incompatible :pypi:`py2deb` releases. This has since been added.
+
+.. _Release 3.0.1: https://github.com/paylogic/py2deb/compare/3.0...3.0.1
+
 `Release 3.0`_ (2020-08-04)
 ---------------------------
 
