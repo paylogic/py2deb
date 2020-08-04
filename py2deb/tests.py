@@ -1,7 +1,7 @@
 # Automated tests for the `py2deb' package.
 #
 # Author: Peter Odding <peter.odding@paylogic.com>
-# Last Change: July 31, 2020
+# Last Change: August 4, 2020
 # URL: https://py2deb.readthedocs.io
 
 """
@@ -348,7 +348,13 @@ class PackageConverterTestCase(TestCase):
             expression = '%s (= 3.6.0)' % fix_name_prefix('python-raven-flask')
             assert expression in relationships
             # Check that a package with the extra in the filename was generated.
-            assert find_package_archive(archives, fix_name_prefix('python-raven-flask'))
+            archive = find_package_archive(archives, fix_name_prefix('python-raven-flask'))
+            assert archive
+            # Use deb-pkg-tools to inspect the package metadata.
+            metadata, contents = inspect_package(archive)
+            logger.debug("Metadata of generated package: %s", dict(metadata))
+            # Check that a "Provides" field was added.
+            assert metadata['Provides'].matches(fix_name_prefix('python-raven'))
 
     def test_conversion_of_environment_markers(self):
         """
