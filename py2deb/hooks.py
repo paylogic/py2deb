@@ -1,7 +1,7 @@
 # py2deb: Python to Debian package converter.
 #
 # Author: Peter Odding <peter.odding@paylogic.com>
-# Last Change: May 22, 2017
+# Last Change: August 4, 2020
 # URL: https://py2deb.readthedocs.io
 
 """
@@ -129,7 +129,7 @@ def generate_bytecode_files(package_name, installed_files):
     """
     Generate Python byte code files for the ``*.py`` files installed by a package.
 
-    Uses :mod:`py_compile.compile()` to generate bytecode files.
+    Uses :func:`py_compile.compile()` to generate bytecode files.
 
     :param package_name: The name of the system package (a string).
     :param installed_files: A list of strings with the absolute pathnames of
@@ -250,7 +250,7 @@ def initialize_namespaces(package_name, modules_directory, namespaces):
     """
     Initialize Python namespace packages so they can be imported in the normal way.
 
-    The setuptools_ project introduced the concept of "namespace packages" and
+    The setuptools_ project introduced the concept of `namespace packages`_ and
     the use of such packages is now fairly widespread. Because the contents of
     multiple namespace packages will (by definition) overlap the relevant
     ``__init__.py`` files cannot be included in the Debian binary packages
@@ -267,7 +267,7 @@ def initialize_namespaces(package_name, modules_directory, namespaces):
                        :attr:`~py2deb.package.PackageToConvert.namespaces`).
 
     .. _setuptools: https://pythonhosted.org/setuptools/
-    .. _namespace packages: https://pythonhosted.org/setuptools/setuptools.html#namespace-packages
+    .. _namespace packages: https://packaging.python.org/guides/packaging-namespace-packages/#packaging-namespace-packages
     """
     if namespaces:
         with NameSpaceReferenceCount(modules_directory) as reference_counts:
