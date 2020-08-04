@@ -11,18 +11,21 @@
 #  - Because 'language: generic' has nothing to do with Python no virtual
 #    environment will be provided by Travis CI, which is good, because we
 #    want to create and use our own virtual environment.
+#
+# Note that the build matrix entries are ordered (roughly) by decreasing build
+# time in order to minimize the total runtime of the build matrix.
 
 sudo: required
 dist: bionic
 language: generic
 matrix:
   include:
-    - env: PYTHON=python2.7 TOXENV=py27
-    - env: PYTHON=python3.5 TOXENV=py35
-    - env: PYTHON=python3.6 TOXENV=py36
-    - env: PYTHON=python3.7 TOXENV=py37
-    - env: PYTHON=pypy TOXENV=pypy
-    - env: PYTHON=pypy3 TOXENV=pypy3
+    - env: PYTHON=pypy3 TOXENV=pypy3     # 15m50s
+    - env: PYTHON=pypy TOXENV=pypy       # 6m57s
+    - env: PYTHON=python3.7 TOXENV=py37  # 4m18s
+    - env: PYTHON=python3.5 TOXENV=py35  # 4m12s
+    - env: PYTHON=python3.6 TOXENV=py36  # 3m53s
+    - env: PYTHON=python2.7 TOXENV=py27  # 3m38s
 install:
   - scripts/travis.sh
   - make install
