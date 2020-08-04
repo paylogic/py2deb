@@ -7,24 +7,24 @@ py2deb: Python to Debian package converter
 .. image:: https://coveralls.io/repos/paylogic/py2deb/badge.svg?branch=master
    :target: https://coveralls.io/r/paylogic/py2deb?branch=master
 
-The Python package `py2deb` converts Python source distributions to Debian
-binary packages (the ones used for installation). It uses pip-accel_ to
-download, unpack and compile Python packages. Because of this `py2deb` is
-compatible with the command line interface of the ``pip install`` command. For
-example you can specify packages to convert as command line arguments but you
-can also use `requirement files`_ if you want.
+The Python package py2deb_ converts Python source distributions to Debian
+binary packages (the ones used for installation). It uses pip-accel_ (based on
+pip_) to download, unpack and compile Python packages. Because of this py2deb_
+is compatible with the command line interface of the ``pip install`` command.
+For example you can specify packages to convert as command line arguments but
+you can also use `requirement files`_ if you want.
 
 During the conversion process dependencies are automatically taken into account
 and converted as well so you don't actually have to use requirement files
 including transitive dependencies. In fact you might prefer not explicitly
-listing your transitive dependencies in requirement files because `py2deb` will
+listing your transitive dependencies in requirement files because py2deb_ will
 translate the version constraints of Python packages into Debian package
 relationships.
 
-The `py2deb` package is currently tested on CPython_ 2.7, 3.5, 3.6, 3.7 and
-PyPy_ (2 and 3). Unfortunately Python 3.8+ is not yet supported, a significant
-upcoming refactoring is required to resolve this. For usage instructions please
-refer to the documentation hosted on `Read The Docs`_.
+The py2deb_ package is currently tested on CPython_ 2.7, 3.5, 3.6, 3.7 and
+PyPy_ 2 and 3. Unfortunately Python 3.8+ is not yet supported (see below). For
+usage instructions please refer to the documentation hosted on `Read The
+Docs`_.
 
 .. contents::
    :local:
@@ -32,7 +32,7 @@ refer to the documentation hosted on `Read The Docs`_.
 Installation
 ------------
 
-The `py2deb` package is available on PyPI_, so installation is very simple:
+The py2deb_ package is available on PyPI_, so installation is very simple:
 
 .. code-block:: console
 
@@ -40,14 +40,14 @@ The `py2deb` package is available on PyPI_, so installation is very simple:
 
 There are some system dependencies which you have to install as well:
 
-.. code-block:: sh
+.. code-block:: console
 
    $ sudo apt-get install dpkg-dev fakeroot
 
 Optionally you can also install Lintian_ (which is not a hard dependency but
 more of a "nice to have"):
 
-.. code-block:: sh
+.. code-block:: console
 
    $ sudo apt-get install lintian
 
@@ -61,7 +61,7 @@ mature.
 Usage
 -----
 
-There are two ways to use the `py2deb` package: As the command line program
+There are two ways to use the py2deb_ package: As the command line program
 ``py2deb`` and as a Python API. For details about the Python API please refer
 to the API documentation hosted on `Read the Docs`_. The command line interface
 is described below.
@@ -166,25 +166,64 @@ So the "--" marker separates the py2deb options from the pip options.
 Future improvements
 -------------------
 
-Some random ideas for possible improvements to py2deb (in no specific order):
+The following sections list possible improvements to the project:
 
-- Find a way to facilitate (explicit / opt-in) installation of system wide
-  files (not related to Python per se) based on a Python distribution? This
-  could significantly reduce the need for "wrapper packages" that basically
-  just pull in packages converted by py2deb and drop a few configuration files
-  into place.
+.. contents::
+   :local:
 
-- Investigate the feasability of supporting conversion of binary wheels. Slowly
-  but surely the Python community seems to be gravitating towards (binary)
-  wheels and once gravity has shifted we don't want to be left in the dust! ;-)
+.. _Python 3.8+ compatibility:
 
-- Make it possible to "replace" Python requirements in a requirement set with a
-  Debian package that's included in the official repositories (e.g. Pillow_
-  becomes python-imaging_ or python-pil_). There are some hairy details
-  involved here.
+Python 3.8+ compatibility
+~~~~~~~~~~~~~~~~~~~~~~~~~
 
-- Dive into PEP-440_ and see if there is a way to fully support it? Then `this
-  question on Reddit`_ can finally get a satisfying answer :-).
+The py2deb_ project builds on top of pip-accel_, which was developed between
+2013 and 2015 on top of ``pip >= 7.0, < 7.2``. Since that time pip_ has grown
+enormously: At the time of writing (in August 2020) we're now at pip 20!
+
+None of the improvements made between pip 7-20 are available in pip-accel and
+py2deb and this has become somewhat of a glaring issue that plenty of users
+have run into (see `#17`_, `#18`_, `#27`_ and `#31`_).
+
+Known issues being caused by this include:
+
+- The old pip version prevents Python 3.8+ compatibility.
+
+- The old pip version doesn't know about ``python_requires`` metadata provided
+  by PyPI and this forces users to maintain constraints files themselves, even
+  though this shouldn't be necessary.
+
+- While pip-accel supports installation from wheels, it was never exposed via
+  the Python API and so py2deb lacks support for converting wheels (it
+  currently needs source distributions).
+
+The current state of affairs is best summarized in `this comment`_. I'm hoping
+to complete the upgrade to newer pip and pip-accel releases in the coming weeks
+(as of this writing in August 2020) but can't commit to a date.
+
+.. _this comment: https://github.com/paylogic/py2deb/issues/18#issuecomment-633848582
+
+Installation of system wide files
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Find a way to facilitate (explicit / opt-in) installation of system wide files
+(not related to Python per se) based on a Python distribution? This could
+significantly reduce the need for "wrapper packages" that basically just pull
+in packages converted by py2deb and drop a few configuration files into place.
+
+:Related issues: See issue `#7`_ for a related discussion.
+
+Conversion of binary wheels
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Investigate the feasability of supporting conversion of binary wheels. Slowly
+but surely the Python community seems to be gravitating towards (binary) wheels
+and once gravity has shifted we don't want to be left in the dust! 😉
+
+Full PEP-440 compatibility
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Dive into PEP-440_ and see if it can be fully supported? Then `this question on
+Reddit`_ can finally get a satisfying answer 🙂.
 
 Similar projects
 ----------------
@@ -196,7 +235,7 @@ fairly `detailed comparison`_ with each of these projects.
 Contact
 -------
 
-The latest version of `py2deb` is available on PyPI_ and GitHub_. The
+The latest version of py2deb is available on PyPI_ and GitHub_. The
 documentation is hosted on `Read the Docs`_ and includes a changelog_. For
 questions, bug reports, suggestions, etc. please create an issue on GitHub_.
 
@@ -208,23 +247,30 @@ This software is licensed under the `MIT license`_.
 © 2020 Peter Odding, Arjan Verwer and Paylogic International.
 
 .. External references:
-.. _changelog: https://py2deb.readthedocs.io/en/latest/changelog.html
 .. _CPython: https://en.wikipedia.org/wiki/CPython
-.. _deb-pkg-tools: https://pypi.org/project/deb-pkg-tools
-.. _detailed comparison: https://py2deb.readthedocs.io/en/latest/comparisons.html
-.. _dh-virtualenv: https://github.com/spotify/dh-virtualenv
-.. _fpm: https://github.com/jordansissel/fpm
 .. _GitHub: https://github.com/paylogic/py2deb
 .. _Lintian: http://en.wikipedia.org/wiki/Lintian
 .. _MIT license: http://en.wikipedia.org/wiki/MIT_License
 .. _PEP-440: https://www.python.org/dev/peps/pep-0440/
 .. _Pillow: https://python-pillow.github.io/
-.. _pip-accel: https://github.com/paylogic/pip-accel
 .. _PyPI: https://pypi.org/project/py2deb
 .. _PyPy: https://en.wikipedia.org/wiki/PyPy
+.. _Read The Docs: https://py2deb.readthedocs.io
+.. _changelog: https://py2deb.readthedocs.io/en/latest/changelog.html
+.. _deb-pkg-tools: https://pypi.org/project/deb-pkg-tools
+.. _detailed comparison: https://py2deb.readthedocs.io/en/latest/comparisons.html
+.. _dh-virtualenv: https://github.com/spotify/dh-virtualenv
+.. _fpm: https://github.com/jordansissel/fpm
+.. _pip-accel: https://pypi.org/project/pip-accel
+.. _pip: https://pypi.org/project/pip
+.. _py2deb: https://pypi.org/project/py2deb
 .. _python-imaging: https://packages.debian.org/search?keywords=python-imaging
 .. _python-pil: https://packages.debian.org/search?keywords=python-pil
-.. _Read The Docs: https://py2deb.readthedocs.io
 .. _requirement files: http://www.pip-installer.org/en/latest/cookbook.html#requirements-files
 .. _stdeb: https://pypi.org/project/stdeb
 .. _this question on Reddit: https://www.reddit.com/r/Python/comments/2x7s17/py2deb_python_to_debian_package_converter/coxyyzu
+.. _#7: https://github.com/paylogic/py2deb/issues/7
+.. _#17: https://github.com/paylogic/py2deb/issues/17
+.. _#18: https://github.com/paylogic/py2deb/issues/18
+.. _#27: https://github.com/paylogic/py2deb/issues/27
+.. _#31: https://github.com/paylogic/py2deb/issues/31
