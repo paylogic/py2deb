@@ -11,6 +11,15 @@ to `semantic versioning`_.
 .. _Keep a Changelog: http://keepachangelog.com/
 .. _semantic versioning: http://semver.org/
 
+`Release 3.2`_ (2020-08-04)
+---------------------------
+
+Merged pull request `#25`_ which adds support for the ``$DEBFULLNAME`` and
+``$DEBEMAIL`` environment variables to override package maintainer metadata.
+
+.. _Release 3.2: https://github.com/paylogic/py2deb/compare/3.1...3.2
+.. _#25: https://github.com/paylogic/py2deb/pull/25
+
 `Release 3.1`_ (2020-08-04)
 ---------------------------
 
