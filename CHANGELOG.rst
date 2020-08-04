@@ -11,6 +11,22 @@ to `semantic versioning`_.
 .. _Keep a Changelog: http://keepachangelog.com/
 .. _semantic versioning: http://semver.org/
 
+`Release 5.0`_ (2020-08-05)
+---------------------------
+
+- Added support for :mod:`pkgutil` style namespace packages. This should be
+  considered experimental because it hasn't seen any real world use yet.
+
+- Explicitly documented Python compatibility in the readme (see also `#17`_,
+  `#18`_, `#27`_ and `#31`_) to avoid more issues being reported about Python
+  3.8+ not being supported.
+
+.. _Release 5.0: https://github.com/paylogic/py2deb/compare/4.0...5.0
+.. _#17: https://github.com/paylogic/py2deb/issues/17
+.. _#18: https://github.com/paylogic/py2deb/issues/18
+.. _#27: https://github.com/paylogic/py2deb/issues/27
+.. _#31: https://github.com/paylogic/py2deb/issues/31
+
 `Release 4.0`_ (2020-08-04)
 ---------------------------
 
