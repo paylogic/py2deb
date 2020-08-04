@@ -3,7 +3,7 @@
 # Authors:
 #  - Arjan Verwer
 #  - Peter Odding <peter.odding@paylogic.com>
-# Last Change: July 28, 2020
+# Last Change: August 4, 2020
 # URL: https://py2deb.readthedocs.io
 
 """The :mod:`py2deb.utils` module contains miscellaneous code."""
@@ -363,19 +363,31 @@ def normalize_package_version(python_package_version, prerelease_workaround=True
     the identifier 'c' is translated into 'rc'. Refer to `issue #8
     <https://github.com/paylogic/py2deb/issues/8>`_ for details.
     """
-    # Lowercase and remove invalid characters from the version string.
-    version = re.sub('[^a-z0-9.+]+', '-', python_package_version.lower()).strip('-')
+    # We need to avoid normalizing "local version labels" (naming from PEP 440)
+    # because these may contain strings such as SCM hashes that should not be
+    # altered, so we split the version string into the "public version
+    # identifier" and "local version label" and only apply normalization to the
+    # "public version identifier".
+    public_version, delimiter, local_version = python_package_version.partition('+')
+    # Lowercase and remove invalid characters from the "public version identifier".
+    public_version = re.sub('[^a-z0-9.+]+', '-', public_version.lower()).strip('-')
     if prerelease_workaround:
         # Translate the PEP 440 pre-release identifier 'c' to 'rc'.
-        version = re.sub(r'(\d)c(\d)', r'\1rc\2', version)
+        public_version = re.sub(r'(\d)c(\d)', r'\1rc\2', public_version)
         # Replicate the intended ordering of PEP 440 pre-release versions (a, b, rc).
-        version = re.sub(r'(\d)(a|b|rc)(\d)', r'\1~\2\3', version)
-    # Make sure the "Debian revision" contains a digit.
-    components = version.split('-')
-    if len(components) > 1 and not re.search('[0-9]', components[-1]):
-        components.append('1')
-        version = '-'.join(components)
-    return version
+        public_version = re.sub(r'(\d)(a|b|rc)(\d)', r'\1~\2\3', public_version)
+    # Restore the local version label (without any normalization).
+    if local_version:
+        public_version = public_version + '+' + local_version
+    # Make sure the "Debian revision" contains a digit. If we don't find one we
+    # add it ourselves, to prevent dpkg and apt from aborting (!) as soon as
+    # they see an invalid Debian revision...
+    if '-' in public_version:
+        components = public_version.split('-')
+        if len(components) > 1 and not re.search('[0-9]', components[-1]):
+            components.append('1')
+            public_version = '-'.join(components)
+    return public_version
 
 
 def package_names_match(a, b):

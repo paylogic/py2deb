@@ -161,6 +161,11 @@ class PackageConverterTestCase(TestCase):
         assert normalize_package_version('1.0b2') == '1.0~b2'
         assert normalize_package_version('1.0c2') == '1.0~rc2'
         assert normalize_package_version('1.0rc2') == '1.0~rc2'
+        # Do not modify local version labels
+        assert normalize_package_version('1.0+a2') == '1.0+a2'
+        assert normalize_package_version('1.0+b2') == '1.0+b2'
+        assert normalize_package_version('1.0+c2') == '1.0+c2'
+        assert normalize_package_version('1.0+65c43') == '1.0+65c43'
         # New versus old behavior (the option to control backwards compatibility was added in release 2.1).
         assert normalize_package_version('1.0a2', prerelease_workaround=True) == '1.0~a2'
         assert normalize_package_version('1.0a2', prerelease_workaround=False) == '1.0a2'
