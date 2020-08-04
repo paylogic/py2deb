@@ -11,7 +11,7 @@ The top level :mod:`py2deb` module contains only a version number.
 
 .. data:: __version__
 
-   The version number of the `pydeb` package (a string).
+   The version number of the :pypi:`pydeb` package (a string).
 """
 
 # Semi-standard module versioning.
