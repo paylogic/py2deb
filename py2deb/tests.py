@@ -785,6 +785,32 @@ class PackageConverterTestCase(TestCase):
             cleanup_namespaces(package_name, directory, TEST_NAMESPACES)
             assert not os.path.isdir(os.path.join(directory, 'foo'))
 
+    def test_pkgutil_namespaces(self):
+        """
+        Test compatibility with :mod:`pkgutil` style namespace packages.
+
+        This test fails on py2deb <= 4.0 because the two packages involved
+        both define the same pkgutil-style namespace package and this
+        causes a file conflict that's detected by py2deb, in the form of
+        a :exc:`~deb_pkg_tools.checks.DuplicateFilesFound` exception::
+
+            deb_pkg_tools.checks.DuplicateFilesFound: Found 1 duplicate file in 2 package archives!
+            -------------------------------------------------------------------------------
+            Found 1 conflict between 2 packages:
+              1. /tmp/tmpgqz6ettd/python3-backports-functools-lru-cache_1.6.1_all.deb
+              2. /tmp/tmpgqz6ettd/python3-configparser_3.7.4_all.deb
+            These packages contain 1 conflict:
+              1. /usr/lib/python3.6/dist-packages/backports/__init__.py
+            -------------------------------------------------------------------------------
+        """
+        with TemporaryDirectory() as directory:
+            converter = self.create_isolated_converter()
+            converter.set_repository(directory)
+            converter.convert([
+                'configparser==3.7.4',
+                'backports.functools-lru-cache==1.6.1',
+            ])
+
     def test_post_install_hook(self):
         """Test the :func:`~py2deb.hooks.post_installation_hook()` function."""
         with TemporaryDirectory() as directory:
