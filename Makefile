@@ -36,7 +36,7 @@ SHELL = bash
 #
 # Here's an overview of my weekend of experimentation to find a way
 # to successfully set up a usable py2deb test environment for PyPy 3:
-# https://github.com/paylogic/py2deb/compare/0f785b8cbc3...819b8101a21
+# https://github.com/paylogic/py2deb/compare/4ab626b6582...affa7158560
 ifeq ($(findstring pypy3,$(PYTHON)),pypy3)
 NO_BINARY_OPTION := :all:
 else
