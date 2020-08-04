@@ -69,6 +69,9 @@ TEST_NAMESPACES = [('foo',),
                    ('foo', 'bar'),
                    ('foo', 'bar', 'baz')]
 
+# Supported namespace package styles.
+NAMESPACE_STYLES = ['setuptools', 'pkgutil', 'none']
+
 
 def setUpModule():
     """
@@ -763,7 +766,7 @@ class PackageConverterTestCase(TestCase):
         This tests the :func:`~py2deb.hooks.initialize_namespaces()` and
         :func:`~py2deb.hooks.cleanup_namespaces()` functions.
         """
-        for namespace_style in 'setuptools', 'pkgutil', 'none':
+        for namespace_style in NAMESPACE_STYLES:
             with TemporaryDirectory() as directory:
                 package_name = 'namespace-package-test'
                 initialize_namespaces(package_name, directory, TEST_NAMESPACES, namespace_style)
@@ -813,26 +816,29 @@ class PackageConverterTestCase(TestCase):
 
     def test_post_install_hook(self):
         """Test the :func:`~py2deb.hooks.post_installation_hook()` function."""
-        with TemporaryDirectory() as directory:
-            self.run_post_install_hook(directory)
-            self.check_test_namespaces(directory)
+        for namespace_style in NAMESPACE_STYLES:
+            with TemporaryDirectory() as directory:
+                self.run_post_install_hook(directory, namespace_style)
+                self.check_test_namespaces(directory)
 
     def test_pre_removal_hook(self):
         """Test the :func:`~py2deb.hooks.pre_removal_hook()` function."""
-        with TemporaryDirectory() as directory:
-            self.run_post_install_hook(directory)
-            pre_removal_hook(package_name='prerm-test-package',
-                             alternatives=set(),
-                             modules_directory=directory,
-                             namespaces=TEST_NAMESPACES)
-            assert not os.path.isdir(os.path.join(directory, 'foo'))
+        for namespace_style in NAMESPACE_STYLES:
+            with TemporaryDirectory() as directory:
+                self.run_post_install_hook(directory, namespace_style)
+                pre_removal_hook(package_name='prerm-test-package',
+                                 alternatives=set(),
+                                 modules_directory=directory,
+                                 namespaces=TEST_NAMESPACES)
+                assert not os.path.isdir(os.path.join(directory, 'foo'))
 
-    def run_post_install_hook(self, directory):
+    def run_post_install_hook(self, directory, namespace_style):
         """Helper for :func:`test_post_install_hook()` and :func:`test_pre_removal_hook()`."""
         post_installation_hook(package_name='postinst-test-package',
                                alternatives=set(),
                                modules_directory=directory,
-                               namespaces=TEST_NAMESPACES)
+                               namespaces=TEST_NAMESPACES,
+                               namespace_style=namespace_style)
 
     def check_test_namespaces(self, directory):
         """Make sure the test name spaces are properly initialized."""
