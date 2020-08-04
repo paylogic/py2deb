@@ -1,7 +1,7 @@
 # Makefile for py2deb.
 #
 # Author: Peter Odding <peter.odding@paylogic.com>
-# Last Change: August 3, 2020
+# Last Change: August 4, 2020
 # URL: https://github.com/paylogic/py2deb
 
 PACKAGE_NAME = py2deb
@@ -12,27 +12,30 @@ PATH := $(VIRTUAL_ENV)/bin:$(PATH)
 MAKE := $(MAKE) --no-print-directory
 SHELL = bash
 
-# Configure pip not to use binary wheels on PyPy 3 (with the goal of
-# stabilizing Travis CI builds). I struggled to work around several issues
-# involving pip using wheels on PyPy 3 but subsequently "crashing" (tracebacks)
-# in one of several ways due to the use of wheels. After wasting quite a few
-# more hours than I care to admit on this state of affairs I decided to
-# preserve my sanity by "giving in" and just disabling wheels on PyPy 3
-# altogether. Related build failures:
+# Configure pip not to use binary wheels on PyPy 3, with the goal of
+# stabilizing Travis CI builds. My trials in getting this to work:
 #
-#  - Job 714371868: AssertionError involving missing byte code files.
-#    https://travis-ci.org/github/paylogic/py2deb/jobs/714371868
+# 1. I struggled to work around several issues involving pip using wheels on
+#    PyPy 3 but subsequently "crashing" (tracebacks) in one of several ways due
+#    to the use of wheels.
 #
-#  - Job 714415991: IndexError involving 'setuptools' package
-#    https://travis-ci.org/github/paylogic/py2deb/jobs/714415991
+# 2. After wasting quite a few more hours than I care to admit on (1) I decided
+#    to preserve my sanity by "giving in" and just disabling wheels on PyPy 3
+#    altogether. This seemed like a simple solution, but it wasn't 😇.
 #
-#  - Job 714419661: IndexError involving 'wheel' package
-#    https://travis-ci.org/github/paylogic/py2deb/jobs/714419661
+# 3. Unfortunately even (2) is not enough, because some of our requirements use
+#    the "setup_requires" feature. This used to be handled by setuptools, but
+#    nowadays it's handled by a nested pip process, and that will try to use
+#    wheels even when the parent process received the "--no-binary=:all:"
+#    command line option 😞. I guess this is a bug in the packaging ecosystem
+#    (I assume pip) but that doesn't really help me at this point.
 #
-#  - Job 714421082: IndexError involving 'flake8' package
-#    https://travis-ci.org/github/paylogic/py2deb/jobs/714421082
+# 4. To work around (3) some of the "transitive build requirements" are listed
+#    in requirements-tests.txt which means they're installed by the top level
+#    pip process which does respect the "--no-binary=:all:" option.
 #
-# Here's an overview of things I tried and what I ended up using:
+# Here's an overview of my weekend of experimentation to find a way
+# to successfully set up a usable py2deb test environment for PyPy 3:
 # https://github.com/paylogic/py2deb/compare/0f785b8cbc3...819b8101a21
 ifeq ($(findstring pypy3,$(PYTHON)),pypy3)
 NO_BINARY_OPTION := :all:
