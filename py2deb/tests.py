@@ -763,26 +763,27 @@ class PackageConverterTestCase(TestCase):
         This tests the :func:`~py2deb.hooks.initialize_namespaces()` and
         :func:`~py2deb.hooks.cleanup_namespaces()` functions.
         """
-        with TemporaryDirectory() as directory:
-            package_name = 'namespace-package-test'
-            initialize_namespaces(package_name, directory, TEST_NAMESPACES)
-            self.check_test_namespaces(directory)
-            # Increase the reference count of the top level name space.
-            initialize_namespaces(package_name, directory, set([('foo',)]))
-            self.check_test_namespaces(directory)
-            # Clean up the nested name spaces.
-            cleanup_namespaces(package_name, directory, TEST_NAMESPACES)
-            # Make sure top level name space is still intact.
-            assert os.path.isdir(os.path.join(directory, 'foo'))
-            assert os.path.isfile(os.path.join(directory, 'foo', '__init__.py'))
-            # Make sure the nested name spaces were cleaned up.
-            assert not os.path.isdir(os.path.join(directory, 'foo', 'bar'))
-            assert not os.path.isfile(os.path.join(directory, 'foo', 'bar', '__init__.py'))
-            assert not os.path.isdir(os.path.join(directory, 'foo', 'bar', 'baz'))
-            assert not os.path.isfile(os.path.join(directory, 'foo', 'bar', 'baz', '__init__.py'))
-            # Clean up the top level name space as well.
-            cleanup_namespaces(package_name, directory, TEST_NAMESPACES)
-            assert not os.path.isdir(os.path.join(directory, 'foo'))
+        for namespace_style in 'setuptools', 'pkgutil', 'none':
+            with TemporaryDirectory() as directory:
+                package_name = 'namespace-package-test'
+                initialize_namespaces(package_name, directory, TEST_NAMESPACES, namespace_style)
+                self.check_test_namespaces(directory)
+                # Increase the reference count of the top level name space.
+                initialize_namespaces(package_name, directory, set([('foo',)]), namespace_style)
+                self.check_test_namespaces(directory)
+                # Clean up the nested name spaces.
+                cleanup_namespaces(package_name, directory, TEST_NAMESPACES)
+                # Make sure top level name space is still intact.
+                assert os.path.isdir(os.path.join(directory, 'foo'))
+                assert os.path.isfile(os.path.join(directory, 'foo', '__init__.py'))
+                # Make sure the nested name spaces were cleaned up.
+                assert not os.path.isdir(os.path.join(directory, 'foo', 'bar'))
+                assert not os.path.isfile(os.path.join(directory, 'foo', 'bar', '__init__.py'))
+                assert not os.path.isdir(os.path.join(directory, 'foo', 'bar', 'baz'))
+                assert not os.path.isfile(os.path.join(directory, 'foo', 'bar', 'baz', '__init__.py'))
+                # Clean up the top level name space as well.
+                cleanup_namespaces(package_name, directory, TEST_NAMESPACES)
+                assert not os.path.isdir(os.path.join(directory, 'foo'))
 
     def test_pkgutil_namespaces(self):
         """
