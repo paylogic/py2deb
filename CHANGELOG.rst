@@ -56,7 +56,7 @@ for "defense in depth" 😇.
 ---------------------------
 
 Enable optional backwards compatibility with the old version number conversion
-up to :ref:`release 0.25` in which pre-release identifiers didn't receive any
+up to `release 0.25`_ in which pre-release identifiers didn't receive any
 special treatment.
 
 My reason for adding this backwards compatibility now is that it will allow me
