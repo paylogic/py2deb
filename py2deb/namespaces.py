@@ -35,7 +35,7 @@ __all__ = ("find_pkgutil_namespaces", "find_pkgutil_ns_hints", "find_python_modu
 
 def find_pkgutil_namespaces(directory):
     """
-    Find the `pkgutil-style namespace packages`_ in an unpacked Python distribution archive.
+    Find the pkgutil-style `namespace packages`_ in an unpacked Python distribution archive.
 
     :param directory:
 

@@ -3,7 +3,7 @@
 # Authors:
 #  - Arjan Verwer
 #  - Peter Odding <peter.odding@paylogic.com>
-# Last Change: August 4, 2020
+# Last Change: August 6, 2020
 # URL: https://py2deb.readthedocs.io
 
 """
@@ -68,14 +68,20 @@ class PackageConverter(PropertyManager):
         """
         Initialize a Python to Debian package converter.
 
-        :param load_configuration_files: When ``True`` (the default)
-                                         :func:`load_default_configuration_files()`
-                                         is called automatically.
-        :param load_environment_variables: When ``True`` (the default)
-                                         :func:`load_environment_variables()`
-                                         is called automatically.
-        :param options: Any keyword arguments are passed on to the initializer
-                        of the :class:`~property_manager.PropertyManager` class.
+        :param load_configuration_files:
+
+            When :data:`True` (the default)
+            :func:`load_default_configuration_files()` is called automatically.
+
+        :param load_environment_variables:
+
+            When :data:`True` (the default)
+            :func:`load_environment_variables()` is called automatically.
+
+        :param options:
+
+            Any keyword arguments are passed on to the initializer of the
+            :class:`~property_manager.PropertyManager` class.
         """
         # Initialize our superclass.
         super(PackageConverter, self).__init__(**options)
@@ -190,9 +196,10 @@ class PackageConverter(PropertyManager):
         The default value of :attr:`name_prefix` depends on
         the Python interpreter that's used to run py2deb:
 
-        - On PyPy_ the default name prefix is ``pypy``.
         - On Python 2 the default name prefix is ``python``.
         - On Python 3 the default name prefix is ``python3``.
+        - On PyPy_ 2 the default name prefix is ``pypy``.
+        - On PyPy_ 3 the default name prefix is ``pypy3``.
 
         When one of these default name prefixes is used, converted packages may
         conflict with system wide packages provided by Debian / Ubuntu. If this
@@ -259,8 +266,8 @@ class PackageConverter(PropertyManager):
           switching to a project's fork.
 
         - A deployment of the new dependency set will conflict with existing
-          installations due to "unrelated" packages (in the eyes of ``apt`` and
-          ``dpkg``) installing the same files.
+          installations due to "unrelated" packages (in the eyes of :man:`apt`
+          and :man:`dpkg`) installing the same files.
 
         - By injecting a custom Python callback the user can mark package B as
           "replacing" and "breaking" package A. Refer to `section 7.6`_ of the
@@ -771,19 +778,26 @@ class PackageConverter(PropertyManager):
 
     def get_source_distributions(self, pip_install_arguments):
         """
-        Use :mod:`pip_accel` to download and unpack Python source distributions.
+        Use :pypi:`pip-accel` to download and unpack Python source distributions.
 
         Retries several times if a download fails (so it doesn't fail
         immediately when a package index server returns a transient error).
 
-        :param pip_install_arguments: The command line arguments to the ``pip
-                                      install`` command.
-        :returns: A generator of :class:`.PackageToConvert` objects.
-        :raises: When downloading fails even after several retries this
-                 function raises :exc:`pip.exceptions.DistributionNotFound`.
-                 This function can also raise other exceptions raised by pip
-                 because it uses :mod:`pip_accel` to call pip (as a Python
-                 API).
+        :param pip_install_arguments:
+
+          The command line arguments to the ``pip install`` command (an
+          iterable of strings).
+
+        :returns:
+
+          A generator of :class:`.PackageToConvert` objects.
+
+        :raises:
+
+          When downloading fails even after several retries this function
+          raises ``pip.exceptions.DistributionNotFound``. This function can
+          also raise other exceptions raised by :pypi:`pip` because it uses
+          :pypi:`pip-accel` to call :pypi:`pip` (as a Python API).
         """
         # We depend on `pip install --ignore-installed ...' so we can guarantee
         # that all of the packages specified by the caller are converted,
@@ -848,15 +862,15 @@ class PackageConverter(PropertyManager):
         :returns: The transformed version (a string).
 
         This method is a wrapper for :func:`.normalize_package_version()` that
-        takes care of one additional quirk to ensure compatibility with pip.
-        Explaining this quirk requires a bit of context:
+        takes care of one additional quirk to ensure compatibility with
+        :pypi:`pip`. Explaining this quirk requires a bit of context:
 
         - When package A requires package B (via ``install_requires``) and
           package A absolutely pins the required version of package B using one
           or more trailing zeros (e.g. ``B==1.0.0``) but the actual version
           number of package B (embedded in the metadata of package B) contains
-          less trailing zeros (e.g. ``1.0``) then pip will not complain but
-          silently fetch version ``1.0`` of package B to satisfy the
+          less trailing zeros (e.g. ``1.0``) then :pypi:`pip` will not complain
+          but silently fetch version ``1.0`` of package B to satisfy the
           requirement.
 
         - However this doesn't change the absolutely pinned version in the
@@ -864,7 +878,7 @@ class PackageConverter(PropertyManager):
 
         - When py2deb converts the resulting requirement set, the dependency of
           package A is converted as ``B (= 1.0.0)``. The resulting packages
-          will not be installable because ``apt`` considers ``1.0`` to be
+          will not be installable because :man:`apt` considers ``1.0`` to be
           different from ``1.0.0``.
 
         This method analyzes the requirement set to identify occurrences of

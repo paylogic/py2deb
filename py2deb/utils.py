@@ -3,7 +3,7 @@
 # Authors:
 #  - Arjan Verwer
 #  - Peter Odding <peter.odding@paylogic.com>
-# Last Change: August 4, 2020
+# Last Change: August 6, 2020
 # URL: https://py2deb.readthedocs.io
 
 """The :mod:`py2deb.utils` module contains miscellaneous code."""
@@ -111,18 +111,17 @@ class PackageRepository(PropertyManager):
         """
         Find a package in the repository.
 
+        :param package: The name of the package (a string).
+        :param version: The version of the package (a string).
+        :param architecture: The architecture of the package (a string).
+        :returns: A :class:`deb_pkg_tools.package.PackageFile` object or :data:`None`.
+
         Here's an example:
 
         >>> from py2deb import PackageRepository
         >>> repo = PackageRepository('/tmp')
         >>> repo.get_package('py2deb', '0.1', 'all')
         PackageFile(name='py2deb', version='0.1', architecture='all', filename='/tmp/py2deb_0.1_all.deb')
-
-        :param package: The name of the package (a string).
-        :param version: The version of the package (a string).
-        :param architecture: The architecture of the package (a string).
-        :returns: A :class:`deb_pkg_tools.package.PackageFile` object
-                  or ``None``.
         """
         for archive in self.archives:
             if archive.name == package and archive.version == version and archive.architecture == architecture:
@@ -147,8 +146,7 @@ class TemporaryDirectory(object):
         """
         Initialize context manager that manages creation & cleanup of temporary directory.
 
-        :param options: Any keyword arguments are passed on to
-                        :func:`tempfile.mkdtemp()`.
+        :param options: Any keyword arguments are passed on to :func:`tempfile.mkdtemp()`.
         """
         self.options = options
 
@@ -169,10 +167,15 @@ def compact_repeating_words(words):
     """
     Remove adjacent repeating words.
 
-    :param words: An iterable of words (strings), assumed to already be
-                  normalized (lowercased).
-    :returns: An iterable of words with adjacent repeating words replaced by a
-              single word.
+    :param words:
+
+        An iterable of words (strings), assumed to
+        already be normalized (lowercased).
+
+    :returns:
+
+        An iterable of words with adjacent repeating
+        words replaced by a single word.
 
     This is used to avoid awkward word repetitions in the package name
     conversion algorithm. Here's an example of what I mean:
@@ -198,11 +201,18 @@ def convert_package_name(python_package_name, name_prefix=None, extras=()):
     """
     Convert a Python package name to a Debian package name.
 
-    :param python_package_name: The name of a Python package as found on PyPI (a string).
-    :param name_prefix: The name prefix to apply (a string or :data:`None`, in
-                        which case the result of :func:`default_name_prefix()`
-                        is used instead).
-    :returns: A Debian package name (a string).
+    :param python_package_name:
+
+        The name of a Python package as found on PyPI (a string).
+
+    :param name_prefix:
+
+        The name prefix to apply (a string or :data:`None`, in which case the
+        result of :func:`default_name_prefix()` is used instead).
+
+    :returns:
+
+        A Debian package name (a string).
     """
     # Apply the name prefix.
     if not name_prefix:
@@ -238,9 +248,14 @@ def detect_python_script(handle):
     """
     Detect whether a file-like object contains an executable Python script.
 
-    :param handle: A file-like object (assumed to contain an executable).
-    :returns: :data:`True` if the program name in the shebang_ of the script
-              references a known Python interpreter, :data:`False` otherwise.
+    :param handle:
+
+        A file-like object (assumed to contain an executable).
+
+    :returns:
+
+        :data:`True` if the program name in the shebang_ of the script
+        references a known Python interpreter, :data:`False` otherwise.
     """
     command = extract_shebang_command(handle)
     program = extract_shebang_program(command)
@@ -332,9 +347,13 @@ def normalize_package_name(python_package_name):
     """
     Normalize Python package name to be used as Debian package name.
 
-    :param python_package_name: The name of a Python package
-                                as found on PyPI (a string).
-    :returns: The normalized name (a string).
+    :param python_package_name:
+
+        The name of a Python package as found on PyPI (a string).
+
+    :returns:
+
+        The normalized name (a string).
 
     >>> from py2deb import normalize_package_name
     >>> normalize_package_name('MySQL-python')
@@ -349,10 +368,14 @@ def normalize_package_version(python_package_version, prerelease_workaround=True
     """
     Normalize Python package version to be used as Debian package version.
 
-    :param python_package_version: The version of a Python package (a string).
-    :param prerelease_workaround: :data:`True` to enable the pre-release
-                                  handling documented below, :data:`False` to
-                                  restore the old behavior.
+    :param python_package_version:
+
+        The version of a Python package (a string).
+
+    :param prerelease_workaround:
+
+        :data:`True` to enable the pre-release handling documented below,
+        :data:`False` to restore the old behavior.
 
     Reformats Python package versions to comply with the Debian policy manual.
     All characters except alphanumerics, dot (``.``) and plus (``+``) are
@@ -394,13 +417,13 @@ def package_names_match(a, b):
     """
     Check whether two Python package names are equal.
 
+    :param a: The name of the first Python package (a string).
+    :param b: The name of the second Python package (a string).
+    :returns: :data:`True` if the package names match, :data:`False` if they don't.
+
     Uses :func:`normalize_package_name()` to normalize both names before
     comparing them for equality. This makes sure differences in case and dashes
     versus underscores are ignored.
-
-    :param a: The name of the first Python package (a string).
-    :param b: The name of the second Python package (a string).
-    :returns: ``True`` if the package names match, ``False`` if they don't.
     """
     return normalize_package_name(a) == normalize_package_name(b)
 
@@ -409,12 +432,12 @@ def python_version():
     """
     Find the version of Python we're running.
 
+    :returns: A string like ``python2.7``, ``python3.8``, ``pypy`` or ``pypy3``.
+
     This specifically returns a name that matches both of the following:
 
     - The name of the Debian package providing the current Python version.
     - The name of the interpreter executable for the current Python version.
-
-    :returns: A string like ``python2.7``, ``python3.8``, ``pypy`` or ``pypy3``.
     """
     if platform.python_implementation() == 'PyPy':
         python_version = 'pypy'

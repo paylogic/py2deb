@@ -143,9 +143,10 @@ Addded support for ``pypy3`` hashbangs via pull request `#29`_.
 
 **Defensively pin pip-accel requirement.**
 
-I intend to revive pip-accel_ based on the latest pip_ release, offering a
-minimal conceptual subset of previous functionality of pip-accel_, just enough
-for py2deb to use for downloading and unpacking distribution archives.
+I intend to revive :pypi:`pip-accel` based on the latest :pypi:`pip` release,
+offering a minimal conceptual subset of previous functionality of pip-accel,
+just enough for py2deb to use for downloading and unpacking distribution
+archives.
 
 However this will surely take some time to flesh out - possibly multiple
 releases of both projects. I'm not even sure yet what will be involved in
@@ -225,28 +226,25 @@ time. This simplifies the transition significantly.
 
 **Internal improvements:**
 
-- Move the finding of shared object files and the dpkg-shlibdeps_ integration
-  to deb-pkg-tools_ (strictly speaking this is backwards incompatible). This
-  functionality originated in py2deb but since then I'd wanted to reuse it
-  outside of py2deb several times and so I eventually reimplemented it in
-  deb-pkg-tools_. Switching to that implementation now made sense (in order to
-  reduce code duplication and simplify the py2deb code base). Strictly speaking
-  this is backwards incompatible because methods have been removed but this
-  only affects those who extend ``PackageToConvert`` which I don't expect
-  anyone to have actually done 🙂.
+- Move the finding of shared object files and the :man:`dpkg-shlibdeps`
+  integration to :pypi:`deb-pkg-tools` (strictly speaking this is backwards
+  incompatible). This functionality originated in py2deb but since then I'd
+  wanted to reuse it outside of py2deb several times and so I eventually
+  reimplemented it in deb-pkg-tools. Switching to that implementation now made
+  sense (in order to reduce code duplication and simplify the py2deb code
+  base). Strictly speaking this is backwards incompatible because methods have
+  been removed but this only affects those who extend ``PackageToConvert``
+  which I don't expect anyone to have actually done 🙂.
 
-- Switched from cached-property_ to property-manager_. The py2deb project comes
-  from a time (2013) when Python descriptors were still magic to me and so I
-  chose to use cached-property_. However since then I created the
-  property-manager_ project (2015). At this point in time (2018) several of the
-  dependencies of py2deb (other projects of mine) already use property-manager_
-  and the integration of property-manager_ in py2deb can help to improve the
+- Switched from :pypi:`cached-property` to :pypi:`property-manager`. The py2deb
+  project comes from a time (2013) when Python descriptors were still magic to
+  me and so I chose to use cached-property. However since then I created the
+  property-manager project (2015). At this point in time (2018) several of the
+  dependencies of py2deb (other projects of mine) already use property-manager
+  and the integration of property-manager in py2deb can help to improve the
   project, so this seemed like the logical choice 😇.
 
 .. _Release 2.0: https://github.com/paylogic/py2deb/compare/1.1...2.0
-.. _dpkg-shlibdeps: https://manpages.debian.org/dpkg-shlibdeps
-.. _cached-property: https://pypi.org/project/cached-property
-.. _property-manager: https://pypi.org/project/property-manager
 .. _PyPy: https://en.wikipedia.org/wiki/PyPy
 .. _Lintian: https://en.wikipedia.org/wiki/Lintian
 
@@ -352,7 +350,9 @@ packaging.
 `Release 0.23.2`_ (2015-09-04)
 ------------------------------
 
-- Strip trailing zeros in required versions when necessary (improves compatibility with pip_).
+- Strip trailing zeros in required versions when necessary (improves
+  compatibility with :pypi:`pip`).
+
 - Document ideas for future improvements.
 
 .. _Release 0.23.2: https://github.com/paylogic/py2deb/compare/0.23.1...0.23.2
@@ -360,7 +360,7 @@ packaging.
 `Release 0.23.1`_ (2015-06-28)
 ------------------------------
 
-Moved usage message munging to humanfriendly_ package.
+Moved usage message munging to :pypi:`humanfriendly` package.
 
 .. _Release 0.23.1: https://github.com/paylogic/py2deb/compare/0.23...0.23.1
 
@@ -383,10 +383,14 @@ Make it possible to disable automatic Lintian checks.
   some additional features:
 
   - Robust support for `pkg_resources-style namespace packages`_.
+
   - Smart enough to clean up properly after PEP 3147 (>= Python 3.2).
 
 - Use :func:`executor.quote()` instead of :func:`pipes.quote()`.
-- Always clean up temporary directories created by pip_ and pip-accel_.
+
+- Always clean up temporary directories created by :pypi:`pip` and
+  :pypi:`pip-accel`.
+
 - Remove redundant temporary directory creation.
 
 .. _Release 0.22: https://github.com/paylogic/py2deb/compare/0.21.1...0.22
@@ -402,7 +406,7 @@ Update usage instructions in readme (and automate the process for the future).
 `Release 0.21`_ (2015-04-04)
 ----------------------------
 
-Upgraded dependencies: pip-accel_ 0.25 and pip_ 6.
+Upgraded dependencies: :pypi:`pip-accel` 0.25 and :pypi:`pip` 6.
 
 .. _Release 0.21: https://github.com/paylogic/py2deb/compare/0.20.11...0.21
 
@@ -423,15 +427,15 @@ Move control field override handling to separate, documented method.
 `Release 0.20.9`_ (2015-03-04)
 ------------------------------
 
-Normalize package names during stdeb.cfg parsing.
+Normalize package names during ``stdeb.cfg`` parsing.
 
 .. _Release 0.20.9: https://github.com/paylogic/py2deb/compare/0.20.8...0.20.9
 
 `Release 0.20.8`_ (2015-03-01)
 ------------------------------
 
-- Include a detailed comparison to stdeb_, dh-virtualenv_ and fpm_ in the
-  documentation (for details see `#1`_).
+- Include a detailed comparison to :pypi:`stdeb`, dh-virtualenv_ and fpm_ in
+  the documentation (for details see `#1`_).
 
 - Clarify in the readme that py2deb builds *binary* Debian packages and that
   Lintian is an optional dependency.
@@ -471,8 +475,8 @@ this change.
 `Release 0.20.5`_ (2015-02-27)
 ------------------------------
 
-- Improved Python 3.4 compatibility, also bumped deb-pkg-tools_ requirement to
-  improve Python 3 compatibility.
+- Improved Python 3.4 compatibility, also bumped :pypi:`deb-pkg-tools`
+  requirement to improve Python 3 compatibility.
 
 - Replaced the use of ``uname -m`` with ``os.uname()`` and added an ``armv6l``
   to ``armhf`` mapping (to enable support for Raspbian).
@@ -487,7 +491,7 @@ this change.
 `Release 0.20.4`_ (2015-02-25)
 ------------------------------
 
-Give up on conversion of package descriptions using docutils_:
+Give up on conversion of package descriptions using :pypi:`docutils`:
 
 1. It was always just a nice to have.
 2. I'm never going to get it working reliably.
@@ -523,18 +527,19 @@ Re-enable auto-install runtime/configuration option.
 `Release 0.20`_ (2014-11-28)
 ----------------------------
 
-Upgraded to the newest pip-accel_ (0.19.2).
+Upgraded to the newest :pypi:`pip-accel` (0.19.2).
 
 .. _Release 0.20: https://github.com/paylogic/py2deb/compare/0.19.1...0.20
 
 `Release 0.19.1`_ (2014-11-18)
 ------------------------------
 
-- Moved ``coerce_to_boolean()`` to humanfriendly_ package.
+- Moved :func:`~humanfriendly.coerce_boolean()` to the :pypi:`humanfriendly`
+  package.
+
 - Workaround for dependency specifications like ``pytz > dev``.
 
 .. _Release 0.19.1: https://github.com/paylogic/py2deb/compare/0.19...0.19.1
-.. _humanfriendly: https://pypi.org/project/humanfriendly
 
 `Release 0.19`_ (2014-11-12)
 ----------------------------
@@ -547,7 +552,7 @@ an escape hatch should it ever turn out to be problematic 😇).
 `Release 0.18.9`_ (2014-11-09)
 ------------------------------
 
-Upgrade to pip-accel_ 0.14.1.
+Upgrade to :pypi:`pip-accel` 0.14.1.
 
 .. _Release 0.18.9: https://github.com/paylogic/py2deb/compare/0.18.8...0.18.9
 
@@ -570,7 +575,7 @@ Bug fix for custom installation prefix embedding in executable scripts.
 
 Disable package description conversion until I find out what's wrong with it:
 
-- Starting from `release 0.16` pydeb would use docutils_ to convert the
+- Starting from `release 0.16` py2deb would use :pypi:`docutils` to convert the
   ``long_description`` of each Python package to HTML which was then translated
   to plain text in order to generate a readme text that was embedded in the
   metadata of the binary package.
@@ -587,7 +592,6 @@ Given that this was a "nice to have" and I had more important things on my
 plate I decided to just disable this feature for now.
 
 .. _Release 0.18.6: https://github.com/paylogic/py2deb/compare/0.18.5...0.18.6
-.. _docutils: https://pypi.org/project/docutils
 
 `Release 0.18.5`_ (2014-07-15)
 ------------------------------
@@ -627,11 +631,11 @@ About those special semantics::
 
 Bug fix: Cleanup temporary source directories.
 
-These are created when you tell pip_ to install from a directory containing an
-unpacked source distribution: pip copies the complete directory to ``/tmp``
-before doing anything with it, but because this directory cannot be set using
-``--build-directory`` py2deb never cleaned up directories created in this
-manner.
+These are created when you tell :pypi:`pip` to install from a directory
+containing an unpacked source distribution: pip copies the complete directory
+to ``/tmp`` before doing anything with it, but because this directory cannot be
+set using ``--build-directory`` py2deb never cleaned up directories created in
+this manner.
 
 .. _Release 0.18.3: https://github.com/paylogic/py2deb/compare/0.18.2...0.18.3
 
@@ -653,9 +657,10 @@ This release consists of more than 10 commits that were part of an effort to
 prepare the py2deb project for open sourcing under the name of Paylogic_.
 Here's a short summary:
 
-- Bumped pip-accel_ requirement (to pull in an upstream bug fix) and minor
-  changes to be compatible wiht the new version.
-- Support for default configuration files (``/etc/py2deb.ini`` and ``~/.py2deb.ini``)
+- Bumped :pypi:`pip-accel` requirement (to pull in an upstream bug fix) and
+  minor changes to be compatible with the new version.
+- Support for default configuration files (``/etc/py2deb.ini`` and
+  ``~/.py2deb.ini``).
 - Don't copy files during builds (performance optimization).
 - Add logging in order to debug handling of postinst/prerm scripts.
 - Explicitly iterate postinst/prerm scripts (explicit is better than implicit).
@@ -677,12 +682,12 @@ Here's a short summary:
 - Support for environment variables.
 - Make py2deb compatible with Python 3.4.
 - Explicitly document that py2deb invokes pip.
-- Improve ``PackageToConvert.python_requirements``.
-- Improve ``PackageToConvert.debian_dependencies``.
+- Improve :attr:`.PackageToConvert.python_requirements`.
+- Improve :attr:`.PackageToConvert.debian_dependencies`.
 - Rename ``find_package()`` to ``get_package()``.
 - Rename ``find_python_version()`` to ``python_version()``.
 - Improve ``compact_repeating_words()``.
-- Add comparison between py2deb and stdeb_ to readme.
+- Add comparison between py2deb and :pypi:`stdeb` to readme.
 - Bring test coverage up to 92%.
 
 .. _Release 0.18: https://github.com/paylogic/py2deb/compare/0.17...0.18
@@ -713,25 +718,25 @@ Here's a short summary:
 `Release 0.16`_ (2014-06-05)
 ----------------------------
 
-Remove the stdeb_ backend and focus fully on the pip-accel_ backend:
+Remove the :pypi:`stdeb` backend and focus fully on the :pypi:`pip-accel` backend:
 
 - I don't need something that's refined and elegant but only supports a subset
-  of packages (stdeb_).
+  of packages (:pypi:`stdeb`).
   
-  I see stdeb_ as the more idealistic choice.
+  I see stdeb as the more idealistic choice.
 
 - What I need instead is something that supports all or most packages, and when
   it does, then it doesn't matter if the way in which it works isn't the most
   elegant way to do things.
 
-  I see the pip-accel backend as the pragmatic choice.
+  I see the :pypi:`pip-accel` backend as the pragmatic choice.
 
 .. _Release 0.16: https://github.com/paylogic/py2deb/compare/0.15...0.16
 
 `Release 0.15`_ (2014-06-01)
 ----------------------------
 
-Abusing ``update-alternatives`` for fun and profit?
+Abusing :man:`update-alternatives` for fun and profit?
 
 This makes it possible to create a package with an isolated installation prefix
 that nevertheless installs global executables in the default executable search
@@ -743,8 +748,10 @@ path (``$PATH``).
 ------------------------------
 
 - Update dependencies.
-- Update tests to use new version of deb-pkg-tools_ (including support for
-  relationship parsing and matching).
+
+- Update tests to use new version of :pypi:`deb-pkg-tools` (including support
+  for relationship parsing and matching).
+
 - Bug fix: Exclude other architectures from ``*.deb`` filename matching.
 
 .. _Release 0.14.9: https://github.com/paylogic/py2deb/compare/0.14.8...0.14.9
@@ -753,7 +760,10 @@ path (``$PATH``).
 ------------------------------
 
 - Rename ``packages_to_rename`` → ``name_mapping``.
-- Update requirements (python-debian 0.1.21-nmu2 for Python 3.x compatibility).
+
+- Update requirements (:pypi:`python-debian` 0.1.21-nmu2 for Python 3.x
+  compatibility).
+
 - Replace configuration (global state) with function arguments (local state).
 
 .. _Release 0.14.8: https://github.com/paylogic/py2deb/compare/0.14.7...0.14.8
@@ -768,14 +778,16 @@ Bug fix for last commit.
 `Release 0.14.6`_ (2014-05-24)
 ------------------------------
 
-Don't implicitly forbid automatic installation by pip-accel_.
+Don't implicitly forbid automatic installation by :pypi:`pip-accel`.
 
 .. _Release 0.14.6: https://github.com/paylogic/py2deb/compare/0.14.5...0.14.6
 
 `Release 0.14.5`_ (2014-05-22)
 ------------------------------
 
-- Moved ``package_name_from_filename()`` to ``deb_pkg_tools.package.parse_filename()``.
+- Moved ``package_name_from_filename()`` to
+  :func:`deb_pkg_tools.package.parse_filename()`.
+
 - Fix non fatal bug in logger format string.
 
 .. _Release 0.14.5: https://github.com/paylogic/py2deb/compare/0.14.4...0.14.5
@@ -824,12 +836,11 @@ Introduce the ``--rename=FROM,TO`` option to make things more robust.
 `Release 0.13.15`_ (2014-05-04)
 -------------------------------
 
-Switch from ``deb_pkg_tools.utils.execute()`` to ``executor.execute()`` (today
-I decided to extract this functionality into a separate package called
-executor_).
+Switch from ``deb_pkg_tools.utils.execute()`` to :func:`executor.execute()`
+(today I decided to extract this functionality into a separate package called
+:pypi:`executor`).
 
 .. _Release 0.13.15: https://github.com/paylogic/py2deb/compare/0.13.14...0.13.15
-.. _executor: https://pypi.org/project/executor
 
 `Release 0.13.14`_ (2014-05-03)
 -------------------------------
@@ -864,15 +875,17 @@ Ignore overridden Debian package names when building isolated packages.
 `Release 0.13.10`_ (2014-04-11)
 -------------------------------
 
-- Don't make the post-installation script error out on syntax errors reported by ``py_compile``.
-- Bug fix for apply-script command in pip-accel_ backend.
+- Don't make the post-installation script error out on syntax errors reported
+  by :mod:`py_compile`.
+
+- Bug fix for ``apply-script`` command in :pypi:`pip-accel` backend.
 
 .. _Release 0.13.10: https://github.com/paylogic/py2deb/compare/0.13.9...0.13.10
 
 `Release 0.13.9`_ (2014-04-11)
 ------------------------------
 
-Bug fix for order of unpack/apply script/cleanup commands in pip-accel_
+Bug fix for order of unpack/apply script/cleanup commands in :pypi:`pip-accel`
 backend.
 
 .. _Release 0.13.9: https://github.com/paylogic/py2deb/compare/0.13.8...0.13.9
@@ -880,9 +893,9 @@ backend.
 `Release 0.13.8`_ (2014-04-11)
 ------------------------------
 
-- Use ``deb_pkg_tools.package.clean_package_tree()`` in pip-accel_ backend.
+- Use :func:`deb_pkg_tools.package.clean_package_tree()` in :pypi:`pip-accel` backend.
 - Move ``apply_script()`` to common code, call it from both backends
-- Move sanity checking from stdeb_ backend to common code.
+- Move sanity checking from :pypi:`stdeb` backend to common code.
 
 .. _Release 0.13.8: https://github.com/paylogic/py2deb/compare/0.13.7...0.13.8
 
@@ -938,21 +951,21 @@ Add a post-installation script to generate ``*.pyc`` files.
 `Release 0.13`_ (2014-03-20)
 ----------------------------
 
-Initial support for isolated packages (not in the default ``sys.path``).
+Initial support for isolated packages (not in the default :data:`sys.path`).
 
 .. _Release 0.13: https://github.com/paylogic/py2deb/compare/0.12.3...0.13
 
 `Release 0.12.3`_ (2014-02-01)
 ------------------------------
 
-Bump pip-accel_ requirement (another upstream bug fixed).
+Bump :pypi:`pip-accel` requirement (another upstream bug fixed).
 
 .. _Release 0.12.3: https://github.com/paylogic/py2deb/compare/0.12.2...0.12.3
 
 `Release 0.12.2`_ (2014-01-30)
 ------------------------------
 
-Bump pip-accel_ requirement (upstream bug fixed).
+Bump :pypi:`pip-accel` requirement (upstream bug fixed).
 
 .. _Release 0.12.2: https://github.com/paylogic/py2deb/compare/0.12.1...0.12.2
 
@@ -966,29 +979,32 @@ Bug fix: Don't fail when a ``PKG-INFO`` file can't be parsed.
 `Release 0.12`_ (2013-11-03)
 ----------------------------
 
-Improve the pip-accel_ backend (use a ``prerm`` script to cleanup left over byte code files).
+Improve the :pypi:`pip-accel` backend (use a ``prerm`` script to cleanup left over byte code files).
 
 .. _Release 0.12: https://github.com/paylogic/py2deb/compare/0.11.2...0.12
 
 `Release 0.11.2`_ (2013-11-03)
 ------------------------------
 
-Improve the pip-accel_ backend (the maintainer field is now preserved).
+Improve the :pypi:`pip-accel` backend (the maintainer field is now preserved).
 
 .. _Release 0.11.2: https://github.com/paylogic/py2deb/compare/0.11.1...0.11.2
 
 `Release 0.11.1`_ (2013-11-03)
 ------------------------------
 
-Improve logging of pip-accel_ backend.
+Improve logging of :pypi:`pip-accel` backend.
 
 .. _Release 0.11.1: https://github.com/paylogic/py2deb/compare/0.11...0.11.1
 
 `Release 0.11`_ (2013-11-03)
 ----------------------------
 
-- Improve the pip-accel_ backend (for example it now respects ``stdeb.cfg``).
+- Improve the :pypi:`pip-accel` backend (for example it now respects
+  ``stdeb.cfg``).
+
 - Move generation of tagged descriptions to common function.
+
 - Make Python >= 2.6 dependency explicit in ``stdeb.cfg``.
 
 .. _Release 0.11: https://github.com/paylogic/py2deb/compare/0.10.8...0.11
@@ -997,7 +1013,7 @@ Improve logging of pip-accel_ backend.
 ------------------------------
 
 - Add a test case for converting packages with dependencies on replacements.
-- Increase the verbosity of the stdeb_ logger.
+- Increase the verbosity of the :pypi:`stdeb` logger.
 
 .. _Release 0.10.8: https://github.com/paylogic/py2deb/compare/0.10.7...0.10.8
 
@@ -1028,7 +1044,7 @@ test case for converting packages with dependencies).
 `Release 0.10.4`_ (2013-10-22)
 ------------------------------
 
-Bug fix for pip-accel_ backend (fallback on e.g. Jaunty and Karmic) by
+Bug fix for :pypi:`pip-accel` backend (fallback on e.g. Jaunty and Karmic) by
 rewriting ``/site-packages/`` to ``/dist-packages/``.
 
 .. _Release 0.10.4: https://github.com/paylogic/py2deb/compare/0.10.3...0.10.4
@@ -1093,7 +1109,7 @@ Automatic installation of required system packages.
 `Release 0.9.6`_ (2013-10-17)
 -----------------------------
 
-Bug fix: Send the output of Lintian to stderr! (otherwise ``--print-deps`` is broken)
+Bug fix: Send the output of Lintian_ to stderr! (otherwise ``--print-deps`` is broken)
 
 .. _Release 0.9.6: https://github.com/paylogic/py2deb/compare/0.9.5...0.9.6
 
@@ -1135,12 +1151,12 @@ Bug fix for broken import.
 `Release 0.9`_ (2013-10-12)
 ---------------------------
 
-- Created a shell script that uses magic in deb-pkg-tools_ to convert py2deb
-  using itself and install the resulting ``*.deb`` packages on the local
+- Created a shell script that uses magic in :pypi:`deb-pkg-tools` to convert
+  py2deb using itself and install the resulting ``*.deb`` packages on the local
   system. This shell script was then converted to Python and is available from
   the command line interface using ``py2deb --install``.
 
-- Bug fix: Don't error out when repository directory matches archive directory
+- Bug fix: Don't error out when repository directory matches archive directory.
 
 .. _Release 0.9: https://github.com/paylogic/py2deb/compare/0.8.6...0.9
 
@@ -1176,7 +1192,7 @@ Process required packages in alphabetical sort order.
 `Release 0.8.2`_ (2013-08-13)
 -----------------------------
 
-- Improved decision process for choosing stdeb_ version:
+- Improved decision process for choosing :pypi:`stdeb` version:
 
   And here's for a very peculiar bug fix... I was trying to convert PyXML 0.8.4
   to a Debian package and the setup.py script kept failing with ``error: invalid
@@ -1195,8 +1211,8 @@ Process required packages in alphabetical sort order.
 
   - Turns out PyXML 0.8.4 indeed contains an ``xml`` module... This all happens
     because Python implicitly imports from the current working directory before
-    the rest of the entries in ``sys.path`` and PyXML actually depends on this;
-    take a look at the ``setup.py`` script.
+    the rest of the entries in :data:`sys.path` and PyXML actually depends on
+    this; take a look at the ``setup.py`` script.
 
   Lesson learned: I guess it's wise to restrict our bundled fake stdeb module
   to standard library module imports :-).
@@ -1208,8 +1224,11 @@ Process required packages in alphabetical sort order.
 `Release 0.8.1`_ (2013-08-13)
 -----------------------------
 
-- Implement control overrides for pip-accel_ backend (also: refactor configuration handling).
+- Implement control overrides for :pypi:`pip-accel` backend (also: refactor
+  configuration handling).
+
 - Make it possible to override individual Debian package names.
+
 - Backends shouldn't know about "replacements".
 
 .. _Release 0.8.1: https://github.com/paylogic/py2deb/compare/0.8...0.8.1
@@ -1217,13 +1236,13 @@ Process required packages in alphabetical sort order.
 `Release 0.8`_ (2013-08-13)
 ---------------------------
 
-Start work on a backend using pip-accel_ instead of stdeb_:
+Start work on a backend using :pypi:`pip-accel` instead of :pypi:`stdeb`:
 
-- After working with stdeb_ for over four months it had become painfully clear
+- After working with stdeb for over four months it had become painfully clear
   that it would never be able to convert the huge dependency trees I had in
   mind for it because it was simply way too fragile.
 
-- At the same time I knew from working on pip-accel_ that ``python setup.py
+- At the same time I knew from working on pip-accel that ``python setup.py
   bdist`` was much more reliable / robust and gave usable results, even if
   completely specific to the major and minor version of the running Python
   interpreter.
@@ -1236,24 +1255,24 @@ backend for py2deb.
 `Release 0.7.7`_ (2013-08-11)
 -----------------------------
 
-- Remove reference to stdeb_ from py2deb.ini (bundled with py2deb anyway)
+- Remove reference to :pypi:`stdeb` from ``py2deb.ini`` (bundled with py2deb anyway).
 - Log external command execution.
 - Fix copy/paste error in ``setup.py``.
-- Improve stdeb_ version selection.
+- Improve :pypi:`stdeb` version selection.
 
 .. _Release 0.7.7: https://github.com/paylogic/py2deb/compare/0.7.6...0.7.7
 
 `Release 0.7.6`_ (2013-08-11)
 -----------------------------
 
-Use ``coloredlogs.increase_verbosity()`` (always keep logger at full verbosity).
+Use :func:`coloredlogs.increase_verbosity()` (always keep logger at full verbosity).
 
 .. _Release 0.7.6: https://github.com/paylogic/py2deb/compare/0.7.5...0.7.6
 
 `Release 0.7.5`_ (2013-08-11)
 -----------------------------
 
-- Start using ``deb_pkg_tools.package.clean_package_tree()``.
+- Start using :func:`deb_pkg_tools.package.clean_package_tree()`.
 - Add ``README`` and ``LICENSE`` to ``MANIFEST.in``.
 
 .. _Release 0.7.5: https://github.com/paylogic/py2deb/compare/0.7.4...0.7.5
@@ -1261,7 +1280,7 @@ Use ``coloredlogs.increase_verbosity()`` (always keep logger at full verbosity).
 `Release 0.7.4`_ (2013-08-11)
 -----------------------------
 
-Compatibility with pip-accel_ 0.9.4.
+Compatibility with :pypi:`pip-accel` 0.9.4.
 
 .. _Release 0.7.4: https://github.com/paylogic/py2deb/compare/0.7.3...0.7.4
 
@@ -1283,8 +1302,8 @@ Tweak the requirements.
 `Release 0.7.1`_ (2013-08-05)
 -----------------------------
 
-- Compatibility with the latest version of pip-accel_ (0.9.12).
-- Compatibility with the latest version of deb-pkg-tools_.
+- Compatibility with the latest version of :pypi:`pip-accel` (0.9.12).
+- Compatibility with the latest version of :pypi:`deb-pkg-tools`.
 - Restore release tag in pinned versions only.
 - Abuse "Description" field to advertise py2deb.
 - Make ``py2deb -v`` imply ``DH_VERBOSE=1`` (pass verbosity to debian-helper scripts).
@@ -1316,22 +1335,23 @@ I'm aware of):
 - Merging of control files was not working properly, however some months ago (I
   think before py2deb was born) I wrote my own control file merger. I've now
   extracted that from the project where it originated and moved it to a package
-  called deb-pkg-tools_, which hasn't been released yet but will be soon. py2deb
-  now uses deb-pkg-tools to patch/merge control files.
+  called :pypi:`deb-pkg-tools`, which hasn't been released yet but will be
+  soon. py2deb now uses deb-pkg-tools to patch/merge control files.
 
 - The Python ``==`` version matching operator was copied verbatim to the
-   Debian control files which is invalid. This is now fixed.
+  Debian control files which is invalid. This is now fixed.
 
-- stdeb_ 0.6.0 is required on Ubuntu 10.04, stdeb 0.6.0+git is required on
-  Ubuntu 12.04, however stdeb 0.6.0+git hasn't been released yet. Also Python
-  nor Debian can simply/elegantly express this *very explicit* distinction
-  between stdeb versions and Ubuntu distributions. The only remaining way to
-  keep my sanity was to bundle both versions of stdeb inside py2deb.
+- :pypi:`stdeb` 0.6.0 is required on Ubuntu 10.04, stdeb 0.6.0+git is required
+  on Ubuntu 12.04, however stdeb 0.6.0+git hasn't been released yet. Also
+  Python nor Debian can simply/elegantly express this *very explicit*
+  distinction between stdeb versions and Ubuntu distributions. The only
+  remaining way to keep my sanity was to bundle both versions of stdeb inside
+  py2deb.
 
   TODO: Add READMEs, LICENSEs.
 
-- Lots of changes to logging including the version of coloredlogs and the
-  introduction of separate loggers for separate modules.
+- Lots of changes to logging including the version of :pypi:`coloredlogs` and
+  the introduction of separate loggers for separate modules.
 
 - Lots of moving around with code and responsibilities while I tried to make
   sense of the way py2deb should and could work.
@@ -1401,7 +1421,7 @@ Temporarily removed sanity checking.
 `Release 0.6.1`_ (2013-06-24)
 -----------------------------
 
-Added sanity check on dependencies using pip-accel_.
+Added sanity check on dependencies using :pypi:`pip-accel`.
 
 .. _Release 0.6.1: https://github.com/paylogic/py2deb/compare/0.6.0...0.6.1
 
@@ -1412,7 +1432,7 @@ Added sanity check on dependencies using pip-accel_.
 - Fixed check on returncodes from subprocesses.
 - Overhauled command line options.
 - Changed verbosity option.
-- Renamed control.ini.
+- Renamed ``control.ini``.
 
 .. _Release 0.6.0: https://github.com/paylogic/py2deb/compare/0.5.41...0.6.0
 
@@ -1447,7 +1467,7 @@ Lots of changes to deal with the whole setuptools/distribute contraption...
 `Release 0.5.37`_ (2013-06-04)
 ------------------------------
 
-Added ``Pillow`` conflict with ``python-imaging`` to ``control.ini``.
+Added :pypi:`Pillow` conflict with ``python-imaging`` to ``control.ini``.
 
 .. _Release 0.5.37: https://github.com/paylogic/py2deb/compare/0.5.36...0.5.37
 
@@ -1470,15 +1490,15 @@ Raise an exception if there is no dependency file to recall.
 `Release 0.5.34`_ (2013-05-17)
 ------------------------------
 
-Properly integrate pip-accel_ 0.8.5 into py2deb and remove the embedded (and
-simplified) variant of pip-accel_ from the py2deb code base.
+Properly integrate :pypi:`pip-accel` 0.8.5 into py2deb and remove the embedded
+(and simplified) variant of pip-accel from the py2deb code base.
 
 .. _Release 0.5.34: https://github.com/paylogic/py2deb/compare/0.5.33...0.5.34
 
 `Release 0.5.33`_ (2013-05-02)
 ------------------------------
 
-Workaround Fabric bundling Paramiko.
+Workaround :pypi:`Fabric` bundling :pypi:`Paramiko`.
 
 .. _Release 0.5.33: https://github.com/paylogic/py2deb/compare/0.5.32...0.5.33
 
@@ -1523,8 +1543,9 @@ Change the location of the default repository when running as ``root``.
 `Release 0.5.27`_ (2013-05-02)
 ------------------------------
 
-- Pinned version of ``python-debian``.
-- Support for "replacing" dependencies (for example ``setuptools`` versus ``distribute``).
+- Pinned version of :pypi:`python-debian`.
+- Support for "replacing" dependencies (for example :pypi:`setuptools` versus
+  :pypi:`distribute`).
 - Lots of changes and improvements to dependency/requirement handling.
 
 .. _Release 0.5.27: https://github.com/paylogic/py2deb/compare/0.5.26...0.5.27
@@ -1650,7 +1671,7 @@ requirement expressions.
 `Release 0.5.10`_ (2013-04-25)
 ------------------------------
 
-Don't silence the output of ``dpkg-buildpackage``.
+Don't silence the output of :man:`dpkg-buildpackage`.
 
 .. _Release 0.5.10: https://github.com/paylogic/py2deb/compare/0.5.9...0.5.10
 
@@ -1694,23 +1715,22 @@ Fixes for installation of global build dependencies.
 `Release 0.5.4`_ (2013-04-25)
 -----------------------------
 
-Don't silence the output of ``apt-get`` when installing build dependencies.
+Don't silence the output of :man:`apt-get` when installing build dependencies.
 
 .. _Release 0.5.4: https://github.com/paylogic/py2deb/compare/0.5.3...0.5.4
 
 `Release 0.5.3`_ (2013-04-25)
 -----------------------------
 
-Use system wide pip-accel_ cache directories when running as ``root``.
+Use system wide :pypi:`pip-accel` cache directories when running as ``root``.
 
 .. _Release 0.5.3: https://github.com/paylogic/py2deb/compare/0.5.2...0.5.3
-.. _pip-accel: https://github.com/paylogic/pip-accel
 
 `Release 0.5.2`_ (2013-04-25)
 -----------------------------
 
-Add dependency on ``chardet`` which is imported by ``python-debian`` but not
-included in its installation requirements.
+Add dependency on :pypi:`chardet` which is imported by :pypi:`python-debian`
+but not included in its installation requirements.
 
 .. _Release 0.5.2: https://github.com/paylogic/py2deb/compare/0.5.1...0.5.2
 
@@ -1737,12 +1757,10 @@ The py2deb project was kicked off by Arjan, an intern at Paylogic at the time,
 in collaboration with Peter (who guided Arjan's internship). The abstract idea
 that we set out to create was as follows:
 
-- Use pip_ to download a Python package from PyPI and recursively gather
+- Use :pypi:`pip` to download a Python package from PyPI and recursively gather
   installation requirements until we can satisfy all dependencies.
 
-- Use stdeb_ to batch convert all of the downloaded Python packages to Debian
-  packages.
+- Use :pypi:`stdeb` to batch convert all of the downloaded Python packages to
+  Debian packages.
 
 .. _Release 0.5.0: https://github.com/paylogic/py2deb/tree/0.5.0
-.. _pip: https://pip.pypa.io/en/stable/
-.. _stdeb: https://pypi.org/project/stdeb
