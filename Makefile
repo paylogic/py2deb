@@ -1,7 +1,7 @@
 # Makefile for py2deb.
 #
 # Author: Peter Odding <peter.odding@paylogic.com>
-# Last Change: August 4, 2020
+# Last Change: August 6, 2020
 # URL: https://github.com/paylogic/py2deb
 
 PACKAGE_NAME = py2deb
@@ -113,7 +113,7 @@ readme: install
 
 docs: readme
 	@$(PIP_INSTALL_CMD) sphinx
-	@cd docs && sphinx-build -nb html -d build/doctrees . build/html
+	@cd docs && sphinx-build -nWb html -d build/doctrees . build/html
 
 publish: install
 	@git push origin && git push --tags origin
