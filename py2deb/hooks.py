@@ -34,7 +34,7 @@ appending a call to :func:`post_installation_hook()` or
 
 # Standard library modules.
 import errno
-import imp
+import importlib
 import json
 import logging
 import os
@@ -42,7 +42,7 @@ import py_compile
 import subprocess
 
 # Detect whether the Python implementation we're running on supports PEP 3147.
-HAS_PEP_3147 = hasattr(imp, 'get_tag')
+HAS_PEP_3147 = hasattr(importlib, 'sys.implementation.cache_tag')
 
 # Initialize a logger.
 logger = logging.getLogger('py2deb.hooks')
@@ -228,7 +228,7 @@ def find_bytecode_files(python_file):
     :returns: A generator of pathnames (strings).
 
     Starting from Python 3.2 byte code files are written according to `PEP
-    3147`_ which also defines :func:`imp.cache_from_source()` to locate
+    3147`_ which also defines :func:`importlib.util.cache_from_source()` to locate
     (optimized) byte code files. When this function is available it is used,
     when it's not available the corresponding ``*.pyc`` and/or ``*.pyo`` files
     are located manually by :func:`find_bytecode_files()`.
@@ -236,10 +236,10 @@ def find_bytecode_files(python_file):
     .. _PEP 3147: https://www.python.org/dev/peps/pep-3147/
     """
     if HAS_PEP_3147:
-        bytecode_file = imp.cache_from_source(python_file, True)
+        bytecode_file = importlib.util.cache_from_source(python_file, True)
         if os.path.isfile(bytecode_file):
             yield bytecode_file
-        optimized_bytecode_file = imp.cache_from_source(python_file, False)
+        optimized_bytecode_file = importlib.util.cache_from_source(python_file, False)
         if os.path.isfile(optimized_bytecode_file):
             yield optimized_bytecode_file
     else:
