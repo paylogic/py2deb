@@ -215,7 +215,7 @@ in packages converted by py2deb and drop a few configuration files into place.
 Conversion of binary wheels
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Investigate the feasability of supporting conversion of binary wheels. Slowly
+Investigate the feasibility of supporting conversion of binary wheels. Slowly
 but surely the Python community seems to be gravitating towards (binary) wheels
 and once gravity has shifted we don't want to be left in the dust! 😉
 
