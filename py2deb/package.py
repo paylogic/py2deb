@@ -120,6 +120,18 @@ class PackageToConvert(PropertyManager):
                         dependencies.add('%s (>> %s)' % (debian_package_name, version))
                     elif constraint in ('<=', '>='):
                         dependencies.add('%s (%s %s)' % (debian_package_name, constraint, version))
+                    elif constraint == "~=":
+                        # Transform ~= into two constraints. ~= 2.4.5blahblah becomes
+                        #    >= 2.4.5blahblah
+                        #    << 2.5
+                        dependencies.add('%s (>= %s)' % (debian_package_name, version))
+                        vcomps = list(int(x) for x in
+                                      sum(list(n.groups() for n in re.finditer(r'(\d+)\.?', version)), ())[:-1])
+                        if not vcomps:
+                            msg = "Cannot convert '~=' requirement (version '%s' used by Python package %s)"
+                            raise Exception(msg % (version, self.python_name))
+                        vcomps[-1] += 1
+                        dependencies.add('%s (<< %s)' % (debian_package_name, ".".join(map(str, vcomps))))
                     else:
                         msg = "Conversion specifier not supported! (%r used by Python package %s)"
                         raise Exception(msg % (constraint, self.python_name))
